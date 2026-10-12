@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/slate_100">
+
+    <!-- Top Status Bar & Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingTop="28dp"
+        android:paddingBottom="12dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:background="@color/slate_50"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            android:visibility="gone"
+            android:contentDescription="Back" />
+
+        <TextView
+            android:id="@+id/tvScreenTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:text="@string/title_hydro_track"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/slate_900" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SDG 6"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_pill_active"
+            android:textColor="@color/white"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+    </LinearLayout>
+
+    <!-- Main Scrollable Body -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- ================= 1. CALENDAR VIEW ================= -->
+            <LinearLayout
+                android:id="@+id/viewCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <!-- Barangay Selector Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:padding="12dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BARANGAY / ZONE"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/slate_400" />
+
+                    <Spinner
+                        android:id="@+id/spinnerZones"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp" />
+                </LinearLayout>
+
+                <!-- Flow Status & Live Countdown Banner -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_flow_banner"
+                    android:padding="20dp"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <View
+                            android:id="@+id/flowPulseDot"
+                            android:layout_width="10dp"
+                            android:layout_height="10dp"
+                            android:background="@drawable/bg_dot_active" />
+
+                        <TextView
+                            android:id="@+id/tvFlowBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="FLOW ACTIVE"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/emerald_400" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCountdownTimer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="02:47:13"
+                        android:textSize="36sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Remaining supply window time"
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_400" />
+                </LinearLayout>
+
+                <!-- Mode Control Toggle (Domestic vs. Commercial) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="#E2E8F0"
+                    android:padding="4dp"
+                    android:layout_marginBottom="16dp">
+
+                    <Button
+                        android:id="@+id/btnModeDomestic"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Domestic"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_pill_active"
+                        android:textColor="@color/white" />
+
+                    <Button
+                        android:id="@+id/btnModeCommercial"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:text="Commercial"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/slate_700" />
+                </LinearLayout>
+
+                <!-- Upcoming Schedule List -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="UPCOMING SCHEDULE"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/slate_400"
+                    android:layout_marginBottom="8dp" />
+
+                <include
+                    android:id="@+id/scheduleItem1"
+                    layout="@layout/item_schedule_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <include
+                    android:id="@+id/scheduleItem2"
+                    layout="@layout/item_schedule_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp" />
+
+                <include
+                    android:id="@+id/scheduleItem3"
+                    layout="@layout/item_schedule_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <!-- ================= 2. RESERVES VIEW (SDG 6 Exclusive Feature) ================= -->
+            <LinearLayout
+                android:id="@+id/viewReserves"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Explanatory Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="BAGUIO DRUM &amp; RUNOUT ESTIMATOR"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/slate_400" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Rationing requires tracking stored containers (blue drums &amp; tanks) to calculate whether reserves will dry up before the next BWD supply window."
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_700" />
+                </LinearLayout>
+
+                <!-- Input Containers Card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="STORAGE INVENTORY"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/slate_400"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- 200L Blue Drums -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Blue Drums (200L each)"
+                            android:textSize="13sp"
+                            android:textColor="@color/slate_800" />
+
+                        <EditText
+                            android:id="@+id/etDrums200L"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:inputType="number"
+                            android:text="2"
+                            android:gravity="center"
+                            android:background="@drawable/bg_card_white" />
+                    </LinearLayout>
+
+                    <!-- 1000L Overhead Tanks -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Overhead Tanks (1,000L each)"
+                            android:textSize="13sp"
+                            android:textColor="@color/slate_800" />
+
+                        <EditText
+                            android:id="@+id/etTanks1000L"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:inputType="number"
+                            android:text="0"
+                            android:gravity="center"
+                            android:background="@drawable/bg_card_white" />
+                    </LinearLayout>
+
+                    <!-- 20L Slim / Gallons -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Gallons / Containers (20L each)"
+                            android:textSize="13sp"
+                            android:textColor="@color/slate_800" />
+
+                        <EditText
+                            android:id="@+id/etGallons20L"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:inputType="number"
+                            android:text="2"
+                            android:gravity="center"
+                            android:background="@drawable/bg_card_white" />
+                    </LinearLayout>
+
+                    <!-- Fill Slider -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Average Container Fill Level (%)"
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_500" />
+
+                    <SeekBar
+                        android:id="@+id/sliderFill"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="100"
+                        android:progress="100"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- Burn Rate & Supply Distance -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Daily Consumption (Liters/day)"
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_500"
+                        android:layout_marginTop="8dp" />
+
+                    <EditText
+                        android:id="@+id/etDailyConsumption"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:inputType="numberDecimal"
+                        android:text="200"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:background="@drawable/bg_card_white" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Hours Until Next BWD Supply Window (hrs)"
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_500"
+                        android:layout_marginTop="8dp" />
+
+                    <EditText
+                        android:id="@+id/etHoursUntilNextSupply"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:inputType="numberDecimal"
+                        android:text="26"
+                        android:paddingStart="8dp"
+                        android:paddingEnd="8dp"
+                        android:background="@drawable/bg_card_white" />
+
+                    <Button
+                        android:id="@+id/btnCalculateRunout"
+                        android:layout_width="match_parent"
+                        android:layout_height="46dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Compute Runout &amp; Deficit"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_pill_active"
+                        android:textColor="@color/white" />
+                </LinearLayout>
+
+                <!-- Calculation Result Card -->
+                <LinearLayout
+                    android:id="@+id/cardRunoutStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_safe"
+                    android:padding="16dp"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:id="@+id/tvRunoutStatusTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SUFFICIENT RESERVE"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/emerald_500" />
+
+                    <TextView
+                        android:id="@+id/tvRunoutStatusMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Your reserve will outlast the next BWD supply window."
+                        android:textSize="13sp"
+                        android:textColor="@color/slate_800" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/slate_200"
+                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="TOTAL STORED"
+                                android:textSize="10sp"
+                                android:textColor="@color/slate_500" />
+
+                            <TextView
+                                android:id="@+id/tvStoredCurrentVolume"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="440 L"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="CAPACITY"
+                                android:textSize="10sp"
+                                android:textColor="@color/slate_500" />
+
+                            <TextView
+                                android:id="@+id/tvStoredTotalCapacity"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="440 L"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="DEPLETION TIME"
+                                android:textSize="10sp"
+                                android:textColor="@color/slate_500" />
+
+                            <TextView
+                                android:id="@+id/tvRunoutHoursValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="52.8 hrs"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- ================= 3. REPORT / CROWDSOURCE VIEW ================= -->
+            <LinearLayout
+                android:id="@+id/viewReport"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Header card -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/bg_card_white"
+                    android:padding="16dp"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="YOUR ZONE"
+                            android:textSize="10sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/slate_400" />
+
+                        <TextView
+                            android:id="@+id/tvReportZoneName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Zone 4 — Brgy. San Isidro"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/slate_900" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="● Verified Resident"
+                        android:textSize="11sp"
+                        android:background="@drawable/bg_pill_active"
+                        android:textColor="@color/emerald_400"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CURRENT WATER STATUS AT YOUR TAP?"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/slate_700"
+                    android:layout_marginBottom="8dp" />
+
+                <RadioGroup
+                    android:id="@+id/rgWaterStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp">
+
+                    <RadioButton
+                        android:id="@+id/rbStatusRunning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Water Running (Strong Flow)"
+                        android:textSize="14sp"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="12dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <RadioButton
+                        android:id="@+id/rbStatusLowPressure"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Low Pressure (Trickle Flow)"
+                        android:textSize="14sp"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="12dp"
+                        android:layout_marginBottom="8dp" />
+
+                    <RadioButton
+                        android:id="@+id/rbStatusDry"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Completely Dry (No Supply)"
+                        android:textSize="14sp"
+                        android:background="@drawable/bg_card_white"
+                        android:padding="12dp" />
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notes (Optional)"
+                    android:textSize="12sp"
+                    android:textColor="@color/slate_500"
+                    android:layout_marginBottom="4dp" />
+
+                <EditText
+                    android:id="@+id/etReportNotes"
+                    android:layout_width="match_parent"
+                    android:layout_height="72dp"
+                    android:background="@drawable/bg_card_white"
+                    android:gravity="top|start"
+                    android:padding="12dp"
+                    android:hint='e.g., "Pressure dropped around 7:15 AM..."'
+                    android:textSize="12sp"
+                    android:layout_marginBottom="16dp" />
+
+                <Button
+                    android:id="@+id/btnSubmitReport"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="Submit Ground Truth"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_pill_active"
+                    android:textColor="@color/white" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Reports feed directly into the distribution ML model"
+                    android:textSize="10sp"
+                    android:textColor="@color/slate_400"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+    </ScrollView>
+
+    <!-- Bottom Navigation Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:background="@color/white"
+        android:gravity="center_vertical">
+
+        <LinearLayout
+            android:id="@+id/navCalendar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tvNavCalendar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅 Calendar"
+                android:textStyle="bold"
+                android:textColor="@color/slate_900"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navReserves"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tvNavReserves"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛢️ Reserves"
+                android:textStyle="bold"
+                android:textColor="@color/slate_400"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navReport"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="true"
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/tvNavReport"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📝 Report"
+                android:textStyle="bold"
+                android:textColor="@color/slate_400"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
