@@ -263,9 +263,9 @@ class MainActivity : AppCompatActivity() {
         val defaultTanks = userPreferences.tanks1000LCount
         val defaultGallons = userPreferences.gallons20LCount
 
-        val drums = binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums
-        val tanks = binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks
-        val gallons = binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons
+        val drums = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
+        val tanks = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
+        val gallons = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
 
         userPreferences.saveContainerCounts(drums, tanks, gallons)
     }
@@ -397,12 +397,12 @@ class MainActivity : AppCompatActivity() {
         val defaultTanks = if (::userPreferences.isInitialized) userPreferences.tanks1000LCount else UserPreferences.DEFAULT_TANKS
         val defaultGallons = if (::userPreferences.isInitialized) userPreferences.gallons20LCount else UserPreferences.DEFAULT_GALLONS
 
-        val drumsCount = binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums
-        val overheadCount = binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks
-        val gallonsCount = binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons
+        val drumsCount = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
+        val overheadCount = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
+        val gallonsCount = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
         val fillPercent = binding.sliderFill.progress.toDouble().coerceIn(0.0, 100.0)
 
-        val dailyBurn = binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0
+        val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0).coerceAtLeast(0.0)
 
         // Auto-fallback to Phase 1 remainingHours if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
@@ -410,8 +410,8 @@ class MainActivity : AppCompatActivity() {
             userMode = currentUserMode,
             currentTime = LocalDateTime.now()
         )
-        val nextSupplyHours = binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
-            ?: countdown.remainingHours
+        val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
+            ?: countdown.remainingHours).coerceAtLeast(0.0)
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
