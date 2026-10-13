@@ -1,12 +1,14 @@
-# Waterall (BWD HydroTrack)
+# BWD HydroTrack
 
-Waterall is an Android application designed for Baguio City households navigating Baguio Water District (BWD) rotational rationing schedules. It provides deterministic schedule countdowns, household reserve and runout buffer calculations across discrete vessel types (e.g., 200L blue drums, overhead tanks, 20L containers), and crowdsourced ground-truth tap status reporting.
+> An Android application by **Waterall** designed for Baguio City households navigating Baguio Water District (BWD) rotational rationing schedules.
+
+**BWD HydroTrack** provides deterministic schedule countdowns, household reserve and runout buffer calculations across discrete vessel types (e.g., 200L blue drums, overhead tanks, 20L containers), and crowdsourced ground-truth tap status reporting.
 
 ---
 
 ## Problem Domain
 
-Rotational water rationing leaves Baguio residents uncertain about supply window timing and remaining reserves. Waterall models and enforces:
+Rotational water rationing leaves Baguio residents uncertain about supply window timing and remaining reserves. BWD HydroTrack models and enforces:
 - **Conservation of Water & Deficit Calculation:** Quantifies current reserves, daily consumption rates, runout hours ($T_{\text{runout}}$), and projected deficit before the next supply window.
 - **Rationing Window Chronology:** Tracks non-overlapping barangay supply windows with lifecycle-aware monotonic countdown timers.
 - **Discrete Vessel Quantization:** Standardized capacity tracking across physical containers (blue drums, overhead tanks, slim/gallon containers).
@@ -53,3 +55,9 @@ Run domain law invariant tests only:
 ```bash
 ./gradlew testDebugUnitTest --tests "com.waterall.domain.laws.*"
 ```
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

@@ -1,6 +1,6 @@
 # HARNESS: Verification Pipeline
 
-This document defines the automated verification pipeline for the **Waterall** codebase.
+This document defines the automated verification pipeline for the **BWD HydroTrack** codebase (developed by team **Waterall**).
 
 ---
 
