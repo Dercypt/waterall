@@ -42,7 +42,7 @@
             style="@style/Waterall.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SDG 6"
+            android:text="WATERALL · SDG 6"
             android:textColor="@color/ink_faint" />
     </LinearLayout>
 
@@ -544,25 +544,101 @@
                 </LinearLayout>
 
                 <!-- Usage parameters -->
-                <TextView
-                    style="@style/Waterall.Label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fill level"
-                    android:layout_marginTop="32dp" />
-
-                <SeekBar
-                    android:id="@+id/sliderFill"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:layout_marginStart="-16dp"
-                    android:layout_marginEnd="-16dp"
-                    android:max="100"
-                    android:progress="100"
-                    android:progressTint="@color/accent"
-                    android:progressBackgroundTint="@color/ink_faint"
-                    android:thumbTint="@color/accent" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="32dp">
+
+                    <TextView
+                        style="@style/Waterall.Label"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Fill level" />
+
+                    <TextView
+                        android:id="@+id/tvFillPercentageDisplay"
+                        style="@style/Waterall.Label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="100% · FULL"
+                        android:textColor="@color/accent" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:background="@drawable/bg_segment_track"
+                    android:padding="4dp"
+                    android:layout_marginTop="12dp">
+
+                    <Button
+                        android:id="@+id/btnFillEmpty"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:text="0%"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/ink_soft" />
+
+                    <Button
+                        android:id="@+id/btnFillQuarter"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:text="25%"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/ink_soft" />
+
+                    <Button
+                        android:id="@+id/btnFillHalf"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:text="50%"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/ink_soft" />
+
+                    <Button
+                        android:id="@+id/btnFillThreeQuarter"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:text="75%"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/ink_soft" />
+
+                    <Button
+                        android:id="@+id/btnFillFull"
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:minHeight="0dp"
+                        android:text="100%"
+                        android:textSize="12sp"
+                        android:background="@drawable/bg_pill_active"
+                        android:textColor="@color/white" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvFillLevelHint"
+                    style="@style/Waterall.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Full to the brim / top rim"
+                    android:textColor="@color/ink_muted" />
 
                 <TextView
                     style="@style/Waterall.Label"
