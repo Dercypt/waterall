@@ -5,7 +5,7 @@ package com.waterall.domain.laws
  *
  * This file serves as the canonical domain law invariant specification stub.
  * The production test implementation is mapped to:
- * app/src/test/java/com/waterall/domain/laws/DomainLawsTest.kt
+ * app/src/test/kotlin/com/waterall/domain/laws/DomainLawsTest.kt
  *
  * It validates:
  * 1. Law 1: Non-negative Storage & Deterministic Depletion Runout.

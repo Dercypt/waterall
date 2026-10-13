@@ -29,13 +29,13 @@ waterall-sandbox/
 │   └── src/
 │       ├── main/
 │       │   ├── AndroidManifest.xml
-│       │   ├── java/com/waterall/
+│       │   ├── kotlin/com/waterall/
 │       │   │   ├── domain/
 │       │   │   │   ├── model/         # Pure domain entities (Zone, Vessel, Schedule, Report)
 │       │   │   │   └── calculator/    # Runout & Countdown pure calculations
 │       │   │   └── ui/                # Activities, Adapters, and View Binding
 │       │   └── res/                   # Layouts, strings, drawable assets, colors
-│       └── test/java/com/waterall/
+│       └── test/kotlin/com/waterall/
 │           └── domain/laws/           # Domain Invariant Law unit tests (JVM)
 ```
 

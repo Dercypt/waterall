@@ -42,7 +42,7 @@ android {
 
     sourceSets {
         getByName("test") {
-            java.srcDirs("src/test/java", "../tests/laws")
+            java.srcDirs("src/test/kotlin", "../tests/laws")
         }
     }
 }
