@@ -7,7 +7,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
 import android.widget.RadioButton
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
@@ -80,6 +79,7 @@ class MainActivity : AppCompatActivity() {
 
     private var selectedZone: BarangayZone = zones[0]
     private var currentUserMode: UserMode = UserMode.DOMESTIC
+    private var selectedFillPercentage: Double = 100.0
     private var countdownTimer: CountDownTimer? = null
     private lateinit var viewModel: MainViewModel
     private val reportRepository: ReportRepository
@@ -347,13 +347,7 @@ class MainActivity : AppCompatActivity() {
             recalculateRunoutBuffer()
         }
 
-        binding.sliderFill.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) recalculateRunoutBuffer()
-            }
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
+        setupFillLevelPresets()
 
         binding.btnCalculateRunout.setOnClickListener {
             persistContainerCounts()
@@ -362,6 +356,54 @@ class MainActivity : AppCompatActivity() {
 
         autoPopulateScheduleHours()
         recalculateRunoutBuffer()
+    }
+
+    /**
+     * Discrete Baguio drum fill level selector (Empty, 1/4, 1/2, 3/4, Full) with physical visual cues.
+     */
+    private fun setupFillLevelPresets() {
+        val fillButtons = listOf(
+            Triple(binding.btnFillEmpty, 0.0, "Empty / dry"),
+            Triple(binding.btnFillQuarter, 25.0, "Quarter full (quarter-line mark)"),
+            Triple(binding.btnFillHalf, 50.0, "Half full (middle ridge line)"),
+            Triple(binding.btnFillThreeQuarter, 75.0, "Three quarters full (upper ring)"),
+            Triple(binding.btnFillFull, 100.0, "Full to the brim / top rim")
+        )
+
+        fun selectFill(percent: Double, hint: String) {
+            selectedFillPercentage = percent
+            val activeBg = R.drawable.bg_pill_active
+            val inactiveBg = R.drawable.bg_pill_inactive
+            val activeColor = getColor(R.color.white)
+            val inactiveColor = getColor(R.color.ink_soft)
+
+            fillButtons.forEach { (btn, p, _) ->
+                if (p == percent) {
+                    btn.setBackgroundResource(activeBg)
+                    btn.setTextColor(activeColor)
+                } else {
+                    btn.setBackgroundResource(inactiveBg)
+                    btn.setTextColor(inactiveColor)
+                }
+            }
+
+            val statusTag = when (percent) {
+                0.0 -> "0% · EMPTY"
+                25.0 -> "25% · 1/4 FULL"
+                50.0 -> "50% · 1/2 FULL"
+                75.0 -> "75% · 3/4 FULL"
+                else -> "100% · FULL"
+            }
+            binding.tvFillPercentageDisplay.text = statusTag
+            binding.tvFillLevelHint.text = hint
+            recalculateRunoutBuffer()
+        }
+
+        fillButtons.forEach { (btn, percent, hint) ->
+            btn.setOnClickListener { selectFill(percent, hint) }
+        }
+
+        selectFill(selectedFillPercentage, "Full to the brim / top rim")
     }
 
     /**
@@ -404,7 +446,7 @@ class MainActivity : AppCompatActivity() {
         val drumsCount = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
         val overheadCount = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
         val gallonsCount = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
-        val fillPercent = binding.sliderFill.progress.toDouble().coerceIn(0.0, 100.0)
+        val fillPercent = selectedFillPercentage.coerceIn(0.0, 100.0)
 
         val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0).coerceAtLeast(0.0)
 
