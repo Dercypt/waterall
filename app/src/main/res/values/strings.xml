@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">WATERALL</string>
+    <string name="app_name">BWD HydroTrack</string>
     <string name="title_hydro_track">BWD HydroTrack</string>
     <string name="tab_calendar">Calendar</string>
     <string name="tab_reserves">Reserves</string>
