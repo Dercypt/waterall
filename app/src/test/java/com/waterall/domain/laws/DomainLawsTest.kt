@@ -1,19 +1,23 @@
 package com.waterall.domain.laws
 
+import com.waterall.domain.calculator.CountdownCalculationResult
 import com.waterall.domain.calculator.RunoutEstimator
 import com.waterall.domain.calculator.ScheduleCountdownCalculator
 import com.waterall.domain.calculator.ScheduleFlowState
+import com.waterall.domain.calculator.ZoneConsensusCalculator
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
+import com.waterall.domain.model.VesselType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import java.time.LocalDateTime
 
@@ -27,6 +31,10 @@ import java.time.LocalDateTime
  * - Law 4: Ground-Truth Report Validity & Temporal Integrity
  */
 class DomainLawsTest : LawsSpecificationStub {
+
+    // =========================================================================
+    // LAW 1: Conservation of Water & Non-Negative Storage / Deficit
+    // =========================================================================
 
     @Test
     override fun verifyLaw1ConservationOfWater() {
@@ -72,6 +80,93 @@ class DomainLawsTest : LawsSpecificationStub {
         assertEquals(0.0, zeroBurnResult.deficitLiters, 0.001)
         assertFalse(zeroBurnResult.isDepletedBeforeNextSupply)
     }
+
+    @Test
+    fun verifyLaw1FillPercentageBoundariesAndExceptions() {
+        val inventory = StorageInventory(blueDrums200L = 2)
+
+        // Exact 0% fill percentage gives 0.0 current volume
+        val emptyInv = inventory.copy(fillPercentage = 0.0)
+        assertEquals(0.0, emptyInv.currentStoredVolumeLiters, 0.001)
+
+        // Exact 100% fill percentage gives total capacity
+        val fullInv = inventory.copy(fillPercentage = 100.0)
+        assertEquals(400.0, fullInv.currentStoredVolumeLiters, 0.001)
+
+        // Negative fill percentage must violate Law 1
+        try {
+            inventory.copy(fillPercentage = -0.1)
+            fail("Negative fill percentage must trigger Law 1 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 1 violation") == true)
+        }
+
+        // Fill percentage over 100% must violate Law 1
+        try {
+            inventory.copy(fillPercentage = 100.1)
+            fail("Fill percentage > 100% must trigger Law 1 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 1 violation") == true)
+        }
+    }
+
+    @Test
+    fun verifyLaw1RunoutEstimatorEdgeCasesAndNonNegativeDeficit() {
+        val inventory = StorageInventory(blueDrums200L = 2, fillPercentage = 100.0) // 400L
+
+        // Surplus reserve: runout 48 hrs > next supply 24 hrs -> deficit is strictly 0.0
+        val surplus = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0, // 8.33 L/hr -> 48 hrs
+            hoursUntilNextSupply = 24.0
+        )
+        assertFalse(surplus.isDepletedBeforeNextSupply)
+        assertEquals(0.0, surplus.deficitLiters, 0.001)
+        assertEquals(24.0, surplus.safetyBufferHours, 0.001)
+        assertTrue("Deficit must never be negative", surplus.deficitLiters >= 0.0)
+
+        // Zero stored water: runout is 0.0 hrs, deficit is entire requirement
+        val zeroStored = StorageInventory(blueDrums200L = 2, fillPercentage = 0.0)
+        val zeroStoredResult = RunoutEstimator.calculate(
+            inventory = zeroStored,
+            dailyBurnRateLiters = 240.0, // 10 L/hr
+            hoursUntilNextSupply = 10.0
+        )
+        assertEquals(0.0, zeroStoredResult.currentStoredLiters, 0.001)
+        assertEquals(0.0, zeroStoredResult.runoutHours, 0.001)
+        assertTrue(zeroStoredResult.isDepletedBeforeNextSupply)
+        assertEquals(100.0, zeroStoredResult.deficitLiters, 0.001)
+        assertEquals(0.0, zeroStoredResult.recommendedDailyTargetLiters, 0.001)
+
+        // Supply window currently active (0 hours until next supply): target is infinite, deficit is 0
+        val immediateSupply = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = 0.0
+        )
+        assertTrue(immediateSupply.recommendedDailyTargetLiters.isInfinite())
+        assertEquals(0.0, immediateSupply.deficitLiters, 0.001)
+        assertFalse(immediateSupply.isDepletedBeforeNextSupply)
+
+        // Negative burn rate or negative hours until supply must throw IllegalArgumentException
+        try {
+            RunoutEstimator.calculate(inventory, dailyBurnRateLiters = -10.0, hoursUntilNextSupply = 12.0)
+            fail("Negative daily burn rate must throw IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Burn rate cannot be negative") == true)
+        }
+
+        try {
+            RunoutEstimator.calculate(inventory, dailyBurnRateLiters = 100.0, hoursUntilNextSupply = -5.0)
+            fail("Negative hours until next supply must throw IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Hours until next supply cannot be negative") == true)
+        }
+    }
+
+    // =========================================================================
+    // LAW 2: Rationing Window Chronology & Disjoint Intervals
+    // =========================================================================
 
     @Test
     override fun verifyLaw2RationingWindowChronology() {
@@ -152,6 +247,120 @@ class DomainLawsTest : LawsSpecificationStub {
         assertEquals(flowResult.remainingSeconds - 60L, flowLaterResult.remainingSeconds)
     }
 
+    @Test
+    fun verifyLaw2ZeroDurationAndClockValidation() {
+        // Zero duration window (end == start) must throw Law 2 violation
+        try {
+            SupplyWindow("Wed", "Wed 11", 6, 30, 6, 30)
+            fail("Zero duration window must throw Law 2 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 2 violation") == true)
+        }
+
+        // Invalid hour (> 23)
+        try {
+            SupplyWindow("Thu", "Thu 12", 24, 0, 25, 0)
+            fail("Invalid hour > 23 must throw IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Invalid start time") == true)
+        }
+
+        // Invalid minute (> 59)
+        try {
+            SupplyWindow("Fri", "Fri 13", 6, 60, 10, 0)
+            fail("Invalid minute > 59 must throw IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Invalid start time") == true)
+        }
+
+        // Invalid day string
+        val invalidDayWindow = SupplyWindow("Funday", "Funday 01", 6, 0, 10, 0)
+        try {
+            invalidDayWindow.dayOfWeekEnum
+            fail("Invalid day string must throw Law 2 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 2 violation") == true)
+        }
+    }
+
+    @Test
+    fun verifyLaw2OverlappingVariationsAndBoundaryAdjacency() {
+        // Abutting windows on the same day (e.g. 06:00-10:00 and 10:00-14:00) are valid (disjoint)
+        val abuttingWindows = listOf(
+            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
+            SupplyWindow("Mon", "Mon 09", 10, 0, 14, 0)
+        )
+        ScheduleCountdownCalculator.validateNonOverlapping(abuttingWindows)
+
+        // Enclosed window (one window completely inside another)
+        val enclosingWindows = listOf(
+            SupplyWindow("Tue", "Tue 10", 6, 0, 18, 0),
+            SupplyWindow("Tue", "Tue 10", 8, 0, 12, 0)
+        )
+        try {
+            ScheduleCountdownCalculator.validateNonOverlapping(enclosingWindows)
+            fail("Enclosed window must trigger Law 2 overlap violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 2 violation") == true)
+        }
+
+        // Duplicate identical window
+        val duplicateWindows = listOf(
+            SupplyWindow("Fri", "Fri 13", 8, 0, 12, 0),
+            SupplyWindow("Fri", "Fri 13", 8, 0, 12, 0)
+        )
+        try {
+            ScheduleCountdownCalculator.validateNonOverlapping(duplicateWindows)
+            fail("Duplicate windows must trigger Law 2 overlap violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 2 violation") == true)
+        }
+    }
+
+    @Test
+    fun verifyLaw2CountdownBoundaryTransitionsAndEmptySchedule() {
+        val schedules = listOf(
+            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
+            SupplyWindow("Fri", "Fri 13", 6, 0, 11, 0)
+        )
+
+        // Exact window start: 06:00:00 -> FLOW_ACTIVE, full duration remaining
+        val exactStart = LocalDateTime.of(2026, 10, 12, 6, 0, 0)
+        val startResult = ScheduleCountdownCalculator.calculate(schedules, exactStart)
+        assertEquals(ScheduleFlowState.FLOW_ACTIVE, startResult.flowState)
+        assertEquals(4 * 3600L, startResult.remainingSeconds)
+
+        // 1 second before window closure: 09:59:59 -> FLOW_ACTIVE, 1 second remaining
+        val oneSecBefore = LocalDateTime.of(2026, 10, 12, 9, 59, 59)
+        val oneSecResult = ScheduleCountdownCalculator.calculate(schedules, oneSecBefore)
+        assertEquals(ScheduleFlowState.FLOW_ACTIVE, oneSecResult.flowState)
+        assertEquals(1L, oneSecResult.remainingSeconds)
+
+        // Exact window closure: 10:00:00 -> RATIONING_ACTIVE, deterministic transition
+        val exactClosure = LocalDateTime.of(2026, 10, 12, 10, 0, 0)
+        val closureResult = ScheduleCountdownCalculator.calculate(schedules, exactClosure)
+        assertEquals(ScheduleFlowState.RATIONING_ACTIVE, closureResult.flowState)
+        // Next window is Friday 06:00 AM: Monday 10:00 to Friday 06:00 = 92 hours = 331200 seconds
+        assertEquals(92 * 3600L, closureResult.remainingSeconds)
+
+        // Weekend wrap-around: Friday 12:00 PM (after Friday 06:00-11:00) to Monday 06:00 AM = 66 hours
+        val fridayAfternoon = LocalDateTime.of(2026, 10, 16, 12, 0, 0)
+        val weekendResult = ScheduleCountdownCalculator.calculate(schedules, fridayAfternoon)
+        assertEquals(ScheduleFlowState.RATIONING_ACTIVE, weekendResult.flowState)
+        assertEquals(66 * 3600L, weekendResult.remainingSeconds)
+        assertEquals("66:00:00", weekendResult.formattedCountdown)
+
+        // Empty schedule handles safely
+        val emptyResult = ScheduleCountdownCalculator.calculate(emptyList(), exactStart)
+        assertEquals(ScheduleFlowState.RATIONING_ACTIVE, emptyResult.flowState)
+        assertEquals(0L, emptyResult.remainingSeconds)
+        assertEquals("00:00:00", emptyResult.formattedCountdown)
+        assertNull(emptyResult.targetDateTime)
+    }
+
+    // =========================================================================
+    // LAW 3: Discrete Vessel Quantization
+    // =========================================================================
 
     @Test
     override fun verifyLaw3DiscreteVesselQuantization() {
@@ -173,6 +382,43 @@ class DomainLawsTest : LawsSpecificationStub {
         }
         assertTrue("Law 3 violation must trigger exception on negative vessel count", caughtNegative)
     }
+
+    @Test
+    fun verifyLaw3VesselUnitCapacitiesAndZeroInventory() {
+        // Standard Baguio vessel capacities per Law 3.1
+        assertEquals(200.0, VesselType.BLUE_DRUM_200L.unitCapacityLiters, 0.001)
+        assertEquals(1000.0, VesselType.OVERHEAD_TANK_1000L.unitCapacityLiters, 0.001)
+        assertEquals(20.0, VesselType.GALLON_CONTAINER_20L.unitCapacityLiters, 0.001)
+
+        // Zero containers yields zero capacity and stored volume
+        val zeroInventory = StorageInventory(blueDrums200L = 0, overheadTanks1000L = 0, gallons20L = 0)
+        assertEquals(0.0, zeroInventory.totalCapacityLiters, 0.001)
+        assertEquals(0.0, zeroInventory.currentStoredVolumeLiters, 0.001)
+
+        // Mixed combination dot product: 5 drums (1000L) + 2 tanks (2000L) + 10 gallons (200L) = 3200L
+        val mixedInventory = StorageInventory(blueDrums200L = 5, overheadTanks1000L = 2, gallons20L = 10)
+        assertEquals(3200.0, mixedInventory.totalCapacityLiters, 0.001)
+
+        // Negative overhead tanks must trigger Law 3 violation
+        try {
+            StorageInventory(overheadTanks1000L = -1)
+            fail("Negative overhead tanks must throw Law 3 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 3 violation") == true)
+        }
+
+        // Negative gallons must trigger Law 3 violation
+        try {
+            StorageInventory(gallons20L = -2)
+            fail("Negative gallons must throw Law 3 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 3 violation") == true)
+        }
+    }
+
+    // =========================================================================
+    // LAW 4: Ground-Truth Report Validity & Temporal Integrity
+    // =========================================================================
 
     @Test
     override fun verifyLaw4ReportValidityAndIntegrity() {
@@ -229,7 +475,7 @@ class DomainLawsTest : LawsSpecificationStub {
             GroundTruthReport("r5", "brgy1", "Zone 1", TapFlowStatus.DRY, timestamp = now - 10 * 60 * 1000L)
         )
 
-        val consensus = com.waterall.domain.calculator.ZoneConsensusCalculator.calculate(
+        val consensus = ZoneConsensusCalculator.calculate(
             zoneId = "brgy4",
             zoneName = "Zone 4 — Brgy. San Isidro",
             reports = zone4Reports,
@@ -249,7 +495,7 @@ class DomainLawsTest : LawsSpecificationStub {
         )
         var caughtConsensusFuture = false
         try {
-            com.waterall.domain.calculator.ZoneConsensusCalculator.calculate(
+            ZoneConsensusCalculator.calculate(
                 zoneId = "brgy4",
                 zoneName = "Zone 4",
                 reports = invalidFutureReports,
@@ -260,5 +506,71 @@ class DomainLawsTest : LawsSpecificationStub {
             assertTrue(e.message?.contains("Law 4 violation") == true)
         }
         assertTrue("Consensus calculator must reject future timestamps under Law 4", caughtConsensusFuture)
+    }
+
+    @Test
+    fun verifyLaw4ClosedEnumStatesAndBlankZoneIntegrity() {
+        // Law 4 Invariant 1: Exactly 3 verified physical tap states in closed enum
+        val statuses = TapFlowStatus.values()
+        assertEquals(3, statuses.size)
+        assertTrue(statuses.contains(TapFlowStatus.RUNNING))
+        assertTrue(statuses.contains(TapFlowStatus.LOW_PRESSURE))
+        assertTrue(statuses.contains(TapFlowStatus.DRY))
+
+        // Law 4 Invariant 3: Blank Zone ID must trigger Law 4 violation
+        try {
+            GroundTruthReport(
+                id = "rep-blank-zone",
+                zoneId = "   ",
+                zoneName = "Zone Blank",
+                status = TapFlowStatus.RUNNING
+            )
+            fail("Blank zone ID must throw Law 4 violation")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message?.contains("Law 4 violation") == true)
+        }
+    }
+
+    @Test
+    fun verifyLaw4RelativeTimestampThresholdBoundaries() {
+        val now = 1_700_000_000_000L
+
+        assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now, now))
+        assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now - 59_000L, now))
+        assertEquals("Reported 1m ago", GroundTruthReport.formatRelativeTimestamp(now - 60_000L, now))
+        assertEquals("Reported 59m ago", GroundTruthReport.formatRelativeTimestamp(now - 59 * 60 * 1000L, now))
+        assertEquals("Reported 1h ago", GroundTruthReport.formatRelativeTimestamp(now - 60 * 60 * 1000L, now))
+        assertEquals("Reported 23h ago", GroundTruthReport.formatRelativeTimestamp(now - 23 * 3600 * 1000L, now))
+        assertEquals("Reported 1d ago", GroundTruthReport.formatRelativeTimestamp(now - 24 * 3600 * 1000L, now))
+        assertEquals("Reported 5d ago", GroundTruthReport.formatRelativeTimestamp(now - 5 * 24 * 3600 * 1000L, now))
+    }
+
+    @Test
+    fun verifyLaw4ConsensusDistributionSumTo100AndEmptyState() {
+        val now = 1_700_000_000_000L
+
+        // Empty state
+        val emptyConsensus = ZoneConsensusCalculator.calculate(
+            zoneId = "brgy1",
+            zoneName = "Zone 1 — Brgy. Cabinet Hill",
+            reports = emptyList(),
+            currentTimeMillis = now
+        )
+        assertEquals(0, emptyConsensus.totalReports)
+        assertNull(emptyConsensus.dominantStatus)
+        assertNull(emptyConsensus.formattedRelativeTime)
+        assertEquals("Zone 1: No verified reports today", emptyConsensus.summaryText)
+
+        // All 3 states present: 1 Running, 1 Low Pressure, 1 Dry -> discrete percentages sum to exactly 100%
+        val threeWayReports = listOf(
+            GroundTruthReport("r1", "brgy1", "Zone 1", TapFlowStatus.RUNNING, timestamp = now - 30 * 60 * 1000L),
+            GroundTruthReport("r2", "brgy1", "Zone 1", TapFlowStatus.LOW_PRESSURE, timestamp = now - 20 * 60 * 1000L),
+            GroundTruthReport("r3", "brgy1", "Zone 1", TapFlowStatus.DRY, timestamp = now - 10 * 60 * 1000L)
+        )
+        val consensus = ZoneConsensusCalculator.calculate("brgy1", "Zone 1", threeWayReports, now)
+        assertEquals(3, consensus.totalReports)
+        val sumPct = consensus.statusPercentages.values.sum()
+        assertEquals(100, sumPct)
+        assertEquals("Reported 10m ago", consensus.formattedRelativeTime)
     }
 }
