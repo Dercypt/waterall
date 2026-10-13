@@ -65,6 +65,16 @@ data class CountdownCalculationResult(
 object ScheduleCountdownCalculator {
 
     /**
+     * Calculates countdown result for a given zone using its schedule.
+     */
+    fun calculate(
+        zone: BarangayZone,
+        currentTime: LocalDateTime = LocalDateTime.now()
+    ): CountdownCalculationResult {
+        return calculate(zone.schedules, currentTime)
+    }
+
+    /**
      * Calculates countdown result for a given zone and user mode.
      */
     fun calculate(

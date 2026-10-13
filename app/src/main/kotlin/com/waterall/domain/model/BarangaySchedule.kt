@@ -67,9 +67,12 @@ data class BarangayZone(
     val id: String,
     val name: String,
     val domesticSchedules: List<SupplyWindow>,
-    val commercialSchedules: List<SupplyWindow>
+    val commercialSchedules: List<SupplyWindow> = emptyList()
 ) {
-    fun getSchedules(mode: UserMode): List<SupplyWindow> = when (mode) {
+    val schedules: List<SupplyWindow>
+        get() = domesticSchedules
+
+    fun getSchedules(mode: UserMode = UserMode.DOMESTIC): List<SupplyWindow> = when (mode) {
         UserMode.DOMESTIC -> domesticSchedules
         UserMode.COMMERCIAL -> commercialSchedules
     }
