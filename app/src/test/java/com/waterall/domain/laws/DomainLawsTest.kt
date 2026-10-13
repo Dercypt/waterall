@@ -185,7 +185,7 @@ class DomainLawsTest : LawsSpecificationStub {
         )
         assertEquals(TapFlowStatus.RUNNING, validReport.status)
 
-        // Future timestamp must trigger validation error
+        // Future timestamp must trigger validation error on report construction
         var caughtFuture = false
         try {
             GroundTruthReport(
@@ -199,5 +199,66 @@ class DomainLawsTest : LawsSpecificationStub {
             caughtFuture = true
         }
         assertTrue("Law 4 violation must trigger exception on future timestamps", caughtFuture)
+
+        // Law 4 Relative Timestamp Formatting: Enforce non-future timestamps
+        val now = 1_700_000_000_000L
+        var caughtRelativeFuture = false
+        try {
+            GroundTruthReport.formatRelativeTimestamp(now + 60_000L, now)
+        } catch (e: IllegalArgumentException) {
+            caughtRelativeFuture = true
+            assertTrue(e.message?.contains("Law 4 violation") == true)
+        }
+        assertTrue("Relative formatting must reject future timestamps under Law 4", caughtRelativeFuture)
+
+        // Relative Formatting checks: exact formats ("Reported 12m ago", "Reported just now", etc.)
+        assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now, now))
+        assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now - 30_000L, now))
+        assertEquals("Reported 12m ago", GroundTruthReport.formatRelativeTimestamp(now - 12 * 60 * 1000L, now))
+        assertEquals("Reported 45m ago", GroundTruthReport.formatRelativeTimestamp(now - 45 * 60 * 1000L, now))
+        assertEquals("Reported 2h ago", GroundTruthReport.formatRelativeTimestamp(now - 2 * 3600 * 1000L, now))
+        assertEquals("Reported 1d ago", GroundTruthReport.formatRelativeTimestamp(now - 24 * 3600 * 1000L, now))
+
+        // Law 4 Zone Consensus Calculation: Aggregates verified reports into consensus
+        val zone4Reports = listOf(
+            GroundTruthReport("r1", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now - 45 * 60 * 1000L),
+            GroundTruthReport("r2", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now - 30 * 60 * 1000L),
+            GroundTruthReport("r3", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now - 20 * 60 * 1000L),
+            GroundTruthReport("r4", "brgy4", "Zone 4", TapFlowStatus.LOW_PRESSURE, timestamp = now - 12 * 60 * 1000L),
+            // Out-of-zone report: must not contaminate Zone 4 (Zone Integrity)
+            GroundTruthReport("r5", "brgy1", "Zone 1", TapFlowStatus.DRY, timestamp = now - 10 * 60 * 1000L)
+        )
+
+        val consensus = com.waterall.domain.calculator.ZoneConsensusCalculator.calculate(
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            reports = zone4Reports,
+            currentTimeMillis = now
+        )
+
+        assertEquals(4, consensus.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensus.dominantStatus)
+        assertEquals(75, consensus.statusPercentages[TapFlowStatus.RUNNING])
+        assertEquals(25, consensus.statusPercentages[TapFlowStatus.LOW_PRESSURE])
+        assertEquals("Reported 12m ago", consensus.formattedRelativeTime)
+        assertEquals("Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure", consensus.summaryText)
+
+        // Invariant: Consensus must reject future-dated reports in calculation
+        val invalidFutureReports = listOf(
+            GroundTruthReport("r-future", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now)
+        )
+        var caughtConsensusFuture = false
+        try {
+            com.waterall.domain.calculator.ZoneConsensusCalculator.calculate(
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                reports = invalidFutureReports,
+                currentTimeMillis = now - 5000L
+            )
+        } catch (e: IllegalArgumentException) {
+            caughtConsensusFuture = true
+            assertTrue(e.message?.contains("Law 4 violation") == true)
+        }
+        assertTrue("Consensus calculator must reject future timestamps under Law 4", caughtConsensusFuture)
     }
 }
