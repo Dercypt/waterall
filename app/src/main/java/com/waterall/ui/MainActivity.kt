@@ -26,6 +26,7 @@ import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
 import com.waterall.domain.repository.ReportRepository
+import kotlinx.coroutines.Job
 import java.time.LocalDateTime
 import java.util.Locale
 
@@ -33,6 +34,8 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var userPreferences: UserPreferences
+    private var uiCoroutineJob: Job? = null
 
     // Mock Baguio Water District Rotation Data
     private val zones = listOf(
@@ -84,6 +87,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        userPreferences = UserPreferences(this)
+        val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
+        selectedZone = zones[savedZoneIndex]
 
         setupBottomNavigation()
         setupZoneSelector()
@@ -151,9 +158,13 @@ class MainActivity : AppCompatActivity() {
             zones.map { it.name }
         )
         binding.spinnerZones.adapter = adapter
+        val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
+        binding.spinnerZones.setSelection(savedZoneIndex, false)
+
         binding.spinnerZones.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedZone = zones[position]
+                userPreferences.selectedZoneId = selectedZone.id
                 binding.tvReportZoneName.text = selectedZone.name
                 updateScheduleCards()
                 startLiveCountdown()
@@ -233,8 +244,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun startLiveCountdown() {
+    /**
+     * Safely unbinds all CountDownTimer instances and UI coroutines per PRINCIPLES.md:37-38.
+     */
+    private fun stopTimersAndCoroutines() {
         countdownTimer?.cancel()
+        countdownTimer = null
+        uiCoroutineJob?.cancel()
+        uiCoroutineJob = null
+    }
+
+    /**
+     * Retains container counts to lightweight SharedPreferences enforcing Law 3 invariants.
+     */
+    private fun persistContainerCounts() {
+        if (!::userPreferences.isInitialized) return
+        val defaultDrums = userPreferences.drums200LCount
+        val defaultTanks = userPreferences.tanks1000LCount
+        val defaultGallons = userPreferences.gallons20LCount
+
+        val drums = binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums
+        val tanks = binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks
+        val gallons = binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons
+
+        userPreferences.saveContainerCounts(drums, tanks, gallons)
+    }
+
+    private fun startLiveCountdown() {
+        stopTimersAndCoroutines()
 
         val calculation = ScheduleCountdownCalculator.calculate(
             zone = selectedZone,
@@ -286,6 +323,10 @@ class MainActivity : AppCompatActivity() {
 
     // --- FEATURE 2: Drum Reserve & Supply Runout Estimator (SDG 6 Exclusive) ---
     private fun setupReservesCalculator() {
+        binding.etDrums200L.setText(userPreferences.drums200LCount.toString())
+        binding.etTanks1000L.setText(userPreferences.tanks1000LCount.toString())
+        binding.etGallons20L.setText(userPreferences.gallons20LCount.toString())
+
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
         binding.btnDecrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, -1) }
         binding.btnIncrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, 1) }
@@ -311,6 +352,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         binding.btnCalculateRunout.setOnClickListener {
+            persistContainerCounts()
             recalculateRunoutBuffer()
         }
 
@@ -325,6 +367,7 @@ class MainActivity : AppCompatActivity() {
         val current = editText.text.toString().toIntOrNull() ?: 0
         val updated = maxOf(0, current + delta)
         editText.setText(updated.toString())
+        persistContainerCounts()
         recalculateRunoutBuffer()
     }
 
@@ -350,9 +393,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun recalculateRunoutBuffer() {
-        val drumsCount = binding.etDrums200L.text.toString().toIntOrNull() ?: 2
-        val overheadCount = binding.etTanks1000L.text.toString().toIntOrNull() ?: 0
-        val gallonsCount = binding.etGallons20L.text.toString().toIntOrNull() ?: 2
+        val defaultDrums = if (::userPreferences.isInitialized) userPreferences.drums200LCount else UserPreferences.DEFAULT_DRUMS
+        val defaultTanks = if (::userPreferences.isInitialized) userPreferences.tanks1000LCount else UserPreferences.DEFAULT_TANKS
+        val defaultGallons = if (::userPreferences.isInitialized) userPreferences.gallons20LCount else UserPreferences.DEFAULT_GALLONS
+
+        val drumsCount = binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums
+        val overheadCount = binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks
+        val gallonsCount = binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons
         val fillPercent = binding.sliderFill.progress.toDouble().coerceIn(0.0, 100.0)
 
         val dailyBurn = binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0
@@ -555,12 +602,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        countdownTimer?.cancel()
+        persistContainerCounts()
+        stopTimersAndCoroutines()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        countdownTimer?.cancel()
+        persistContainerCounts()
+        stopTimersAndCoroutines()
     }
 }
 
