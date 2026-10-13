@@ -3,38 +3,37 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:background="@drawable/bg_card_white"
-    android:padding="14dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="14dp"
     android:gravity="center_vertical">
 
     <TextView
         android:id="@+id/tvScheduleDayBadge"
-        android:layout_width="26dp"
-        android:layout_height="26dp"
-        android:background="#E2E8F0"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/bg_day_badge"
         android:text="M"
-        android:textStyle="bold"
-        android:textColor="@color/slate_700"
         android:gravity="center"
-        android:textSize="11sp" />
+        android:textSize="12sp"
+        android:fontFamily="sans-serif-medium"
+        android:textColor="@color/accent" />
 
     <TextView
         android:id="@+id/tvScheduleDay"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="16dp"
         android:text="Mon 09"
-        android:textStyle="bold"
-        android:textColor="@color/slate_800"
-        android:textSize="14sp" />
+        android:textSize="15sp"
+        android:textColor="@color/ink" />
 
     <TextView
         android:id="@+id/tvScheduleTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="6:00 AM – 10:00 AM"
-        android:textColor="@color/slate_500"
-        android:textSize="12sp" />
+        android:text="06:00 AM – 10:00 AM"
+        android:textSize="13sp"
+        android:textColor="@color/ink_muted" />
 
 </LinearLayout>

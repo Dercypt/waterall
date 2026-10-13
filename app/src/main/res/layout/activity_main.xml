@@ -3,26 +3,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/slate_100">
+    android:background="@color/paper">
 
-    <!-- Top Status Bar & Header -->
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingTop="28dp"
-        android:paddingBottom="12dp"
+        android:paddingBottom="16dp"
         android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:background="@color/slate_50"
+        android:paddingEnd="24dp"
         android:gravity="center_vertical">
 
         <ImageButton
             android:id="@+id/btnBack"
             android:layout_width="36dp"
             android:layout_height="36dp"
+            android:layout_marginEnd="4dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@android:drawable/ic_menu_revert"
+            android:src="@drawable/ic_arrow_back"
             android:visibility="gone"
             android:contentDescription="Back" />
 
@@ -31,37 +31,35 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="4dp"
             android:text="@string/title_hydro_track"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/slate_900" />
+            android:textSize="22sp"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="-0.01"
+            android:textColor="@color/ink" />
 
         <TextView
+            style="@style/Waterall.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="SDG 6"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:background="@drawable/bg_pill_active"
-            android:textColor="@color/white"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp" />
+            android:textColor="@color/ink_faint" />
     </LinearLayout>
 
-    <!-- Main Scrollable Body -->
+    <!-- Body -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:scrollbars="none">
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingBottom="32dp">
 
             <!-- ================= 1. CALENDAR VIEW ================= -->
             <LinearLayout
@@ -71,99 +69,93 @@
                 android:orientation="vertical"
                 android:visibility="visible">
 
-                <!-- Barangay Selector Card -->
+                <!-- Zone selector -->
+                <TextView
+                    style="@style/Waterall.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Zone" />
+
+                <Spinner
+                    android:id="@+id/spinnerZones"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="-8dp"
+                    android:backgroundTint="@color/ink_muted" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/hairline" />
+
+                <!-- Live countdown -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_card_white"
-                    android:padding="12dp"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="BARANGAY / ZONE"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/slate_400" />
-
-                    <Spinner
-                        android:id="@+id/spinnerZones"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp" />
-                </LinearLayout>
-
-                <!-- Flow Status & Live Countdown Banner -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_flow_banner"
-                    android:padding="20dp"
-                    android:layout_marginBottom="12dp">
+                    android:paddingTop="40dp"
+                    android:paddingBottom="40dp">
 
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:gravity="center_vertical">
 
                         <View
                             android:id="@+id/flowPulseDot"
-                            android:layout_width="10dp"
-                            android:layout_height="10dp"
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
                             android:background="@drawable/bg_dot_active" />
 
                         <TextView
                             android:id="@+id/tvFlowBadge"
+                            style="@style/Waterall.Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="FLOW ACTIVE"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/emerald_400" />
+                            android:text="Flow active"
+                            android:textColor="@color/status_ok" />
                     </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvCountdownTimer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginStart="-3dp"
                         android:text="02:47:13"
-                        android:textSize="36sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/white" />
+                        android:textSize="60sp"
+                        android:fontFamily="sans-serif-thin"
+                        android:fontFeatureSettings="tnum"
+                        android:letterSpacing="-0.02"
+                        android:textColor="@color/ink" />
 
                     <TextView
                         android:id="@+id/tvCountdownSubtext"
+                        style="@style/Waterall.Caption"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Remaining supply window time"
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_400" />
-
+                        android:text="Remaining supply window time" />
                 </LinearLayout>
 
-                <!-- Mode Control Toggle (Domestic vs. Commercial) -->
+                <!-- Mode toggle -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:background="#E2E8F0"
+                    android:background="@drawable/bg_segment_track"
                     android:padding="4dp"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="40dp">
 
                     <Button
                         android:id="@+id/btnModeDomestic"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
+                        android:minHeight="0dp"
                         android:text="Domestic"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textSize="13sp"
                         android:background="@drawable/bg_pill_active"
                         android:textColor="@color/white" />
 
@@ -172,36 +164,44 @@
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_weight="1"
+                        android:minHeight="0dp"
                         android:text="Commercial"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
+                        android:textSize="13sp"
                         android:background="@drawable/bg_pill_inactive"
-                        android:textColor="@color/slate_700" />
+                        android:textColor="@color/ink_soft" />
                 </LinearLayout>
 
-                <!-- Upcoming Schedule List -->
+                <!-- Schedule -->
                 <TextView
+                    style="@style/Waterall.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="UPCOMING SCHEDULE"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/slate_400"
-                    android:layout_marginBottom="8dp" />
+                    android:text="Upcoming schedule"
+                    android:layout_marginBottom="4dp" />
 
                 <include
                     android:id="@+id/scheduleItem1"
                     layout="@layout/item_schedule_card"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_height="wrap_content" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="48dp"
+                    android:background="@color/hairline" />
 
                 <include
                     android:id="@+id/scheduleItem2"
                     layout="@layout/item_schedule_card"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp" />
+                    android:layout_height="wrap_content" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginStart="48dp"
+                    android:background="@color/hairline" />
 
                 <include
                     android:id="@+id/scheduleItem3"
@@ -209,16 +209,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <!-- Crowdsourced Zone Consensus Card -->
+                <!-- Community consensus -->
                 <TextView
+                    style="@style/Waterall.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="COMMUNITY GROUND TRUTH"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/slate_400"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="8dp" />
+                    android:text="Community reports"
+                    android:layout_marginTop="40dp"
+                    android:layout_marginBottom="12dp" />
 
                 <LinearLayout
                     android:id="@+id/cardZoneConsensus"
@@ -226,25 +224,22 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card_white"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
+                    android:padding="20dp">
 
-                    <!-- Header Row: Status Badge & Relative Timestamp -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="12dp">
 
                         <TextView
                             android:id="@+id/tvConsensusBadge"
+                            style="@style/Waterall.Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="● CROWDSOURCED CONSENSUS"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/emerald_500" />
+                            android:text="Consensus"
+                            android:textColor="@color/status_ok" />
 
                         <View
                             android:layout_width="0dp"
@@ -253,59 +248,53 @@
 
                         <TextView
                             android:id="@+id/tvConsensusTimestamp"
+                            style="@style/Waterall.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Reported 12m ago"
-                            android:textSize="11sp"
-                            android:textColor="@color/slate_400" />
+                            android:text="12m ago" />
                     </LinearLayout>
 
-                    <!-- Summary Headline -->
                     <TextView
                         android:id="@+id/tvConsensusSummary"
+                        style="@style/Waterall.Body"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/slate_800"
+                        android:textSize="15sp"
                         android:layout_marginBottom="6dp" />
 
-                    <!-- Details / Latest Verification note -->
                     <TextView
                         android:id="@+id/tvConsensusDetails"
+                        style="@style/Waterall.Caption"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Latest report: Water Running (Strong Flow) • Reported 12m ago"
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_600"
-                        android:layout_marginBottom="10dp" />
+                        android:text="Latest: Water Running (Strong Flow) · 12m ago"
+                        android:layout_marginBottom="16dp" />
 
-                    <!-- Immediate UI Acknowledgment Banner -->
                     <TextView
                         android:id="@+id/tvConsensusAcknowledgment"
+                        style="@style/Waterall.Caption"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_card_safe"
-                        android:padding="8dp"
-                        android:text="✓ Ground truth submitted! Recalibrating distribution model..."
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/emerald_500"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:text="Report recorded. Status refreshed."
+                        android:textColor="@color/status_ok"
                         android:visibility="gone"
-                        android:layout_marginBottom="10dp" />
+                        android:layout_marginBottom="16dp" />
 
-                    <!-- Quick Action: Report Tap Flow Ground Truth -->
                     <Button
                         android:id="@+id/btnQuickReport"
                         android:layout_width="match_parent"
-                        android:layout_height="36dp"
-                        android:text="Report Tap Flow Ground Truth"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:background="@drawable/bg_pill_inactive"
-                        android:textColor="@color/slate_700" />
-
+                        android:layout_height="44dp"
+                        android:minHeight="0dp"
+                        android:text="Report tap status"
+                        android:textSize="13sp"
+                        android:background="@drawable/bg_button_outline"
+                        android:textColor="@color/ink" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -318,439 +307,391 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- Explanatory Header -->
+                <TextView
+                    style="@style/Waterall.Caption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Track stored water to see whether it lasts until the next supply window."
+                    android:textSize="13sp"
+                    android:layout_marginBottom="32dp" />
+
+                <!-- Storage inventory -->
+                <TextView
+                    style="@style/Waterall.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Storage"
+                    android:layout_marginBottom="4dp" />
+
+                <!-- 200L Blue Drums -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card_white"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="BAGUIO DRUM &amp; RUNOUT ESTIMATOR"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/slate_400" />
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="Rationing requires tracking stored containers (blue drums &amp; tanks) to calculate whether reserves will dry up before the next BWD supply window."
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_700" />
+                        <TextView
+                            style="@style/Waterall.Body"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Blue drums" />
+
+                        <TextView
+                            style="@style/Waterall.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="200 L each" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnDecrementDrums200L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="−"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
+
+                    <EditText
+                        android:id="@+id/etDrums200L"
+                        android:layout_width="48dp"
+                        android:layout_height="36dp"
+                        android:inputType="number"
+                        android:text="2"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:textSize="16sp"
+                        android:fontFeatureSettings="tnum"
+                        android:textColor="@color/ink"
+                        android:importantForAutofill="no" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnIncrementDrums200L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="+"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
                 </LinearLayout>
 
-                <!-- Input Containers Card -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/hairline" />
+
+                <!-- 1000L Overhead Tanks -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card_white"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="STORAGE INVENTORY"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/slate_400"
-                        android:layout_marginBottom="10dp" />
-
-                    <!-- 200L Blue Drums -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Blue Drums"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_800" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Standard Baguio Drum (200L)"
-                                android:textSize="11sp"
-                                android:textColor="@color/slate_500" />
-                        </LinearLayout>
-
-                        <!-- Stepper controls -->
-                        <LinearLayout
+                        <TextView
+                            style="@style/Waterall.Body"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:background="@drawable/bg_stepper_container"
-                            android:padding="2dp">
+                            android:text="Overhead tanks" />
 
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnDecrementDrums200L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="−"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-
-                            <EditText
-                                android:id="@+id/etDrums200L"
-                                android:layout_width="48dp"
-                                android:layout_height="36dp"
-                                android:inputType="number"
-                                android:text="2"
-                                android:gravity="center"
-                                android:background="@android:color/transparent"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnIncrementDrums200L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="+"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- 1000L Overhead Tanks -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Overhead Tanks"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_800" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Stainless / Poly Tank (1,000L)"
-                                android:textSize="11sp"
-                                android:textColor="@color/slate_500" />
-                        </LinearLayout>
-
-                        <!-- Stepper controls -->
-                        <LinearLayout
+                        <TextView
+                            style="@style/Waterall.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:background="@drawable/bg_stepper_container"
-                            android:padding="2dp">
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnDecrementTanks1000L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="−"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-
-                            <EditText
-                                android:id="@+id/etTanks1000L"
-                                android:layout_width="48dp"
-                                android:layout_height="36dp"
-                                android:inputType="number"
-                                android:text="0"
-                                android:gravity="center"
-                                android:background="@android:color/transparent"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnIncrementTanks1000L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="+"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-                        </LinearLayout>
+                            android:text="1,000 L each" />
                     </LinearLayout>
 
-                    <!-- 20L Slim / Gallons -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="14dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Slim Gallons / Blue Jugs"
-                                android:textSize="13sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_800" />
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Standard Water Container (20L)"
-                                android:textSize="11sp"
-                                android:textColor="@color/slate_500" />
-                        </LinearLayout>
-
-                        <!-- Stepper controls -->
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:background="@drawable/bg_stepper_container"
-                            android:padding="2dp">
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnDecrementGallons20L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="−"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-
-                            <EditText
-                                android:id="@+id/etGallons20L"
-                                android:layout_width="48dp"
-                                android:layout_height="36dp"
-                                android:inputType="number"
-                                android:text="2"
-                                android:gravity="center"
-                                android:background="@android:color/transparent"
-                                android:textSize="14sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
-
-                            <androidx.appcompat.widget.AppCompatButton
-                                android:id="@+id/btnIncrementGallons20L"
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:text="+"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_700"
-                                android:background="@drawable/bg_stepper_btn"
-                                android:gravity="center"
-                                android:padding="0dp" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Fill Slider -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Average Container Fill Level (%)"
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_500" />
-
-                    <SeekBar
-                        android:id="@+id/sliderFill"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:max="100"
-                        android:progress="100"
-                        android:layout_marginTop="4dp" />
-
-                    <!-- Burn Rate & Supply Distance -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Daily Consumption (Liters/day)"
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_500"
-                        android:layout_marginTop="8dp" />
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnDecrementTanks1000L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="−"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
 
                     <EditText
-                        android:id="@+id/etDailyConsumption"
-                        android:layout_width="match_parent"
-                        android:layout_height="40dp"
-                        android:inputType="numberDecimal"
-                        android:text="200"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:background="@drawable/bg_card_white" />
+                        android:id="@+id/etTanks1000L"
+                        android:layout_width="48dp"
+                        android:layout_height="36dp"
+                        android:inputType="number"
+                        android:text="0"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:textSize="16sp"
+                        android:fontFeatureSettings="tnum"
+                        android:textColor="@color/ink"
+                        android:importantForAutofill="no" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="10dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Hours Until Next Supply Window (hrs)"
-                                android:textSize="12sp"
-                                android:textColor="@color/slate_500" />
-
-                            <TextView
-                                android:id="@+id/tvScheduleSyncStatus"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Auto-synced with Zone Schedule"
-                                android:textSize="10sp"
-                                android:textColor="@color/emerald_500" />
-                        </LinearLayout>
-
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btnSyncScheduleHours"
-                            android:layout_width="wrap_content"
-                            android:layout_height="28dp"
-                            android:text="Sync Schedule"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/slate_700"
-                            android:background="@drawable/bg_stepper_btn"
-                            android:paddingStart="8dp"
-                            android:paddingEnd="8dp"
-                            android:paddingTop="0dp"
-                            android:paddingBottom="0dp" />
-                    </LinearLayout>
-
-                    <EditText
-                        android:id="@+id/etHoursUntilNextSupply"
-                        android:layout_width="match_parent"
-                        android:layout_height="40dp"
-                        android:inputType="numberDecimal"
-                        android:hint="Auto-calculated from schedule"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
-                        android:layout_marginTop="4dp"
-                        android:background="@drawable/bg_card_white" />
-
-                    <Button
-                        android:id="@+id/btnCalculateRunout"
-                        android:layout_width="match_parent"
-                        android:layout_height="46dp"
-                        android:layout_marginTop="16dp"
-                        android:text="Compute Runout &amp; Deficit"
-                        android:textStyle="bold"
-                        android:background="@drawable/bg_pill_active"
-                        android:textColor="@color/white" />
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnIncrementTanks1000L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="+"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
                 </LinearLayout>
 
-                <!-- Calculation Result Card -->
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/hairline" />
+
+                <!-- 20L Slim / Gallons -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Waterall.Body"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Slim gallons" />
+
+                        <TextView
+                            style="@style/Waterall.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="20 L each" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnDecrementGallons20L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="−"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
+
+                    <EditText
+                        android:id="@+id/etGallons20L"
+                        android:layout_width="48dp"
+                        android:layout_height="36dp"
+                        android:inputType="number"
+                        android:text="2"
+                        android:gravity="center"
+                        android:background="@android:color/transparent"
+                        android:textSize="16sp"
+                        android:fontFeatureSettings="tnum"
+                        android:textColor="@color/ink"
+                        android:importantForAutofill="no" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnIncrementGallons20L"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:padding="0dp"
+                        android:text="+"
+                        android:textSize="18sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/ink_soft"
+                        android:background="@drawable/bg_stepper_btn"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <!-- Usage parameters -->
+                <TextView
+                    style="@style/Waterall.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fill level"
+                    android:layout_marginTop="32dp" />
+
+                <SeekBar
+                    android:id="@+id/sliderFill"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginStart="-16dp"
+                    android:layout_marginEnd="-16dp"
+                    android:max="100"
+                    android:progress="100"
+                    android:progressTint="@color/accent"
+                    android:progressBackgroundTint="@color/ink_faint"
+                    android:thumbTint="@color/accent" />
+
+                <TextView
+                    style="@style/Waterall.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Daily use (L)"
+                    android:layout_marginTop="28dp" />
+
+                <EditText
+                    android:id="@+id/etDailyConsumption"
+                    style="@style/Waterall.Input"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:inputType="numberDecimal"
+                    android:text="200"
+                    android:importantForAutofill="no" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="28dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Waterall.Label"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hours to next supply" />
+
+                        <TextView
+                            android:id="@+id/tvScheduleSyncStatus"
+                            style="@style/Waterall.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="Synced with zone schedule"
+                            android:textSize="11sp" />
+                    </LinearLayout>
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnSyncScheduleHours"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="0dp"
+                        android:text="Sync"
+                        android:textAllCaps="false"
+                        android:textSize="12sp"
+                        android:textColor="@color/accent"
+                        android:background="@drawable/bg_button_outline" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/etHoursUntilNextSupply"
+                    style="@style/Waterall.Input"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:inputType="numberDecimal"
+                    android:hint="Auto-calculated from schedule"
+                    android:importantForAutofill="no" />
+
+                <Button
+                    android:id="@+id/btnCalculateRunout"
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="32dp"
+                    android:text="Calculate"
+                    android:textSize="14sp"
+                    android:background="@drawable/bg_pill_active"
+                    android:textColor="@color/white" />
+
+                <!-- Result -->
                 <LinearLayout
                     android:id="@+id/cardRunoutStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card_safe"
-                    android:padding="16dp"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-
-                        <TextView
-                            android:id="@+id/tvRunoutStatusBadge"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="● SURPLUS BUFFER"
-                            android:textSize="11sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/emerald_500"
-                            android:background="@drawable/bg_pill_inactive"
-                            android:paddingStart="0dp"
-                            android:paddingEnd="8dp" />
-
-                        <TextView
-                            android:id="@+id/tvRunoutStatusTitle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="SUFFICIENT RESERVE"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/emerald_500" />
-                    </LinearLayout>
+                    android:padding="20dp">
 
                     <TextView
-                        android:id="@+id/tvRunoutStatusMessage"
+                        android:id="@+id/tvRunoutStatusBadge"
+                        style="@style/Waterall.Label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Surplus"
+                        android:textColor="@color/status_ok" />
+
+                    <TextView
+                        android:id="@+id/tvRunoutStatusTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
-                        android:text="Your reserve will outlast the next BWD supply window."
-                        android:textSize="13sp"
-                        android:textColor="@color/slate_800" />
+                        android:text="+12.0 hrs"
+                        android:textSize="30sp"
+                        android:fontFamily="sans-serif-light"
+                        android:textColor="@color/status_ok" />
 
-                    <!-- Recommended Target Box -->
+                    <TextView
+                        android:id="@+id/tvRunoutStatusMessage"
+                        style="@style/Waterall.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Your reserve will outlast the next supply window."
+                        android:textSize="13sp"
+                        android:textColor="@color/ink_soft" />
+
+                    <!-- Recommended target -->
                     <LinearLayout
                         android:id="@+id/cardRecommendedTarget"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:background="@drawable/bg_target_box_safe"
-                        android:padding="12dp"
-                        android:layout_marginTop="12dp">
+                        android:paddingStart="14dp"
+                        android:layout_marginTop="20dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
@@ -760,13 +701,12 @@
 
                             <TextView
                                 android:id="@+id/tvTargetLabel"
+                                style="@style/Waterall.Label"
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="RECOMMENDED DAILY TARGET"
-                                android:textSize="10sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_500" />
+                                android:text="Daily target"
+                                android:textSize="10sp" />
 
                             <TextView
                                 android:id="@+id/tvRecommendedTargetValue"
@@ -774,26 +714,25 @@
                                 android:layout_height="wrap_content"
                                 android:text="≤ 160 L/day"
                                 android:textSize="15sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/emerald_500" />
+                                android:fontFamily="sans-serif-medium"
+                                android:textColor="@color/status_ok" />
                         </LinearLayout>
 
                         <TextView
                             android:id="@+id/tvRecommendedTargetSubtext"
+                            style="@style/Waterall.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Maintain consumption at or below target to preserve surplus buffer and avoid emergency water purchases."
-                            android:textSize="11sp"
-                            android:textColor="@color/slate_600" />
+                            android:text="Stay at or below target to keep your buffer." />
                     </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:background="@color/slate_200"
-                        android:layout_marginTop="12dp"
-                        android:layout_marginBottom="12dp" />
+                        android:background="@color/hairline"
+                        android:layout_marginTop="20dp"
+                        android:layout_marginBottom="16dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -807,20 +746,19 @@
                             android:orientation="vertical">
 
                             <TextView
+                                style="@style/Waterall.Label"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="TOTAL STORED"
-                                android:textSize="10sp"
-                                android:textColor="@color/slate_500" />
+                                android:text="Stored"
+                                android:textSize="10sp" />
 
                             <TextView
                                 android:id="@+id/tvStoredCurrentVolume"
+                                style="@style/Waterall.Metric"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="440 L"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
+                                android:layout_marginTop="2dp"
+                                android:text="440 L" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -830,20 +768,19 @@
                             android:orientation="vertical">
 
                             <TextView
+                                style="@style/Waterall.Label"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="CAPACITY"
-                                android:textSize="10sp"
-                                android:textColor="@color/slate_500" />
+                                android:text="Capacity"
+                                android:textSize="10sp" />
 
                             <TextView
                                 android:id="@+id/tvStoredTotalCapacity"
+                                style="@style/Waterall.Metric"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="440 L"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
+                                android:layout_marginTop="2dp"
+                                android:text="440 L" />
                         </LinearLayout>
 
                         <LinearLayout
@@ -853,20 +790,19 @@
                             android:orientation="vertical">
 
                             <TextView
+                                style="@style/Waterall.Label"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="DEPLETION TIME"
-                                android:textSize="10sp"
-                                android:textColor="@color/slate_500" />
+                                android:text="Lasts"
+                                android:textSize="10sp" />
 
                             <TextView
                                 android:id="@+id/tvRunoutHoursValue"
+                                style="@style/Waterall.Metric"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="52.8 hrs"
-                                android:textSize="16sp"
-                                android:textStyle="bold"
-                                android:textColor="@color/slate_900" />
+                                android:layout_marginTop="2dp"
+                                android:text="52.8 hrs" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
@@ -881,146 +817,127 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- Header card -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/bg_card_white"
-                    android:padding="16dp"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="YOUR ZONE"
-                            android:textSize="10sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/slate_400" />
-
-                        <TextView
-                            android:id="@+id/tvReportZoneName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Zone 4 — Brgy. San Isidro"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/slate_900" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="● Verified Resident"
-                        android:textSize="11sp"
-                        android:background="@drawable/bg_pill_active"
-                        android:textColor="@color/emerald_400"
-                        android:paddingStart="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingTop="4dp"
-                        android:paddingBottom="4dp" />
-                </LinearLayout>
-
                 <TextView
+                    style="@style/Waterall.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CURRENT WATER STATUS AT YOUR TAP?"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/slate_700"
-                    android:layout_marginBottom="8dp" />
+                    android:text="Your zone" />
+
+                <TextView
+                    android:id="@+id/tvReportZoneName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Zone 4 — Brgy. San Isidro"
+                    android:textSize="18sp"
+                    android:textColor="@color/ink" />
+
+                <TextView
+                    style="@style/Waterall.Label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Water at your tap"
+                    android:layout_marginTop="36dp"
+                    android:layout_marginBottom="12dp" />
 
                 <RadioGroup
                     android:id="@+id/rgWaterStatus"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="28dp">
 
                     <RadioButton
                         android:id="@+id/rbStatusRunning"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Water Running (Strong Flow)"
-                        android:textSize="14sp"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="12dp"
-                        android:layout_marginBottom="8dp" />
+                        android:button="@null"
+                        android:text="Running"
+                        android:textSize="15sp"
+                        android:textColor="@color/ink"
+                        android:background="@drawable/bg_radio_option"
+                        android:padding="18dp"
+                        android:layout_marginBottom="10dp" />
 
                     <RadioButton
                         android:id="@+id/rbStatusLowPressure"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Low Pressure (Trickle Flow)"
-                        android:textSize="14sp"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="12dp"
-                        android:layout_marginBottom="8dp" />
+                        android:button="@null"
+                        android:text="Low pressure"
+                        android:textSize="15sp"
+                        android:textColor="@color/ink"
+                        android:background="@drawable/bg_radio_option"
+                        android:padding="18dp"
+                        android:layout_marginBottom="10dp" />
 
                     <RadioButton
                         android:id="@+id/rbStatusDry"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Completely Dry (No Supply)"
-                        android:textSize="14sp"
-                        android:background="@drawable/bg_card_white"
-                        android:padding="12dp" />
+                        android:button="@null"
+                        android:text="Dry"
+                        android:textSize="15sp"
+                        android:textColor="@color/ink"
+                        android:background="@drawable/bg_radio_option"
+                        android:padding="18dp" />
                 </RadioGroup>
 
                 <TextView
+                    style="@style/Waterall.Label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Notes (Optional)"
-                    android:textSize="12sp"
-                    android:textColor="@color/slate_500"
-                    android:layout_marginBottom="4dp" />
+                    android:text="Note (optional)" />
 
                 <EditText
                     android:id="@+id/etReportNotes"
+                    style="@style/Waterall.Input"
                     android:layout_width="match_parent"
-                    android:layout_height="72dp"
-                    android:background="@drawable/bg_card_white"
+                    android:layout_height="wrap_content"
+                    android:minHeight="44dp"
                     android:gravity="top|start"
-                    android:padding="12dp"
-                    android:hint='e.g., "Pressure dropped around 7:15 AM..."'
-                    android:textSize="12sp"
-                    android:layout_marginBottom="16dp" />
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
+                    android:inputType="textMultiLine|textCapSentences"
+                    android:hint="Pressure dropped around 7:15 AM"
+                    android:textSize="14sp"
+                    android:importantForAutofill="no"
+                    android:layout_marginBottom="36dp" />
 
                 <Button
                     android:id="@+id/btnSubmitReport"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:text="Submit Ground Truth"
-                    android:textStyle="bold"
+                    android:layout_height="52dp"
+                    android:text="Submit report"
+                    android:textSize="14sp"
                     android:background="@drawable/bg_pill_active"
                     android:textColor="@color/white" />
 
                 <TextView
+                    style="@style/Waterall.Caption"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Reports feed directly into the distribution ML model"
-                    android:textSize="10sp"
-                    android:textColor="@color/slate_400"
+                    android:text="Reports help refine distribution estimates for your zone."
+                    android:textSize="11sp"
+                    android:textColor="@color/ink_faint"
                     android:gravity="center"
-                    android:layout_marginTop="8dp" />
+                    android:layout_marginTop="12dp" />
 
             </LinearLayout>
 
         </FrameLayout>
     </ScrollView>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Bottom navigation -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/hairline" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:orientation="horizontal"
-        android:background="@color/white"
+        android:background="@color/paper"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -1030,17 +947,17 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
 
             <TextView
                 android:id="@+id/tvNavCalendar"
+                style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📅 Calendar"
-                android:textStyle="bold"
-                android:textColor="@color/slate_900"
-                android:textSize="12sp" />
+                android:text="@string/tab_calendar"
+                android:textColor="@color/ink" />
         </LinearLayout>
 
         <LinearLayout
@@ -1050,17 +967,17 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
 
             <TextView
                 android:id="@+id/tvNavReserves"
+                style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🛢️ Reserves"
-                android:textStyle="bold"
-                android:textColor="@color/slate_400"
-                android:textSize="12sp" />
+                android:text="@string/tab_reserves"
+                android:textColor="@color/ink_faint" />
         </LinearLayout>
 
         <LinearLayout
@@ -1070,17 +987,17 @@
             android:layout_weight="1"
             android:orientation="vertical"
             android:gravity="center"
+            android:background="?attr/selectableItemBackground"
             android:clickable="true"
             android:focusable="true">
 
             <TextView
                 android:id="@+id/tvNavReport"
+                style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📝 Report"
-                android:textStyle="bold"
-                android:textColor="@color/slate_400"
-                android:textSize="12sp" />
+                android:text="@string/tab_report"
+                android:textColor="@color/ink_faint" />
         </LinearLayout>
 
     </LinearLayout>
