@@ -1,6 +1,6 @@
 # PRINCIPLES: Governance, Escalations & Defaults
 
-This document governs engineering practices, default patterns, and mandatory escalation triggers for the Waterall project.
+This document governs engineering practices, default patterns, and mandatory escalation triggers for the **BWD HydroTrack** project developed by team **Waterall**.
 
 ---
 

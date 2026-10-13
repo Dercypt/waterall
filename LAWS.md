@@ -1,6 +1,6 @@
 # LAWS: Waterall Domain Invariants
 
-This document establishes the inviolable laws governing all business calculations, state machines, and data processing within the **Waterall** (BWD HydroTrack) system. No code change, refactor, or test may bypass or relax these invariants without an explicit update to this document.
+This document establishes the inviolable laws governing all business calculations, state machines, and data processing within the **BWD HydroTrack** application developed by **Waterall**. No code change, refactor, or test may bypass or relax these invariants without an explicit update to this document.
 
 ---
 

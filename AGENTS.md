@@ -1,6 +1,6 @@
 # AGENTS: Agent & Automation Operational Manual
 
-This operational manual guides autonomous AI agents, human developers, and CI/CD pipelines working within the **Waterall** codebase.
+This operational manual guides autonomous AI agents, human developers, and CI/CD pipelines working within the **BWD HydroTrack** codebase developed by team **Waterall**.
 
 ---
 
