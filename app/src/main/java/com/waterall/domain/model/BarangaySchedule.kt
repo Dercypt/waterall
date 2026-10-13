@@ -1,5 +1,8 @@
 package com.waterall.domain.model
 
+import java.time.DayOfWeek
+import java.util.Locale
+
 enum class UserMode {
     DOMESTIC,
     COMMERCIAL
@@ -14,12 +17,30 @@ data class SupplyWindow(
     val endMinute: Int
 ) {
     init {
+        require(startHour in 0..23 && startMinute in 0..59) {
+            "Invalid start time: $startHour:$startMinute"
+        }
+        require(endHour in 0..23 && endMinute in 0..59) {
+            "Invalid end time: $endHour:$endMinute"
+        }
         val startTotalMinutes = startHour * 60 + startMinute
         val endTotalMinutes = endHour * 60 + endMinute
         require(endTotalMinutes > startTotalMinutes) {
             "Law 2 violation: SupplyWindow must have positive duration (end > start)."
         }
     }
+
+    val dayOfWeekEnum: DayOfWeek
+        get() = when (dayOfWeek.trim().take(3).lowercase(Locale.US)) {
+            "mon" -> DayOfWeek.MONDAY
+            "tue" -> DayOfWeek.TUESDAY
+            "wed" -> DayOfWeek.WEDNESDAY
+            "thu" -> DayOfWeek.THURSDAY
+            "fri" -> DayOfWeek.FRIDAY
+            "sat" -> DayOfWeek.SATURDAY
+            "sun" -> DayOfWeek.SUNDAY
+            else -> throw IllegalArgumentException("Law 2 violation: Invalid dayOfWeek '$dayOfWeek'.")
+        }
 
     val durationMinutes: Int
         get() = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
@@ -47,4 +68,10 @@ data class BarangayZone(
     val name: String,
     val domesticSchedules: List<SupplyWindow>,
     val commercialSchedules: List<SupplyWindow>
-)
+) {
+    fun getSchedules(mode: UserMode): List<SupplyWindow> = when (mode) {
+        UserMode.DOMESTIC -> domesticSchedules
+        UserMode.COMMERCIAL -> commercialSchedules
+    }
+}
+

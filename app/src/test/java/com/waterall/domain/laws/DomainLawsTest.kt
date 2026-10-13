@@ -1,6 +1,8 @@
 package com.waterall.domain.laws
 
 import com.waterall.domain.calculator.RunoutEstimator
+import com.waterall.domain.calculator.ScheduleCountdownCalculator
+import com.waterall.domain.calculator.ScheduleFlowState
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
@@ -9,8 +11,11 @@ import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.LocalDateTime
 
 /**
  * Domain Invariant Law Test Suite
@@ -68,7 +73,7 @@ class DomainLawsTest : LawsSpecificationStub {
 
     @Test
     override fun verifyLaw2RationingWindowChronology() {
-        // Valid supply window: 6:00 AM to 10:00 AM
+        // Law 2.1: Strict positive duration (end > start)
         val validWindow = SupplyWindow(
             dayOfWeek = "Mon",
             dateLabel = "Mon 09",
@@ -94,8 +99,57 @@ class DomainLawsTest : LawsSpecificationStub {
         } catch (e: IllegalArgumentException) {
             caughtViolation = true
         }
-        assertTrue("Law 2 violation must trigger exception on non-positive duration", caughtViolation)
+        assertTrue("Law 2.1 violation must trigger exception on non-positive duration", caughtViolation)
+
+        // Law 2.2: Temporal Non-Overlap within a schedule
+        val nonOverlappingSchedule = listOf(
+            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
+            SupplyWindow("Wed", "Wed 11", 5, 0, 9, 0)
+        )
+        // Valid disjoint schedules pass validation without exception
+        ScheduleCountdownCalculator.validateNonOverlapping(nonOverlappingSchedule)
+
+        val overlappingSchedule = listOf(
+            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
+            SupplyWindow("Mon", "Mon 09", 8, 0, 12, 0)
+        )
+        var caughtOverlap = false
+        try {
+            ScheduleCountdownCalculator.validateNonOverlapping(overlappingSchedule)
+        } catch (e: IllegalArgumentException) {
+            caughtOverlap = true
+        }
+        assertTrue("Law 2.2 violation must trigger exception on overlapping windows", caughtOverlap)
+
+        // Law 2.3: Monotonic Countdown & Deterministic State Transitions
+        val schedules = listOf(
+            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
+            SupplyWindow("Wed", "Wed 11", 5, 0, 9, 0)
+        )
+
+        // Test 2.3a: During active flow, countdown ticks toward endTime
+        val duringFlow = LocalDateTime.of(2026, 10, 12, 8, 0, 0) // Mon 8:00 AM
+        val flowResult = ScheduleCountdownCalculator.calculate(schedules, duringFlow)
+        assertEquals(ScheduleFlowState.FLOW_ACTIVE, flowResult.flowState)
+        assertEquals(2 * 3600L, flowResult.remainingSeconds) // 2 hours until 10:00 AM closure
+        assertEquals("02:00:00", flowResult.formattedCountdown)
+        assertTrue("Countdown must be strictly non-negative", flowResult.remainingSeconds >= 0L)
+
+        // Test 2.3b: During dry interval, countdown ticks toward next window startTime
+        val duringDry = LocalDateTime.of(2026, 10, 12, 10, 0, 0) // Mon 10:00 AM (just closed)
+        val dryResult = ScheduleCountdownCalculator.calculate(schedules, duringDry)
+        assertEquals(ScheduleFlowState.RATIONING_ACTIVE, dryResult.flowState)
+        // Ticks toward Wednesday 05:00 AM opening (43 hours away)
+        assertEquals(43 * 3600L, dryResult.remainingSeconds)
+        assertEquals("43:00:00", dryResult.formattedCountdown)
+        assertTrue("Countdown must be strictly non-negative", dryResult.remainingSeconds >= 0L)
+
+        // Test 2.3c: Monotonicity check (countdown strictly decreases as time advances)
+        val duringFlowLater = LocalDateTime.of(2026, 10, 12, 8, 1, 0) // 1 minute later
+        val flowLaterResult = ScheduleCountdownCalculator.calculate(schedules, duringFlowLater)
+        assertEquals(flowResult.remainingSeconds - 60L, flowLaterResult.remainingSeconds)
     }
+
 
     @Test
     override fun verifyLaw3DiscreteVesselQuantization() {
