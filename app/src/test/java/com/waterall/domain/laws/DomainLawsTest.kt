@@ -59,6 +59,8 @@ class DomainLawsTest : LawsSpecificationStub {
         // 12 hrs * (400 / 24) = 200.0 Liters shortfall.
         assertEquals(200.0, result.deficitLiters, 0.001)
         assertTrue("Deficit must never be negative", result.deficitLiters >= 0.0)
+        // Recommended daily target to eliminate deficit before next supply: (400 / 36) * 24 = 266.667 L/day
+        assertEquals(266.667, result.recommendedDailyTargetLiters, 0.001)
 
         // Test 3: Zero burn rate yields infinite runout and zero deficit
         val zeroBurnResult = RunoutEstimator.calculate(

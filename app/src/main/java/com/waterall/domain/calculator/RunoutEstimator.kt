@@ -11,21 +11,28 @@ data class RunoutEstimateResult(
     val hoursUntilNextSupply: Double,
     val deficitLiters: Double,
     val isDepletedBeforeNextSupply: Boolean,
-    val safetyBufferHours: Double
+    val safetyBufferHours: Double,
+    val recommendedDailyTargetLiters: Double = if (hoursUntilNextSupply > 0.0) {
+        (currentStoredLiters / hoursUntilNextSupply) * 24.0
+    } else {
+        Double.POSITIVE_INFINITY
+    }
 ) {
     val runoutSummaryText: String
         get() = when {
             runoutHours.isInfinite() -> "Stored supply will last indefinitely (0 consumption)."
             isDepletedBeforeNextSupply -> String.format(
-                "CRITICAL DEFICIT: Reserve depletes in %.1f hrs (%.1f hrs before next supply). Estimated water shortfall: %.0f Liters.",
+                "CRITICAL DEFICIT: Reserve depletes in %.1f hrs (%.1f hrs before next supply). Estimated water shortfall: %.0f Liters. Target: ≤ %.0f L/day to avoid emergency water purchases.",
                 runoutHours,
                 -safetyBufferHours,
-                deficitLiters
+                deficitLiters,
+                recommendedDailyTargetLiters
             )
             else -> String.format(
-                "SAFE SURPLUS: Reserve lasts %.1f hrs (Buffer of +%.1f hrs after next supply window).",
+                "SAFE SURPLUS: Reserve lasts %.1f hrs (Buffer of +%.1f hrs after next supply window). Recommended daily target: ≤ %.0f L/day.",
                 runoutHours,
-                safetyBufferHours
+                safetyBufferHours,
+                recommendedDailyTargetLiters
             )
         }
 }
@@ -51,6 +58,12 @@ object RunoutEstimator {
         val capacity = inventory.totalCapacityLiters
         val stored = inventory.currentStoredVolumeLiters
 
+        val recommendedTarget = if (hoursUntilNextSupply > 0.0) {
+            (stored / hoursUntilNextSupply) * 24.0
+        } else {
+            Double.POSITIVE_INFINITY
+        }
+
         if (dailyBurnRateLiters == 0.0) {
             return RunoutEstimateResult(
                 totalCapacityLiters = capacity,
@@ -60,7 +73,8 @@ object RunoutEstimator {
                 hoursUntilNextSupply = hoursUntilNextSupply,
                 deficitLiters = 0.0,
                 isDepletedBeforeNextSupply = false,
-                safetyBufferHours = Double.POSITIVE_INFINITY
+                safetyBufferHours = Double.POSITIVE_INFINITY,
+                recommendedDailyTargetLiters = recommendedTarget
             )
         }
 
@@ -87,7 +101,27 @@ object RunoutEstimator {
             hoursUntilNextSupply = hoursUntilNextSupply,
             deficitLiters = deficitLiters,
             isDepletedBeforeNextSupply = isDepletedBefore,
-            safetyBufferHours = safetyBufferHours
+            safetyBufferHours = safetyBufferHours,
+            recommendedDailyTargetLiters = recommendedTarget
         )
     }
+
+    /**
+     * Calculates reserve runout duration and deficit interconnected with the schedule engine
+     * using [CountdownCalculationResult] from Phase 1.
+     * Auto-populates hoursUntilNextSupply from [CountdownCalculationResult.remainingHours].
+     *
+     * @param inventory Current container inventory and fill %
+     * @param dailyBurnRateLiters Household or small business consumption per 24 hours
+     * @param countdownResult Countdown calculation result from Phase 1 schedule engine
+     */
+    fun calculate(
+        inventory: StorageInventory,
+        dailyBurnRateLiters: Double,
+        countdownResult: CountdownCalculationResult
+    ): RunoutEstimateResult = calculate(
+        inventory = inventory,
+        dailyBurnRateLiters = dailyBurnRateLiters,
+        hoursUntilNextSupply = countdownResult.remainingHours
+    )
 }
