@@ -10,6 +10,7 @@ import android.widget.RadioButton
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
 import com.waterall.domain.calculator.CountdownCalculationResult
@@ -24,7 +25,6 @@ import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
-import com.waterall.domain.repository.InMemoryReportRepository
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import java.time.LocalDateTime
@@ -81,12 +81,16 @@ class MainActivity : AppCompatActivity() {
     private var selectedZone: BarangayZone = zones[0]
     private var currentUserMode: UserMode = UserMode.DOMESTIC
     private var countdownTimer: CountDownTimer? = null
-    private val reportRepository: ReportRepository = InMemoryReportRepository.createDefault()
+    private lateinit var viewModel: MainViewModel
+    private val reportRepository: ReportRepository
+        get() = viewModel.reportRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
 
         userPreferences = UserPreferences(this)
         val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
