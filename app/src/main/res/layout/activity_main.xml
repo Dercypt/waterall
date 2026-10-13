@@ -269,24 +269,75 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="10dp">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Blue Drums (200L each)"
-                            android:textSize="13sp"
-                            android:textColor="@color/slate_800" />
+                            android:orientation="vertical">
 
-                        <EditText
-                            android:id="@+id/etDrums200L"
-                            android:layout_width="80dp"
-                            android:layout_height="40dp"
-                            android:inputType="number"
-                            android:text="2"
-                            android:gravity="center"
-                            android:background="@drawable/bg_card_white" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Blue Drums"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_800" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Standard Baguio Drum (200L)"
+                                android:textSize="11sp"
+                                android:textColor="@color/slate_500" />
+                        </LinearLayout>
+
+                        <!-- Stepper controls -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:background="@drawable/bg_stepper_container"
+                            android:padding="2dp">
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnDecrementDrums200L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="−"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+
+                            <EditText
+                                android:id="@+id/etDrums200L"
+                                android:layout_width="48dp"
+                                android:layout_height="36dp"
+                                android:inputType="number"
+                                android:text="2"
+                                android:gravity="center"
+                                android:background="@android:color/transparent"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnIncrementDrums200L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="+"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 1000L Overhead Tanks -->
@@ -295,24 +346,75 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="10dp">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Overhead Tanks (1,000L each)"
-                            android:textSize="13sp"
-                            android:textColor="@color/slate_800" />
+                            android:orientation="vertical">
 
-                        <EditText
-                            android:id="@+id/etTanks1000L"
-                            android:layout_width="80dp"
-                            android:layout_height="40dp"
-                            android:inputType="number"
-                            android:text="0"
-                            android:gravity="center"
-                            android:background="@drawable/bg_card_white" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Overhead Tanks"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_800" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Stainless / Poly Tank (1,000L)"
+                                android:textSize="11sp"
+                                android:textColor="@color/slate_500" />
+                        </LinearLayout>
+
+                        <!-- Stepper controls -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:background="@drawable/bg_stepper_container"
+                            android:padding="2dp">
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnDecrementTanks1000L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="−"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+
+                            <EditText
+                                android:id="@+id/etTanks1000L"
+                                android:layout_width="48dp"
+                                android:layout_height="36dp"
+                                android:inputType="number"
+                                android:text="0"
+                                android:gravity="center"
+                                android:background="@android:color/transparent"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnIncrementTanks1000L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="+"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- 20L Slim / Gallons -->
@@ -321,24 +423,75 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="14dp">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Gallons / Containers (20L each)"
-                            android:textSize="13sp"
-                            android:textColor="@color/slate_800" />
+                            android:orientation="vertical">
 
-                        <EditText
-                            android:id="@+id/etGallons20L"
-                            android:layout_width="80dp"
-                            android:layout_height="40dp"
-                            android:inputType="number"
-                            android:text="2"
-                            android:gravity="center"
-                            android:background="@drawable/bg_card_white" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Slim Gallons / Blue Jugs"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_800" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Standard Water Container (20L)"
+                                android:textSize="11sp"
+                                android:textColor="@color/slate_500" />
+                        </LinearLayout>
+
+                        <!-- Stepper controls -->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:background="@drawable/bg_stepper_container"
+                            android:padding="2dp">
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnDecrementGallons20L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="−"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+
+                            <EditText
+                                android:id="@+id/etGallons20L"
+                                android:layout_width="48dp"
+                                android:layout_height="36dp"
+                                android:inputType="number"
+                                android:text="2"
+                                android:gravity="center"
+                                android:background="@android:color/transparent"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_900" />
+
+                            <androidx.appcompat.widget.AppCompatButton
+                                android:id="@+id/btnIncrementGallons20L"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:text="+"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_700"
+                                android:background="@drawable/bg_stepper_btn"
+                                android:gravity="center"
+                                android:padding="0dp" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <!-- Fill Slider -->
@@ -376,22 +529,59 @@
                         android:paddingEnd="8dp"
                         android:background="@drawable/bg_card_white" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Hours Until Next BWD Supply Window (hrs)"
-                        android:textSize="12sp"
-                        android:textColor="@color/slate_500"
-                        android:layout_marginTop="8dp" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="10dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Hours Until Next Supply Window (hrs)"
+                                android:textSize="12sp"
+                                android:textColor="@color/slate_500" />
+
+                            <TextView
+                                android:id="@+id/tvScheduleSyncStatus"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Auto-synced with Zone Schedule"
+                                android:textSize="10sp"
+                                android:textColor="@color/emerald_500" />
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.AppCompatButton
+                            android:id="@+id/btnSyncScheduleHours"
+                            android:layout_width="wrap_content"
+                            android:layout_height="28dp"
+                            android:text="Sync Schedule"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/slate_700"
+                            android:background="@drawable/bg_stepper_btn"
+                            android:paddingStart="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingTop="0dp"
+                            android:paddingBottom="0dp" />
+                    </LinearLayout>
 
                     <EditText
                         android:id="@+id/etHoursUntilNextSupply"
                         android:layout_width="match_parent"
                         android:layout_height="40dp"
                         android:inputType="numberDecimal"
-                        android:text="26"
+                        android:hint="Auto-calculated from schedule"
                         android:paddingStart="8dp"
                         android:paddingEnd="8dp"
+                        android:layout_marginTop="4dp"
                         android:background="@drawable/bg_card_white" />
 
                     <Button
@@ -415,14 +605,34 @@
                     android:padding="16dp"
                     android:layout_marginBottom="16dp">
 
-                    <TextView
-                        android:id="@+id/tvRunoutStatusTitle"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="SUFFICIENT RESERVE"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/emerald_500" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tvRunoutStatusBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="● SURPLUS BUFFER"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/emerald_500"
+                            android:background="@drawable/bg_pill_inactive"
+                            android:paddingStart="0dp"
+                            android:paddingEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/tvRunoutStatusTitle"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="SUFFICIENT RESERVE"
+                            android:textSize="14sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/emerald_500" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tvRunoutStatusMessage"
@@ -432,6 +642,52 @@
                         android:text="Your reserve will outlast the next BWD supply window."
                         android:textSize="13sp"
                         android:textColor="@color/slate_800" />
+
+                    <!-- Recommended Target Box -->
+                    <LinearLayout
+                        android:id="@+id/cardRecommendedTarget"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@drawable/bg_target_box_safe"
+                        android:padding="12dp"
+                        android:layout_marginTop="12dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:id="@+id/tvTargetLabel"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="RECOMMENDED DAILY TARGET"
+                                android:textSize="10sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/slate_500" />
+
+                            <TextView
+                                android:id="@+id/tvRecommendedTargetValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="≤ 160 L/day"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/emerald_500" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/tvRecommendedTargetSubtext"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Maintain consumption at or below target to preserve surplus buffer and avoid emergency water purchases."
+                            android:textSize="11sp"
+                            android:textColor="@color/slate_600" />
+                    </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"

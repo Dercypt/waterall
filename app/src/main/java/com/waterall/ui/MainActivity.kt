@@ -5,7 +5,9 @@ import android.os.CountDownTimer
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.RadioButton
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.waterall.R
@@ -109,6 +111,11 @@ class MainActivity : AppCompatActivity() {
             Tab.REPORT -> "Water Flow Ground Truth"
         }
 
+        if (tab == Tab.RESERVES) {
+            autoPopulateScheduleHours()
+            recalculateRunoutBuffer()
+        }
+
         // Highlight selected nav tab
         val activeColor = getColor(R.color.slate_900)
         val inactiveColor = getColor(R.color.slate_400)
@@ -132,6 +139,7 @@ class MainActivity : AppCompatActivity() {
                 binding.tvReportZoneName.text = selectedZone.name
                 updateScheduleCards()
                 startLiveCountdown()
+                autoPopulateScheduleHours()
                 recalculateRunoutBuffer()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -147,6 +155,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeCommercial.setTextColor(getColor(R.color.slate_700))
             updateScheduleCards()
             startLiveCountdown()
+            autoPopulateScheduleHours()
             recalculateRunoutBuffer()
         }
 
@@ -158,6 +167,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeDomestic.setTextColor(getColor(R.color.slate_700))
             updateScheduleCards()
             startLiveCountdown()
+            autoPopulateScheduleHours()
             recalculateRunoutBuffer()
         }
     }
@@ -255,9 +265,67 @@ class MainActivity : AppCompatActivity() {
 
     // --- FEATURE 2: Drum Reserve & Supply Runout Estimator (SDG 6 Exclusive) ---
     private fun setupReservesCalculator() {
+        // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
+        binding.btnDecrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, -1) }
+        binding.btnIncrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, 1) }
+
+        binding.btnDecrementTanks1000L.setOnClickListener { adjustContainerCount(binding.etTanks1000L, -1) }
+        binding.btnIncrementTanks1000L.setOnClickListener { adjustContainerCount(binding.etTanks1000L, 1) }
+
+        binding.btnDecrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, -1) }
+        binding.btnIncrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, 1) }
+
+        // Sync with Phase 1 Schedule Countdown button
+        binding.btnSyncScheduleHours.setOnClickListener {
+            autoPopulateScheduleHours()
+            recalculateRunoutBuffer()
+        }
+
+        binding.sliderFill.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) recalculateRunoutBuffer()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
         binding.btnCalculateRunout.setOnClickListener {
             recalculateRunoutBuffer()
         }
+
+        autoPopulateScheduleHours()
+        recalculateRunoutBuffer()
+    }
+
+    /**
+     * Increments or decrements container counts enforcing Law 3 discrete whole vessel quantization.
+     */
+    private fun adjustContainerCount(editText: EditText, delta: Int) {
+        val current = editText.text.toString().toIntOrNull() ?: 0
+        val updated = maxOf(0, current + delta)
+        editText.setText(updated.toString())
+        recalculateRunoutBuffer()
+    }
+
+    /**
+     * Interconnects the reserve estimator with the schedule engine from Phase 1.
+     * Auto-populates hoursUntilNextSupply from CountdownCalculationResult.remainingHours.
+     */
+    private fun autoPopulateScheduleHours() {
+        val countdown = ScheduleCountdownCalculator.calculate(
+            zone = selectedZone,
+            userMode = currentUserMode,
+            currentTime = LocalDateTime.now()
+        )
+        binding.etHoursUntilNextSupply.setText(
+            String.format(Locale.US, "%.1f", countdown.remainingHours)
+        )
+        binding.tvScheduleSyncStatus.text = String.format(
+            Locale.US,
+            "Synced: %.1f hrs (%s)",
+            countdown.remainingHours,
+            countdown.flowState.badgeLabel
+        )
     }
 
     private fun recalculateRunoutBuffer() {
@@ -266,8 +334,16 @@ class MainActivity : AppCompatActivity() {
         val gallonsCount = binding.etGallons20L.text.toString().toIntOrNull() ?: 2
         val fillPercent = binding.sliderFill.progress.toDouble().coerceIn(0.0, 100.0)
 
-        val dailyBurn = binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 250.0
-        val nextSupplyHours = binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull() ?: 26.0
+        val dailyBurn = binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0
+
+        // Auto-fallback to Phase 1 remainingHours if input is blank
+        val countdown = ScheduleCountdownCalculator.calculate(
+            zone = selectedZone,
+            userMode = currentUserMode,
+            currentTime = LocalDateTime.now()
+        )
+        val nextSupplyHours = binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
+            ?: countdown.remainingHours
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
@@ -286,25 +362,70 @@ class MainActivity : AppCompatActivity() {
         binding.tvStoredCurrentVolume.text = String.format(Locale.US, "%.0f L", result.currentStoredLiters)
         binding.tvRunoutHoursValue.text = if (result.runoutHours.isInfinite()) "∞ hrs" else String.format(Locale.US, "%.1f hrs", result.runoutHours)
 
+        // Visual status color transition: Emerald for Surplus Buffer vs. Rose for Deficit Risk
         if (result.isDepletedBeforeNextSupply) {
+            // Deficit Risk (Rose)
             binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_danger)
-            binding.tvRunoutStatusTitle.text = "DEFICIT WARNING"
+            binding.tvRunoutStatusBadge.text = "● DEFICIT RISK"
+            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.rose_500))
+            binding.tvRunoutStatusTitle.text = String.format(Locale.US, "DEFICIT RISK (%.0f L Shortfall)", result.deficitLiters)
             binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.rose_500))
             binding.tvRunoutStatusMessage.text = String.format(
                 Locale.US,
-                "Reserves run dry %.1f hrs BEFORE the next BWD supply window. Estimated water shortfall: %.0f Liters. Reduce consumption immediately!",
+                "Reserves run dry %.1f hrs BEFORE the next BWD supply window. Estimated water shortfall: %.0f Liters.",
                 -result.safetyBufferHours,
                 result.deficitLiters
             )
-        } else {
-            binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_safe)
-            binding.tvRunoutStatusTitle.text = "SUFFICIENT RESERVE"
-            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.emerald_500))
-            binding.tvRunoutStatusMessage.text = String.format(
+
+            // Recommended Daily Consumption Target to avoid emergency water purchases
+            binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_danger)
+            binding.tvTargetLabel.setTextColor(getColor(R.color.rose_500))
+            binding.tvRecommendedTargetValue.text = String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
+            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.rose_500))
+            binding.tvRecommendedTargetSubtext.text = String.format(
                 Locale.US,
-                "Your stored reserve will outlast the next BWD supply window with a surplus safety buffer of +%.1f hrs.",
-                result.safetyBufferHours
+                "Reduce daily consumption from %.0f L/day to at most %.0f L/day to avoid running out and eliminate emergency water purchases.",
+                result.dailyBurnRateLiters,
+                result.recommendedDailyTargetLiters
             )
+        } else {
+            // Surplus Buffer (Emerald)
+            binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_safe)
+            binding.tvRunoutStatusBadge.text = "● SURPLUS BUFFER"
+            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.emerald_500))
+            val bufferLabel = if (result.safetyBufferHours.isInfinite()) "Infinite" else String.format(Locale.US, "+%.1f hrs", result.safetyBufferHours)
+            binding.tvRunoutStatusTitle.text = "SURPLUS BUFFER ($bufferLabel)"
+            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.emerald_500))
+            binding.tvRunoutStatusMessage.text = if (result.safetyBufferHours.isInfinite()) {
+                "Zero consumption rate. Stored reserve will last indefinitely."
+            } else {
+                String.format(
+                    Locale.US,
+                    "Your stored reserve will outlast the next BWD supply window with a surplus safety buffer of +%.1f hrs.",
+                    result.safetyBufferHours
+                )
+            }
+
+            // Recommended Daily Consumption Target
+            binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_safe)
+            binding.tvTargetLabel.setTextColor(getColor(R.color.slate_500))
+            val targetStr = if (result.recommendedDailyTargetLiters.isInfinite()) {
+                "Unrestricted"
+            } else {
+                String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
+            }
+            binding.tvRecommendedTargetValue.text = targetStr
+            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.emerald_500))
+            binding.tvRecommendedTargetSubtext.text = if (result.recommendedDailyTargetLiters.isInfinite()) {
+                "Supply window is currently active. Refill stored containers now."
+            } else {
+                String.format(
+                    Locale.US,
+                    "Maintain consumption at or below %.0f L/day (current: %.0f L/day) to sustain your buffer and avoid emergency water purchases.",
+                    result.recommendedDailyTargetLiters,
+                    result.dailyBurnRateLiters
+                )
+            }
         }
     }
 
