@@ -209,6 +209,105 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
+                <!-- Crowdsourced Zone Consensus Card -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="COMMUNITY GROUND TRUTH"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/slate_400"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp" />
+
+                <LinearLayout
+                    android:id="@+id/cardZoneConsensus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_white"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <!-- Header Row: Status Badge & Relative Timestamp -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp">
+
+                        <TextView
+                            android:id="@+id/tvConsensusBadge"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="● CROWDSOURCED CONSENSUS"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/emerald_500" />
+
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_height="1dp"
+                            android:layout_weight="1" />
+
+                        <TextView
+                            android:id="@+id/tvConsensusTimestamp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reported 12m ago"
+                            android:textSize="11sp"
+                            android:textColor="@color/slate_400" />
+                    </LinearLayout>
+
+                    <!-- Summary Headline -->
+                    <TextView
+                        android:id="@+id/tvConsensusSummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/slate_800"
+                        android:layout_marginBottom="6dp" />
+
+                    <!-- Details / Latest Verification note -->
+                    <TextView
+                        android:id="@+id/tvConsensusDetails"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Latest report: Water Running (Strong Flow) • Reported 12m ago"
+                        android:textSize="12sp"
+                        android:textColor="@color/slate_600"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Immediate UI Acknowledgment Banner -->
+                    <TextView
+                        android:id="@+id/tvConsensusAcknowledgment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_card_safe"
+                        android:padding="8dp"
+                        android:text="✓ Ground truth submitted! Recalibrating distribution model..."
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/emerald_500"
+                        android:visibility="gone"
+                        android:layout_marginBottom="10dp" />
+
+                    <!-- Quick Action: Report Tap Flow Ground Truth -->
+                    <Button
+                        android:id="@+id/btnQuickReport"
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:text="Report Tap Flow Ground Truth"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:background="@drawable/bg_pill_inactive"
+                        android:textColor="@color/slate_700" />
+
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- ================= 2. RESERVES VIEW (SDG 6 Exclusive Feature) ================= -->

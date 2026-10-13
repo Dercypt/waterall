@@ -16,12 +16,16 @@ import com.waterall.domain.calculator.CountdownCalculationResult
 import com.waterall.domain.calculator.RunoutEstimator
 import com.waterall.domain.calculator.ScheduleCountdownCalculator
 import com.waterall.domain.calculator.ScheduleFlowState
+import com.waterall.domain.calculator.ZoneConsensus
+import com.waterall.domain.calculator.ZoneConsensusCalculator
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
+import com.waterall.domain.repository.InMemoryReportRepository
+import com.waterall.domain.repository.ReportRepository
 import java.time.LocalDateTime
 import java.util.Locale
 
@@ -74,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedZone: BarangayZone = zones[0]
     private var currentUserMode: UserMode = UserMode.DOMESTIC
     private var countdownTimer: CountDownTimer? = null
-
+    private val reportRepository: ReportRepository = InMemoryReportRepository.createDefault()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,7 +91,13 @@ class MainActivity : AppCompatActivity() {
         startLiveCountdown()
         setupReservesCalculator()
         setupReportFeature()
+        updateConsensusCard()
+
+        binding.btnQuickReport.setOnClickListener {
+            switchTab(Tab.REPORT)
+        }
     }
+
 
     private fun setupBottomNavigation() {
         binding.navCalendar.setOnClickListener { switchTab(Tab.CALENDAR) }
@@ -111,9 +121,17 @@ class MainActivity : AppCompatActivity() {
             Tab.REPORT -> "Water Flow Ground Truth"
         }
 
+        if (tab == Tab.CALENDAR) {
+            updateConsensusCard()
+        }
+
         if (tab == Tab.RESERVES) {
             autoPopulateScheduleHours()
             recalculateRunoutBuffer()
+        }
+
+        if (tab == Tab.REPORT) {
+            binding.tvReportZoneName.text = selectedZone.name
         }
 
         // Highlight selected nav tab
@@ -141,10 +159,13 @@ class MainActivity : AppCompatActivity() {
                 startLiveCountdown()
                 autoPopulateScheduleHours()
                 recalculateRunoutBuffer()
+                updateConsensusCard()
+                binding.tvConsensusAcknowledgment.visibility = View.GONE
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
+
 
     private fun setupModeToggle() {
         binding.btnModeDomestic.setOnClickListener {
@@ -446,27 +467,86 @@ class MainActivity : AppCompatActivity() {
                 else -> TapFlowStatus.DRY
             }
 
-            val notes = binding.etReportNotes.text.toString()
+            val notes = binding.etReportNotes.text.toString().trim()
             val report = GroundTruthReport(
                 id = "rep_${System.currentTimeMillis()}",
                 zoneId = selectedZone.id,
                 zoneName = selectedZone.name,
                 status = status,
-                notes = notes
+                notes = notes,
+                timestamp = System.currentTimeMillis()
             )
 
-            // Feedback Toast & switch back to calendar view
+            // Feed report into the in-memory repository to close the feedback loop
+            reportRepository.addReport(report)
+
+            // Immediate UI acknowledgment: Toast notification and consensus card confirmation
             Toast.makeText(
                 this,
                 "Ground truth submitted for ${report.zoneName}: ${report.status.label}! Recalibrating distribution model...",
                 Toast.LENGTH_LONG
             ).show()
 
+            binding.tvConsensusAcknowledgment.visibility = View.VISIBLE
+            binding.tvConsensusAcknowledgment.text =
+                "✓ Ground truth recorded for ${selectedZone.name}: ${report.status.label}! Status refreshed."
+
             binding.etReportNotes.setText("")
             binding.rgWaterStatus.clearCheck()
+
+            // Immediate status refresh on user's view
+            updateConsensusCard()
             switchTab(Tab.CALENDAR)
         }
     }
+
+    /**
+     * Refreshes the in-memory zone consensus card beneath the schedule,
+     * computing verified report distribution, dominant status, and relative timestamp.
+     */
+    private fun updateConsensusCard() {
+        val consensus = reportRepository.getConsensus(
+            zoneId = selectedZone.id,
+            zoneName = selectedZone.name,
+            currentTimeMillis = System.currentTimeMillis()
+        )
+
+        binding.tvConsensusSummary.text = consensus.summaryText
+
+        if (consensus.totalReports == 0) {
+            binding.tvConsensusBadge.text = "● NO REPORTS"
+            binding.tvConsensusBadge.setTextColor(getColor(R.color.slate_400))
+            binding.tvConsensusTimestamp.text = "No reports today"
+            binding.tvConsensusDetails.text = "Be the first resident to submit ground truth for this zone."
+        } else {
+            val latest = consensus.latestReport
+            val relativeTime = consensus.formattedRelativeTime ?: "Recently"
+            binding.tvConsensusTimestamp.text = relativeTime
+
+            val dominant = consensus.dominantStatus
+            val badgeColor = when (dominant) {
+                TapFlowStatus.RUNNING -> getColor(R.color.emerald_500)
+                TapFlowStatus.LOW_PRESSURE -> getColor(R.color.amber_500)
+                TapFlowStatus.DRY -> getColor(R.color.rose_500)
+                null -> getColor(R.color.slate_400)
+            }
+            val dominantPct = dominant?.let { consensus.statusPercentages[it] } ?: 0
+            val dominantLabel = dominant?.let {
+                when (it) {
+                    TapFlowStatus.RUNNING -> "RUNNING"
+                    TapFlowStatus.LOW_PRESSURE -> "LOW PRESSURE"
+                    TapFlowStatus.DRY -> "DRY"
+                }
+            } ?: "CONSENSUS"
+
+            binding.tvConsensusBadge.text = "● $dominantPct% $dominantLabel"
+            binding.tvConsensusBadge.setTextColor(badgeColor)
+
+            val notesStr = if (!latest?.notes.isNullOrBlank()) " (\"${latest?.notes}\")" else ""
+            binding.tvConsensusDetails.text = "Latest: ${latest?.status?.label ?: "Unknown"}$notesStr • $relativeTime"
+        }
+    }
+
 
     override fun onStart() {
         super.onStart()
