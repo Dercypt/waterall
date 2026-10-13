@@ -128,8 +128,8 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvScreenTitle.text = when (tab) {
             Tab.CALENDAR -> getString(R.string.title_hydro_track)
-            Tab.RESERVES -> "Drum Reserve & Runout"
-            Tab.REPORT -> "Water Flow Ground Truth"
+            Tab.RESERVES -> "Reserves"
+            Tab.REPORT -> "Report"
         }
 
         if (tab == Tab.CALENDAR) {
@@ -146,8 +146,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Highlight selected nav tab
-        val activeColor = getColor(R.color.slate_900)
-        val inactiveColor = getColor(R.color.slate_400)
+        val activeColor = getColor(R.color.ink)
+        val inactiveColor = getColor(R.color.ink_faint)
 
         binding.tvNavCalendar.setTextColor(if (tab == Tab.CALENDAR) activeColor else inactiveColor)
         binding.tvNavReserves.setTextColor(if (tab == Tab.RESERVES) activeColor else inactiveColor)
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_active)
             binding.btnModeDomestic.setTextColor(getColor(R.color.white))
             binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeCommercial.setTextColor(getColor(R.color.slate_700))
+            binding.btnModeCommercial.setTextColor(getColor(R.color.ink_soft))
             updateScheduleCards()
             startLiveCountdown()
             autoPopulateScheduleHours()
@@ -200,7 +200,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_active)
             binding.btnModeCommercial.setTextColor(getColor(R.color.white))
             binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeDomestic.setTextColor(getColor(R.color.slate_700))
+            binding.btnModeDomestic.setTextColor(getColor(R.color.ink_soft))
             updateScheduleCards()
             startLiveCountdown()
             autoPopulateScheduleHours()
@@ -310,14 +310,14 @@ class MainActivity : AppCompatActivity() {
 
         when (result.flowState) {
             ScheduleFlowState.FLOW_ACTIVE -> {
-                binding.tvFlowBadge.text = "FLOW ACTIVE"
-                binding.tvFlowBadge.setTextColor(getColor(R.color.emerald_400))
+                binding.tvFlowBadge.text = "Flow active"
+                binding.tvFlowBadge.setTextColor(getColor(R.color.status_ok))
                 binding.flowPulseDot.setBackgroundResource(R.drawable.bg_dot_active)
                 binding.tvCountdownSubtext.text = "Remaining supply window time"
             }
             ScheduleFlowState.RATIONING_ACTIVE -> {
-                binding.tvFlowBadge.text = "RATIONING ACTIVE"
-                binding.tvFlowBadge.setTextColor(getColor(R.color.amber_500))
+                binding.tvFlowBadge.text = "Rationing"
+                binding.tvFlowBadge.setTextColor(getColor(R.color.status_warn))
                 binding.flowPulseDot.setBackgroundResource(R.drawable.bg_dot_inactive)
                 binding.tvCountdownSubtext.text = "Time until next supply window"
             }
@@ -390,7 +390,7 @@ class MainActivity : AppCompatActivity() {
         )
         binding.tvScheduleSyncStatus.text = String.format(
             Locale.US,
-            "Synced: %.1f hrs (%s)",
+            "Synced · %.1f hrs · %s",
             countdown.remainingHours,
             countdown.flowState.badgeLabel
         )
@@ -432,68 +432,68 @@ class MainActivity : AppCompatActivity() {
 
         binding.tvStoredTotalCapacity.text = String.format(Locale.US, "%.0f L", result.totalCapacityLiters)
         binding.tvStoredCurrentVolume.text = String.format(Locale.US, "%.0f L", result.currentStoredLiters)
-        binding.tvRunoutHoursValue.text = if (result.runoutHours.isInfinite()) "∞ hrs" else String.format(Locale.US, "%.1f hrs", result.runoutHours)
+        binding.tvRunoutHoursValue.text = if (result.runoutHours.isInfinite()) "∞" else String.format(Locale.US, "%.1f hrs", result.runoutHours)
 
         // Visual status color transition: Emerald for Surplus Buffer vs. Rose for Deficit Risk
         if (result.isDepletedBeforeNextSupply) {
             // Deficit Risk (Rose)
             binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_danger)
-            binding.tvRunoutStatusBadge.text = "● DEFICIT RISK"
-            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.rose_500))
-            binding.tvRunoutStatusTitle.text = String.format(Locale.US, "DEFICIT RISK (%.0f L Shortfall)", result.deficitLiters)
-            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.rose_500))
+            binding.tvRunoutStatusBadge.text = "Deficit risk"
+            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.status_alert))
+            binding.tvRunoutStatusTitle.text = String.format(Locale.US, "%.0f L short", result.deficitLiters)
+            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.status_alert))
             binding.tvRunoutStatusMessage.text = String.format(
                 Locale.US,
-                "Reserves run dry %.1f hrs BEFORE the next BWD supply window. Estimated water shortfall: %.0f Liters.",
+                "Reserves run dry %.1f hrs before the next supply window, leaving a %.0f L shortfall.",
                 -result.safetyBufferHours,
                 result.deficitLiters
             )
 
             // Recommended Daily Consumption Target to avoid emergency water purchases
             binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_danger)
-            binding.tvTargetLabel.setTextColor(getColor(R.color.rose_500))
+            binding.tvTargetLabel.setTextColor(getColor(R.color.status_alert))
             binding.tvRecommendedTargetValue.text = String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
-            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.rose_500))
+            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.status_alert))
             binding.tvRecommendedTargetSubtext.text = String.format(
                 Locale.US,
-                "Reduce daily consumption from %.0f L/day to at most %.0f L/day to avoid running out and eliminate emergency water purchases.",
+                "Reduce use from %.0f to %.0f L/day to avoid running out.",
                 result.dailyBurnRateLiters,
                 result.recommendedDailyTargetLiters
             )
         } else {
             // Surplus Buffer (Emerald)
             binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_safe)
-            binding.tvRunoutStatusBadge.text = "● SURPLUS BUFFER"
-            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.emerald_500))
-            val bufferLabel = if (result.safetyBufferHours.isInfinite()) "Infinite" else String.format(Locale.US, "+%.1f hrs", result.safetyBufferHours)
-            binding.tvRunoutStatusTitle.text = "SURPLUS BUFFER ($bufferLabel)"
-            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.emerald_500))
+            binding.tvRunoutStatusBadge.text = "Surplus"
+            binding.tvRunoutStatusBadge.setTextColor(getColor(R.color.status_ok))
+            val bufferLabel = if (result.safetyBufferHours.isInfinite()) "Indefinite" else String.format(Locale.US, "+%.1f hrs", result.safetyBufferHours)
+            binding.tvRunoutStatusTitle.text = bufferLabel
+            binding.tvRunoutStatusTitle.setTextColor(getColor(R.color.status_ok))
             binding.tvRunoutStatusMessage.text = if (result.safetyBufferHours.isInfinite()) {
-                "Zero consumption rate. Stored reserve will last indefinitely."
+                "No consumption set. Stored water lasts indefinitely."
             } else {
                 String.format(
                     Locale.US,
-                    "Your stored reserve will outlast the next BWD supply window with a surplus safety buffer of +%.1f hrs.",
+                    "Stored water outlasts the next supply window by %.1f hrs.",
                     result.safetyBufferHours
                 )
             }
 
             // Recommended Daily Consumption Target
             binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_safe)
-            binding.tvTargetLabel.setTextColor(getColor(R.color.slate_500))
+            binding.tvTargetLabel.setTextColor(getColor(R.color.ink_muted))
             val targetStr = if (result.recommendedDailyTargetLiters.isInfinite()) {
                 "Unrestricted"
             } else {
                 String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
             }
             binding.tvRecommendedTargetValue.text = targetStr
-            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.emerald_500))
+            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.status_ok))
             binding.tvRecommendedTargetSubtext.text = if (result.recommendedDailyTargetLiters.isInfinite()) {
-                "Supply window is currently active. Refill stored containers now."
+                "Supply window is active. Refill containers now."
             } else {
                 String.format(
                     Locale.US,
-                    "Maintain consumption at or below %.0f L/day (current: %.0f L/day) to sustain your buffer and avoid emergency water purchases.",
+                    "Stay at or below %.0f L/day (currently %.0f) to keep your buffer.",
                     result.recommendedDailyTargetLiters,
                     result.dailyBurnRateLiters
                 )
@@ -508,7 +508,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnSubmitReport.setOnClickListener {
             val selectedRadioId = binding.rgWaterStatus.checkedRadioButtonId
             if (selectedRadioId == -1) {
-                Toast.makeText(this, "Please select the current water status at your tap.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Select the water status at your tap.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -534,13 +534,13 @@ class MainActivity : AppCompatActivity() {
             // Immediate UI acknowledgment: Toast notification and consensus card confirmation
             Toast.makeText(
                 this,
-                "Ground truth submitted for ${report.zoneName}: ${report.status.label}! Recalibrating distribution model...",
+                "Report submitted for ${report.zoneName}",
                 Toast.LENGTH_LONG
             ).show()
 
             binding.tvConsensusAcknowledgment.visibility = View.VISIBLE
             binding.tvConsensusAcknowledgment.text =
-                "✓ Ground truth recorded for ${selectedZone.name}: ${report.status.label}! Status refreshed."
+                "Report recorded: ${report.status.label}. Status refreshed."
 
             binding.etReportNotes.setText("")
             binding.rgWaterStatus.clearCheck()
@@ -565,10 +565,10 @@ class MainActivity : AppCompatActivity() {
         binding.tvConsensusSummary.text = consensus.summaryText
 
         if (consensus.totalReports == 0) {
-            binding.tvConsensusBadge.text = "● NO REPORTS"
-            binding.tvConsensusBadge.setTextColor(getColor(R.color.slate_400))
-            binding.tvConsensusTimestamp.text = "No reports today"
-            binding.tvConsensusDetails.text = "Be the first resident to submit ground truth for this zone."
+            binding.tvConsensusBadge.text = "No reports"
+            binding.tvConsensusBadge.setTextColor(getColor(R.color.ink_muted))
+            binding.tvConsensusTimestamp.text = "Today"
+            binding.tvConsensusDetails.text = "Be the first to report for this zone."
         } else {
             val latest = consensus.latestReport
             val relativeTime = consensus.formattedRelativeTime ?: "Recently"
@@ -576,10 +576,10 @@ class MainActivity : AppCompatActivity() {
 
             val dominant = consensus.dominantStatus
             val badgeColor = when (dominant) {
-                TapFlowStatus.RUNNING -> getColor(R.color.emerald_500)
-                TapFlowStatus.LOW_PRESSURE -> getColor(R.color.amber_500)
-                TapFlowStatus.DRY -> getColor(R.color.rose_500)
-                null -> getColor(R.color.slate_400)
+                TapFlowStatus.RUNNING -> getColor(R.color.status_ok)
+                TapFlowStatus.LOW_PRESSURE -> getColor(R.color.status_warn)
+                TapFlowStatus.DRY -> getColor(R.color.status_alert)
+                null -> getColor(R.color.ink_muted)
             }
             val dominantPct = dominant?.let { consensus.statusPercentages[it] } ?: 0
             val dominantLabel = dominant?.let {
@@ -590,11 +590,11 @@ class MainActivity : AppCompatActivity() {
                 }
             } ?: "CONSENSUS"
 
-            binding.tvConsensusBadge.text = "● $dominantPct% $dominantLabel"
+            binding.tvConsensusBadge.text = "$dominantPct% $dominantLabel"
             binding.tvConsensusBadge.setTextColor(badgeColor)
 
             val notesStr = if (!latest?.notes.isNullOrBlank()) " (\"${latest?.notes}\")" else ""
-            binding.tvConsensusDetails.text = "Latest: ${latest?.status?.label ?: "Unknown"}$notesStr • $relativeTime"
+            binding.tvConsensusDetails.text = "Latest: ${latest?.status?.label ?: "Unknown"}$notesStr · $relativeTime"
         }
     }
 
