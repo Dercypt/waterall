@@ -10,14 +10,19 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
+import com.waterall.domain.calculator.CountdownCalculationResult
 import com.waterall.domain.calculator.RunoutEstimator
+import com.waterall.domain.calculator.ScheduleCountdownCalculator
+import com.waterall.domain.calculator.ScheduleFlowState
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
+import java.time.LocalDateTime
 import java.util.Locale
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -67,7 +72,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedZone: BarangayZone = zones[0]
     private var currentUserMode: UserMode = UserMode.DOMESTIC
     private var countdownTimer: CountDownTimer? = null
-    private var remainingSupplySeconds: Long = 2 * 3600 + 47 * 60 + 13 // 02:47:13 initial mock
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                 selectedZone = zones[position]
                 binding.tvReportZoneName.text = selectedZone.name
                 updateScheduleCards()
+                startLiveCountdown()
                 recalculateRunoutBuffer()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -140,6 +146,7 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_inactive)
             binding.btnModeCommercial.setTextColor(getColor(R.color.slate_700))
             updateScheduleCards()
+            startLiveCountdown()
             recalculateRunoutBuffer()
         }
 
@@ -150,9 +157,11 @@ class MainActivity : AppCompatActivity() {
             binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_inactive)
             binding.btnModeDomestic.setTextColor(getColor(R.color.slate_700))
             updateScheduleCards()
+            startLiveCountdown()
             recalculateRunoutBuffer()
         }
     }
+
 
     private fun updateScheduleCards() {
         val schedules = if (currentUserMode == UserMode.DOMESTIC) {
@@ -195,7 +204,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun startLiveCountdown() {
         countdownTimer?.cancel()
-        countdownTimer = object : CountDownTimer(remainingSupplySeconds * 1000L, 1000L) {
+
+        val calculation = ScheduleCountdownCalculator.calculate(
+            zone = selectedZone,
+            userMode = currentUserMode,
+            currentTime = LocalDateTime.now()
+        )
+
+        updateCountdownUi(calculation)
+
+        if (calculation.remainingSeconds <= 0L) {
+            return
+        }
+
+        countdownTimer = object : CountDownTimer(calculation.remainingSeconds * 1000L, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
                 val totalSecs = millisUntilFinished / 1000L
                 val hrs = totalSecs / 3600
@@ -205,12 +227,31 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFinish() {
-                binding.tvCountdownTimer.text = "00:00:00"
-                binding.tvFlowBadge.text = "FLOW INACTIVE"
-                binding.flowPulseDot.setBackgroundResource(R.drawable.bg_dot_inactive)
+                // Law 2 Invariant 3: Deterministic transition to next state upon expiry
+                startLiveCountdown()
             }
         }.start()
     }
+
+    private fun updateCountdownUi(result: CountdownCalculationResult) {
+        binding.tvCountdownTimer.text = result.formattedCountdown
+
+        when (result.flowState) {
+            ScheduleFlowState.FLOW_ACTIVE -> {
+                binding.tvFlowBadge.text = "FLOW ACTIVE"
+                binding.tvFlowBadge.setTextColor(getColor(R.color.emerald_400))
+                binding.flowPulseDot.setBackgroundResource(R.drawable.bg_dot_active)
+                binding.tvCountdownSubtext.text = "Remaining supply window time"
+            }
+            ScheduleFlowState.RATIONING_ACTIVE -> {
+                binding.tvFlowBadge.text = "RATIONING ACTIVE"
+                binding.tvFlowBadge.setTextColor(getColor(R.color.amber_500))
+                binding.flowPulseDot.setBackgroundResource(R.drawable.bg_dot_inactive)
+                binding.tvCountdownSubtext.text = "Time until next supply window"
+            }
+        }
+    }
+
 
     // --- FEATURE 2: Drum Reserve & Supply Runout Estimator (SDG 6 Exclusive) ---
     private fun setupReservesCalculator() {
@@ -306,8 +347,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        startLiveCountdown()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        countdownTimer?.cancel()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         countdownTimer?.cancel()
     }
 }
+
