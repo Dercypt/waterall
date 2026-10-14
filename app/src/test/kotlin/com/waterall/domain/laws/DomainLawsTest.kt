@@ -229,6 +229,7 @@ class DomainLawsTest : LawsSpecificationStub {
         val flowResult = ScheduleCountdownCalculator.calculate(schedules, duringFlow)
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, flowResult.flowState)
         assertEquals(2 * 3600L, flowResult.remainingSeconds) // 2 hours until 10:00 AM closure
+        assertEquals(45.0, flowResult.hoursUntilNextOpening, 0.001) // 45 hours until Wednesday 05:00 AM opening
         assertEquals("02:00:00", flowResult.formattedCountdown)
         assertTrue("Countdown must be strictly non-negative", flowResult.remainingSeconds >= 0L)
 
@@ -238,6 +239,7 @@ class DomainLawsTest : LawsSpecificationStub {
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, dryResult.flowState)
         // Ticks toward Wednesday 05:00 AM opening (43 hours away)
         assertEquals(43 * 3600L, dryResult.remainingSeconds)
+        assertEquals(43.0, dryResult.hoursUntilNextOpening, 0.001)
         assertEquals("43:00:00", dryResult.formattedCountdown)
         assertTrue("Countdown must be strictly non-negative", dryResult.remainingSeconds >= 0L)
 

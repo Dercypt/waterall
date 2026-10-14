@@ -40,6 +40,38 @@ class RunoutEstimatorTest {
     }
 
     @Test
+    fun testInterconnectionDuringActiveFlowUsesHoursUntilNextOpening() {
+        // Reserve: 200L (1 drum full). Daily burn: 240 L/day (10 L/hr -> 20.0 hours of reserve)
+        val inventory = StorageInventory(
+            blueDrums200L = 1,
+            fillPercentage = 100.0
+        )
+        // Active window has 2.0 hours left until shutoff, but next supply window opening is in 45.0 hours
+        val activeFlowCountdown = CountdownCalculationResult(
+            flowState = ScheduleFlowState.FLOW_ACTIVE,
+            remainingSeconds = 2 * 3600L,
+            targetDateTime = LocalDateTime.now().plusHours(2),
+            activeWindow = null,
+            nextWindow = null,
+            hoursUntilNextOpening = 45.0
+        )
+
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 240.0,
+            countdownResult = activeFlowCountdown
+        )
+
+        // Must evaluate against next supply opening (45.0 hrs), NOT window shutoff (2.0 hrs)
+        assertEquals(45.0, result.hoursUntilNextSupply, 0.001)
+        assertEquals(20.0, result.runoutHours, 0.001)
+        assertTrue(result.isDepletedBeforeNextSupply)
+        assertEquals(25.0, -result.safetyBufferHours, 0.001)
+        // Shortfall: 25 hrs * 10 L/hr = 250 L deficit
+        assertEquals(250.0, result.deficitLiters, 0.001)
+    }
+
+    @Test
     fun testRecommendedDailyTargetEliminatesDeficit() {
         // Reserve: 2 drums = 400L. Next supply in 40 hours.
         // Current consumption: 300 L/day (which runs out in 32 hrs -> 8 hrs shortfall).
