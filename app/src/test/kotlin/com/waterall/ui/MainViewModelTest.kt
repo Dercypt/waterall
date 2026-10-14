@@ -9,8 +9,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit test verifying [MainViewModel] preserves [com.waterall.domain.repository.ReportRepository] state
- * across ViewModel lifecycle and consumer usage.
+ * Unit test verifying [MainViewModel] preserves [com.waterall.domain.repository.ReportRepository]
+ * and UI state (selectedZone, selectedFillPercentage, dailyConsumption) across ViewModel lifecycle
+ * and configuration changes.
  */
 class MainViewModelTest {
 
@@ -70,5 +71,75 @@ class MainViewModelTest {
         val created = MainViewModel.Factory.create(MainViewModel::class.java)
         assertNotNull(created)
         assertTrue(created.reportRepository.getAllReports().isEmpty())
+    }
+
+    @Test
+    fun testInitialUiStateDefaults() {
+        val viewModel = MainViewModel()
+        assertEquals(MainViewModel.DEFAULT_ZONES[0], viewModel.selectedZone.value)
+        assertEquals(0.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
+    }
+
+    @Test
+    fun testSetSelectedZoneUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        val targetZone = MainViewModel.DEFAULT_ZONES[1]
+        viewModel.setSelectedZone(targetZone)
+
+        assertEquals(targetZone, viewModel.selectedZone.value)
+    }
+
+    @Test
+    fun testSetSelectedFillPercentageUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        viewModel.setSelectedFillPercentage(50.0)
+        assertEquals(50.0, viewModel.selectedFillPercentage.value, 0.001)
+
+        // Test clamping bounds
+        viewModel.setSelectedFillPercentage(120.0)
+        assertEquals(100.0, viewModel.selectedFillPercentage.value, 0.001)
+
+        viewModel.setSelectedFillPercentage(-10.0)
+        assertEquals(0.0, viewModel.selectedFillPercentage.value, 0.001)
+    }
+
+    @Test
+    fun testSetDailyConsumptionUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        viewModel.setDailyConsumption(75.5)
+        assertEquals(75.5, viewModel.dailyConsumption.value, 0.001)
+
+        // Coerce negative consumption to 0.0
+        viewModel.setDailyConsumption(-25.0)
+        assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
+    }
+
+    @Test
+    fun testUiStatePreservationAcrossSimulatedConfigurationChange() {
+        val viewModel = MainViewModel()
+        val selectedZone = MainViewModel.DEFAULT_ZONES[2]
+        viewModel.setSelectedZone(selectedZone)
+        viewModel.setSelectedFillPercentage(75.0)
+        viewModel.setDailyConsumption(120.0)
+
+        // Simulate activity recreation retrieving the existing ViewModel instance
+        assertEquals(selectedZone, viewModel.selectedZone.value)
+        assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(120.0, viewModel.dailyConsumption.value, 0.001)
+    }
+
+    @Test
+    fun testCustomInitialValues() {
+        val zone = MainViewModel.DEFAULT_ZONES[1]
+        val viewModel = MainViewModel(
+            initialZone = zone,
+            initialFillPercentage = 50.0,
+            initialDailyConsumption = 80.0
+        )
+
+        assertEquals(zone, viewModel.selectedZone.value)
+        assertEquals(50.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(80.0, viewModel.dailyConsumption.value, 0.001)
     }
 }
