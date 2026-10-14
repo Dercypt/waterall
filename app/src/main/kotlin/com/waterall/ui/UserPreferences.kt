@@ -80,8 +80,8 @@ class UserPreferences(private val storage: PreferenceStorage) {
         const val KEY_GALLONS_20L = "gallons_20l_count"
 
         const val DEFAULT_ZONE_ID = "brgy4"
-        const val DEFAULT_DRUMS = 2
+        const val DEFAULT_DRUMS = 0
         const val DEFAULT_TANKS = 0
-        const val DEFAULT_GALLONS = 2
+        const val DEFAULT_GALLONS = 0
     }
 }

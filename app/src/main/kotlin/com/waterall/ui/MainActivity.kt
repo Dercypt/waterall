@@ -9,6 +9,7 @@ import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
@@ -77,7 +78,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     private var selectedZone: BarangayZone = zones[0]
-    private var selectedFillPercentage: Double = 100.0
+    private var selectedFillPercentage: Double = 0.0
     private var countdownTimer: CountDownTimer? = null
     private lateinit var viewModel: MainViewModel
     private val reportRepository: ReportRepository
@@ -295,6 +296,7 @@ class MainActivity : AppCompatActivity() {
         binding.etDrums200L.setText(userPreferences.drums200LCount.toString())
         binding.etTanks1000L.setText(userPreferences.tanks1000LCount.toString())
         binding.etGallons20L.setText(userPreferences.gallons20LCount.toString())
+        binding.etDailyConsumption.setText("0")
 
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
         binding.btnDecrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, -1) }
@@ -306,6 +308,26 @@ class MainActivity : AppCompatActivity() {
         binding.btnDecrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, -1) }
         binding.btnIncrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, 1) }
 
+        // Live text watchers for automatic real-time calculation as inputs change
+        binding.etDrums200L.doAfterTextChanged {
+            persistContainerCounts()
+            recalculateRunoutBuffer()
+        }
+        binding.etTanks1000L.doAfterTextChanged {
+            persistContainerCounts()
+            recalculateRunoutBuffer()
+        }
+        binding.etGallons20L.doAfterTextChanged {
+            persistContainerCounts()
+            recalculateRunoutBuffer()
+        }
+        binding.etDailyConsumption.doAfterTextChanged {
+            recalculateRunoutBuffer()
+        }
+        binding.etHoursUntilNextSupply.doAfterTextChanged {
+            recalculateRunoutBuffer()
+        }
+
         // Sync with Phase 1 Schedule Countdown button
         binding.btnSyncScheduleHours.setOnClickListener {
             autoPopulateScheduleHours()
@@ -313,11 +335,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupFillLevelPresets()
-
-        binding.btnCalculateRunout.setOnClickListener {
-            persistContainerCounts()
-            recalculateRunoutBuffer()
-        }
 
         autoPopulateScheduleHours()
         recalculateRunoutBuffer()
@@ -368,7 +385,7 @@ class MainActivity : AppCompatActivity() {
             btn.setOnClickListener { selectFill(percent, hint) }
         }
 
-        selectFill(selectedFillPercentage, "Full to the brim / top rim")
+        selectFill(selectedFillPercentage, "Empty / dry")
     }
 
     /**
@@ -412,7 +429,7 @@ class MainActivity : AppCompatActivity() {
         val gallonsCount = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
         val fillPercent = selectedFillPercentage.coerceIn(0.0, 100.0)
 
-        val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 200.0).coerceAtLeast(0.0)
+        val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
 
         // Auto-fallback to Phase 1 remainingHours if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
