@@ -459,6 +459,7 @@ class DomainLawsTest : LawsSpecificationStub {
 
         // Relative Formatting checks: exact formats ("Reported 12m ago", "Reported just now", etc.)
         assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now, now))
+        assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now + 1000L, now))
         assertEquals("Reported just now", GroundTruthReport.formatRelativeTimestamp(now - 30_000L, now))
         assertEquals("Reported 12m ago", GroundTruthReport.formatRelativeTimestamp(now - 12 * 60 * 1000L, now))
         assertEquals("Reported 45m ago", GroundTruthReport.formatRelativeTimestamp(now - 45 * 60 * 1000L, now))
@@ -489,7 +490,20 @@ class DomainLawsTest : LawsSpecificationStub {
         assertEquals("Reported 12m ago", consensus.formattedRelativeTime)
         assertEquals("Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure", consensus.summaryText)
 
-        // Invariant: Consensus must reject future-dated reports in calculation
+        // Invariant: Consensus accepts reports within clock skew tolerance (<= 1,000ms)
+        val skewedReports = listOf(
+            GroundTruthReport("r-skewed", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now + 800L)
+        )
+        val skewedConsensus = ZoneConsensusCalculator.calculate(
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            reports = skewedReports,
+            currentTimeMillis = now
+        )
+        assertEquals(1, skewedConsensus.totalReports)
+        assertEquals("Reported just now", skewedConsensus.formattedRelativeTime)
+
+        // Invariant: Consensus must reject reports exceeding the 1,000ms clock skew buffer
         val invalidFutureReports = listOf(
             GroundTruthReport("r-future", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = now)
         )
