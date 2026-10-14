@@ -15,7 +15,7 @@ data class GroundTruthReport(
     val timestamp: Long = System.currentTimeMillis()
 ) {
     init {
-        require(timestamp <= System.currentTimeMillis() + 1000) {
+        require(timestamp <= System.currentTimeMillis() + CLOCK_SKEW_TOLERANCE_MS) {
             "Law 4 violation: Report timestamp cannot be in the future."
         }
         require(zoneId.isNotBlank()) {
@@ -30,15 +30,17 @@ data class GroundTruthReport(
         formatRelativeTimestamp(timestamp, now)
 
     companion object {
+        const val CLOCK_SKEW_TOLERANCE_MS = 1000L
+
         /**
          * Formats epoch timestamp relative to [now] enforcing Law 4 invariant (no future timestamps).
          * Format examples: "Reported just now", "Reported 12m ago", "Reported 2h ago", "Reported 1d ago".
          */
         fun formatRelativeTimestamp(timestamp: Long, now: Long = System.currentTimeMillis()): String {
-            require(timestamp <= now) {
+            require(timestamp <= now + CLOCK_SKEW_TOLERANCE_MS) {
                 "Law 4 violation: Report timestamp cannot be in the future (timestamp=$timestamp, now=$now)."
             }
-            val diffMillis = now - timestamp
+            val diffMillis = maxOf(0L, now - timestamp)
             val diffSeconds = diffMillis / 1000
             val diffMinutes = diffSeconds / 60
             val diffHours = diffMinutes / 60

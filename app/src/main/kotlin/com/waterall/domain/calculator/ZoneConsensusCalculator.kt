@@ -35,7 +35,7 @@ object ZoneConsensusCalculator {
     ): ZoneConsensus {
         // Enforce Law 4 temporal integrity on all provided reports
         reports.forEach { report ->
-            require(report.timestamp <= currentTimeMillis) {
+            require(report.timestamp <= currentTimeMillis + GroundTruthReport.CLOCK_SKEW_TOLERANCE_MS) {
                 "Law 4 violation: Report timestamp cannot be in the future (timestamp=${report.timestamp}, now=$currentTimeMillis)."
             }
             require(report.zoneId.isNotBlank()) {

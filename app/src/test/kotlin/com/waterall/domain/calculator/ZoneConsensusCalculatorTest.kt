@@ -147,6 +147,66 @@ class ZoneConsensusCalculatorTest {
     }
 
     @Test
+    fun testClockSkewToleranceSafelyFormatsJustNowAndRejectsExceedingThreshold() {
+        // Skewed within 1,000ms tolerance: safely format as "Reported just now"
+        assertEquals("Reported just now", ZoneConsensusCalculator.formatRelativeTime(baseTime + 500L, baseTime))
+        assertEquals("Reported just now", ZoneConsensusCalculator.formatRelativeTime(baseTime + 1000L, baseTime))
+
+        // Exceeding 1,000ms skew: must throw Law 4 violation
+        var caught = false
+        try {
+            ZoneConsensusCalculator.formatRelativeTime(baseTime + 1001L, baseTime)
+        } catch (e: IllegalArgumentException) {
+            caught = true
+            assertTrue(e.message?.contains("Law 4 violation") == true)
+        }
+        assertTrue("Timestamp exceeding 1000ms tolerance must throw Law 4 violation", caught)
+
+        // Zone consensus calculation with millisecond clock skew report
+        val skewedReports = listOf(
+            GroundTruthReport(
+                id = "r-skewed",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.RUNNING,
+                timestamp = baseTime + 800L
+            )
+        )
+        val consensus = ZoneConsensusCalculator.calculate(
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            reports = skewedReports,
+            currentTimeMillis = baseTime
+        )
+        assertEquals(1, consensus.totalReports)
+        assertEquals("Reported just now", consensus.formattedRelativeTime)
+
+        // Zone consensus calculation with timestamp exceeding 1000ms tolerance must throw
+        val excessiveFutureReports = listOf(
+            GroundTruthReport(
+                id = "r-future-excessive",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.RUNNING,
+                timestamp = baseTime + 1001L
+            )
+        )
+        var caughtConsensus = false
+        try {
+            ZoneConsensusCalculator.calculate(
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                reports = excessiveFutureReports,
+                currentTimeMillis = baseTime
+            )
+        } catch (e: IllegalArgumentException) {
+            caughtConsensus = true
+            assertTrue(e.message?.contains("Law 4 violation") == true)
+        }
+        assertTrue("Consensus with report exceeding clock skew tolerance must throw", caughtConsensus)
+    }
+
+    @Test
     fun testInMemoryReportRepositoryDefaultIsEmpty() {
         val repo = InMemoryReportRepository.createDefault()
         assertEquals(0, repo.getAllReports().size)
