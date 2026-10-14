@@ -13,14 +13,14 @@ import java.time.LocalDateTime
 class ScheduleCountdownCalculatorTest {
 
     private val sampleDomesticSchedules = listOf(
-        SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
-        SupplyWindow("Wed", "Wed 11", 5, 0, 9, 0),
-        SupplyWindow("Fri", "Fri 13", 6, 0, 11, 0)
+        SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
+        SupplyWindow("Wed", "Wed", 5, 0, 9, 0),
+        SupplyWindow("Fri", "Fri", 6, 0, 11, 0)
     )
 
     private val sampleCommercialSchedules = listOf(
-        SupplyWindow("Tue", "Tue 10", 8, 0, 14, 0),
-        SupplyWindow("Thu", "Thu 12", 8, 0, 14, 0)
+        SupplyWindow("Tue", "Tue", 8, 0, 14, 0),
+        SupplyWindow("Thu", "Thu", 8, 0, 14, 0)
     )
 
     private val sampleZone = BarangayZone(
@@ -123,8 +123,8 @@ class ScheduleCountdownCalculatorTest {
     @Test
     fun testLaw2TemporalNonOverlapEnforcement() {
         val overlappingSchedules = listOf(
-            SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
-            SupplyWindow("Mon", "Mon 09", 9, 30, 12, 0) // Overlaps 9:30 - 10:00
+            SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
+            SupplyWindow("Mon", "Mon", 9, 30, 12, 0) // Overlaps 9:30 - 10:00
         )
 
         var caughtOverlap = false
@@ -154,5 +154,16 @@ class ScheduleCountdownCalculatorTest {
         assertEquals(0L, result.remainingSeconds)
         assertEquals("00:00:00", result.formattedCountdown)
         assertNull(result.targetDateTime)
+    }
+
+    @Test
+    fun testScheduleDaysContainNoNumbers() {
+        val allSchedules = sampleZone.domesticSchedules + sampleZone.commercialSchedules
+        allSchedules.forEach { window ->
+            assertTrue(
+                "Schedule day label '${window.dateLabel}' should not contain digits",
+                window.dateLabel.none { it.isDigit() }
+            )
+        }
     }
 }

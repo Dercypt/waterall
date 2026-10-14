@@ -37,42 +37,42 @@ class MainActivity : AppCompatActivity() {
     private var uiCoroutineJob: Job? = null
 
     // Mock Baguio Water District Rotation Data
-    private val zones = listOf(
+    internal val zones = listOf(
         BarangayZone(
             id = "brgy4",
             name = "Zone 4 — Brgy. San Isidro",
             domesticSchedules = listOf(
-                SupplyWindow("Mon", "Mon 09", 6, 0, 10, 0),
-                SupplyWindow("Wed", "Wed 11", 5, 0, 9, 0),
-                SupplyWindow("Fri", "Fri 13", 6, 0, 11, 0)
+                SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
+                SupplyWindow("Wed", "Wed", 5, 0, 9, 0),
+                SupplyWindow("Fri", "Fri", 6, 0, 11, 0)
             ),
             commercialSchedules = listOf(
-                SupplyWindow("Tue", "Tue 10", 8, 0, 14, 0),
-                SupplyWindow("Thu", "Thu 12", 8, 0, 14, 0)
+                SupplyWindow("Tue", "Tue", 8, 0, 14, 0),
+                SupplyWindow("Thu", "Thu", 8, 0, 14, 0)
             )
         ),
         BarangayZone(
             id = "brgy1",
             name = "Zone 1 — Brgy. Cabinet Hill",
             domesticSchedules = listOf(
-                SupplyWindow("Tue", "Tue 10", 5, 30, 9, 30),
-                SupplyWindow("Thu", "Thu 12", 5, 30, 9, 30),
-                SupplyWindow("Sat", "Sat 14", 6, 0, 12, 0)
+                SupplyWindow("Tue", "Tue", 5, 30, 9, 30),
+                SupplyWindow("Thu", "Thu", 5, 30, 9, 30),
+                SupplyWindow("Sat", "Sat", 6, 0, 12, 0)
             ),
             commercialSchedules = listOf(
-                SupplyWindow("Mon", "Mon 09", 7, 0, 13, 0),
-                SupplyWindow("Wed", "Wed 11", 7, 0, 13, 0)
+                SupplyWindow("Mon", "Mon", 7, 0, 13, 0),
+                SupplyWindow("Wed", "Wed", 7, 0, 13, 0)
             )
         ),
         BarangayZone(
             id = "brgy7",
             name = "Zone 7 — Brgy. Trancoville",
             domesticSchedules = listOf(
-                SupplyWindow("Wed", "Wed 11", 6, 0, 10, 30),
-                SupplyWindow("Sat", "Sat 14", 5, 0, 10, 0)
+                SupplyWindow("Wed", "Wed", 6, 0, 10, 30),
+                SupplyWindow("Sat", "Sat", 5, 0, 10, 0)
             ),
             commercialSchedules = listOf(
-                SupplyWindow("Fri", "Fri 13", 8, 0, 15, 0)
+                SupplyWindow("Fri", "Fri", 8, 0, 15, 0)
             )
         )
     )
@@ -190,7 +190,7 @@ class MainActivity : AppCompatActivity() {
         if (schedules.isNotEmpty()) {
             card1.root.visibility = View.VISIBLE
             card1.tvScheduleDayBadge.text = schedules[0].dayOfWeek.first().toString()
-            card1.tvScheduleDay.text = schedules[0].dateLabel
+            card1.tvScheduleDay.text = schedules[0].dateLabel.replace(Regex("\\s*\\d+"), "")
             card1.tvScheduleTime.text = schedules[0].formattedRange
         } else {
             card1.root.visibility = View.GONE
@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
         if (schedules.size > 1) {
             card2.root.visibility = View.VISIBLE
             card2.tvScheduleDayBadge.text = schedules[1].dayOfWeek.first().toString()
-            card2.tvScheduleDay.text = schedules[1].dateLabel
+            card2.tvScheduleDay.text = schedules[1].dateLabel.replace(Regex("\\s*\\d+"), "")
             card2.tvScheduleTime.text = schedules[1].formattedRange
         } else {
             card2.root.visibility = View.GONE
@@ -208,7 +208,7 @@ class MainActivity : AppCompatActivity() {
         if (schedules.size > 2) {
             card3.root.visibility = View.VISIBLE
             card3.tvScheduleDayBadge.text = schedules[2].dayOfWeek.first().toString()
-            card3.tvScheduleDay.text = schedules[2].dateLabel
+            card3.tvScheduleDay.text = schedules[2].dateLabel.replace(Regex("\\s*\\d+"), "")
             card3.tvScheduleTime.text = schedules[2].formattedRange
         } else {
             card3.root.visibility = View.GONE

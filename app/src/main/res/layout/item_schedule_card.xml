@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="16dp"
-        android:text="Mon 09"
+        android:text="Mon"
         android:textSize="15sp"
         android:textColor="@color/ink" />
 
