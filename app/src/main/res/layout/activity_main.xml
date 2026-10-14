@@ -206,8 +206,8 @@
                             style="@style/Waterall.Label"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Consensus"
-                            android:textColor="@color/status_ok" />
+                            android:text="No reports"
+                            android:textColor="@color/ink_muted" />
 
                         <View
                             android:layout_width="0dp"
@@ -219,7 +219,7 @@
                             style="@style/Waterall.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="12m ago" />
+                            android:text="Today" />
                     </LinearLayout>
 
                     <TextView
@@ -227,7 +227,7 @@
                         style="@style/Waterall.Body"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure"
+                        android:text="No verified reports today"
                         android:textSize="15sp"
                         android:layout_marginBottom="6dp" />
 
@@ -236,7 +236,7 @@
                         style="@style/Waterall.Caption"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Latest: Water Running (Strong Flow) · 12m ago"
+                        android:text="Be the first to report for this zone."
                         android:layout_marginBottom="16dp" />
 
                     <TextView

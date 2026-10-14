@@ -147,10 +147,20 @@ class ZoneConsensusCalculatorTest {
     }
 
     @Test
-    fun testInMemoryReportRepositoryDefaultSeedAndAdd() {
-        val repo = InMemoryReportRepository.createDefault(baseTime)
+    fun testInMemoryReportRepositoryDefaultIsEmpty() {
+        val repo = InMemoryReportRepository.createDefault()
+        assertEquals(0, repo.getAllReports().size)
+        val consensus = repo.getConsensus("brgy4", "Zone 4", baseTime)
+        assertEquals(0, consensus.totalReports)
+        assertNull(consensus.latestReport)
+        assertEquals("Zone 4: No verified reports today", consensus.summaryText)
+    }
 
-        // Default seed has 4 reports for Zone 4
+    @Test
+    fun testInMemoryReportRepositoryDefaultSeedAndAdd() {
+        val repo = InMemoryReportRepository.createSeeded(baseTime)
+
+        // Seeded repo has 4 reports for Zone 4
         val z4Consensus = repo.getConsensus("brgy4", "Zone 4 — Brgy. San Isidro", baseTime)
         assertEquals(4, z4Consensus.totalReports)
         assertEquals("Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure", z4Consensus.summaryText)
