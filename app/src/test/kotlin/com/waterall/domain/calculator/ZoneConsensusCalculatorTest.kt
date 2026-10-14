@@ -245,4 +245,84 @@ class ZoneConsensusCalculatorTest {
         assertEquals("Reported just now", refreshed.formattedRelativeTime)
         assertEquals("Zone 4: 5 verified reports today — 60% Running, 20% Low Pressure, 20% Dry", refreshed.summaryText)
     }
+
+    @Test
+    fun testStaleReportsOlderThan24HoursAreExcludedFromConsensus() {
+        val mixedReports = listOf(
+            // Stale report 5 days ago
+            GroundTruthReport(
+                id = "stale-5d",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.DRY,
+                timestamp = baseTime - 5 * 24 * 60 * 60 * 1000L
+            ),
+            // Stale report 25 hours ago (exceeding 24h expiration)
+            GroundTruthReport(
+                id = "stale-25h",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.LOW_PRESSURE,
+                timestamp = baseTime - 25 * 60 * 60 * 1000L
+            ),
+            // Fresh report exactly 24 hours ago (boundary)
+            GroundTruthReport(
+                id = "fresh-24h",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.RUNNING,
+                timestamp = baseTime - 24 * 60 * 60 * 1000L
+            ),
+            // Fresh report 2 hours ago
+            GroundTruthReport(
+                id = "fresh-2h",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.RUNNING,
+                timestamp = baseTime - 2 * 60 * 60 * 1000L
+            )
+        )
+
+        val consensus = ZoneConsensusCalculator.calculate(
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            reports = mixedReports,
+            currentTimeMillis = baseTime
+        )
+
+        // Only the 2 fresh reports within 24h should be counted; stale reports 5d and 25h ago must not skew active consensus
+        assertEquals(2, consensus.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensus.dominantStatus)
+        assertEquals(100, consensus.statusPercentages[TapFlowStatus.RUNNING])
+        assertEquals("Reported 2h ago", consensus.formattedRelativeTime)
+        assertEquals("Zone 4: 2 verified reports today — 100% Running", consensus.summaryText)
+    }
+
+    @Test
+    fun testAllStaleReportsProducesEmptyConsensus() {
+        val staleReports = listOf(
+            GroundTruthReport(
+                id = "stale-past-rotation",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = TapFlowStatus.RUNNING,
+                timestamp = baseTime - 48 * 60 * 60 * 1000L
+            )
+        )
+
+        val consensus = ZoneConsensusCalculator.calculate(
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            reports = staleReports,
+            currentTimeMillis = baseTime
+        )
+
+        assertEquals(0, consensus.totalReports)
+        assertNull(consensus.dominantStatus)
+        assertNull(consensus.latestReport)
+        assertNull(consensus.formattedRelativeTime)
+        assertEquals("Zone 4: No verified reports today", consensus.summaryText)
+        assertTrue(consensus.statusPercentages.isEmpty())
+    }
 }
+

@@ -2,6 +2,7 @@ package com.waterall.ui
 
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.TapFlowStatus
+import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -10,7 +11,7 @@ import org.junit.Test
 
 /**
  * Unit test verifying [MainViewModel] preserves [com.waterall.domain.repository.ReportRepository]
- * and UI state (selectedZone, selectedFillPercentage, dailyConsumption) across ViewModel lifecycle
+ * and UI state (selectedZone, selectedFillPercentage, dailyConsumption, userMode) across ViewModel lifecycle
  * and configuration changes.
  */
 class MainViewModelTest {
@@ -79,6 +80,8 @@ class MainViewModelTest {
         assertEquals(MainViewModel.DEFAULT_ZONES[0], viewModel.selectedZone.value)
         assertEquals(0.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
     }
 
     @Test
@@ -116,17 +119,48 @@ class MainViewModelTest {
     }
 
     @Test
+    fun testSetUserModeUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
+
+        viewModel.setUserMode(UserMode.COMMERCIAL)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+
+        viewModel.setUserMode(UserMode.DOMESTIC)
+        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
+    }
+
+    @Test
+    fun testSetCurrentTabUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.RESERVES)
+        assertEquals(Tab.RESERVES, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.REPORT)
+        assertEquals(Tab.REPORT, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.CALENDAR)
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
+    }
+
+    @Test
     fun testUiStatePreservationAcrossSimulatedConfigurationChange() {
         val viewModel = MainViewModel()
         val selectedZone = MainViewModel.DEFAULT_ZONES[2]
         viewModel.setSelectedZone(selectedZone)
         viewModel.setSelectedFillPercentage(75.0)
         viewModel.setDailyConsumption(120.0)
+        viewModel.setUserMode(UserMode.COMMERCIAL)
+        viewModel.setCurrentTab(Tab.RESERVES)
 
         // Simulate activity recreation retrieving the existing ViewModel instance
         assertEquals(selectedZone, viewModel.selectedZone.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(120.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(Tab.RESERVES, viewModel.currentTab.value)
     }
 
     @Test
@@ -135,11 +169,15 @@ class MainViewModelTest {
         val viewModel = MainViewModel(
             initialZone = zone,
             initialFillPercentage = 50.0,
-            initialDailyConsumption = 80.0
+            initialDailyConsumption = 80.0,
+            initialUserMode = UserMode.COMMERCIAL,
+            initialTab = Tab.REPORT
         )
 
         assertEquals(zone, viewModel.selectedZone.value)
         assertEquals(50.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(80.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(Tab.REPORT, viewModel.currentTab.value)
     }
 }

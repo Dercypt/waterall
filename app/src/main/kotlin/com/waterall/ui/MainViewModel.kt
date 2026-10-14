@@ -4,11 +4,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.SupplyWindow
+import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Top-level application navigation tabs.
+ */
+enum class Tab {
+    CALENDAR,
+    RESERVES,
+    REPORT
+}
 
 /**
  * ViewModel managing UI state and the crowdsourced report repository across Activity configuration changes (e.g. screen rotation).
@@ -17,7 +27,9 @@ class MainViewModel(
     val reportRepository: ReportRepository = InMemoryReportRepository.createDefault(),
     initialZone: BarangayZone = DEFAULT_ZONES[0],
     initialFillPercentage: Double = 0.0,
-    initialDailyConsumption: Double = 0.0
+    initialDailyConsumption: Double = 0.0,
+    initialUserMode: UserMode = UserMode.DOMESTIC,
+    initialTab: Tab = Tab.CALENDAR
 ) : ViewModel() {
 
     private val _selectedZone = MutableStateFlow(initialZone)
@@ -29,6 +41,12 @@ class MainViewModel(
     private val _dailyConsumption = MutableStateFlow(initialDailyConsumption)
     val dailyConsumption: StateFlow<Double> = _dailyConsumption.asStateFlow()
 
+    private val _userMode = MutableStateFlow(initialUserMode)
+    val userMode: StateFlow<UserMode> = _userMode.asStateFlow()
+
+    private val _currentTab = MutableStateFlow(initialTab)
+    val currentTab: StateFlow<Tab> = _currentTab.asStateFlow()
+
     fun setSelectedZone(zone: BarangayZone) {
         _selectedZone.value = zone
     }
@@ -39,6 +57,14 @@ class MainViewModel(
 
     fun setDailyConsumption(consumption: Double) {
         _dailyConsumption.value = consumption.coerceAtLeast(0.0)
+    }
+
+    fun setUserMode(mode: UserMode) {
+        _userMode.value = mode
+    }
+
+    fun setCurrentTab(tab: Tab) {
+        _currentTab.value = tab
     }
 
     companion object {
