@@ -40,9 +40,9 @@ class UserPreferencesTest {
     @Test
     fun testDefaultValuesMatchSpecification() {
         assertEquals(UserPreferences.DEFAULT_ZONE_ID, preferences.selectedZoneId)
-        assertEquals(UserPreferences.DEFAULT_DRUMS, preferences.drums200LCount)
-        assertEquals(UserPreferences.DEFAULT_TANKS, preferences.tanks1000LCount)
-        assertEquals(UserPreferences.DEFAULT_GALLONS, preferences.gallons20LCount)
+        assertEquals(0, preferences.drums200LCount)
+        assertEquals(0, preferences.tanks1000LCount)
+        assertEquals(0, preferences.gallons20LCount)
     }
 
     @Test

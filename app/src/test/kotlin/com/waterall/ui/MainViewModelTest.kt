@@ -15,19 +15,20 @@ import org.junit.Test
 class MainViewModelTest {
 
     @Test
-    fun testDefaultReportRepositoryIsInstantiated() {
+    fun testDefaultReportRepositoryIsInstantiatedAndInitiallyEmpty() {
         val viewModel = MainViewModel()
         assertNotNull(viewModel.reportRepository)
 
-        // Seeded reports should be present
+        // When first opening the app, no reports exist until a report is submitted
         val allReports = viewModel.reportRepository.getAllReports()
-        assertTrue(allReports.isNotEmpty())
+        assertTrue(allReports.isEmpty())
     }
 
     @Test
     fun testReportRepositoryRetainsSubmissions() {
         val viewModel = MainViewModel()
         val initialCount = viewModel.reportRepository.getAllReports().size
+        assertEquals(0, initialCount)
 
         val report = GroundTruthReport(
             id = "test-session-report-1",
@@ -41,7 +42,7 @@ class MainViewModelTest {
         viewModel.reportRepository.addReport(report)
 
         val updatedReports = viewModel.reportRepository.getAllReports()
-        assertEquals(initialCount + 1, updatedReports.size)
+        assertEquals(1, updatedReports.size)
         assertEquals(report, updatedReports.first())
     }
 
@@ -65,9 +66,9 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testFactoryCreatesMainViewModel() {
+    fun testFactoryCreatesMainViewModelWithEmptyRepository() {
         val created = MainViewModel.Factory.create(MainViewModel::class.java)
         assertNotNull(created)
-        assertTrue(created.reportRepository.getAllReports().isNotEmpty())
+        assertTrue(created.reportRepository.getAllReports().isEmpty())
     }
 }

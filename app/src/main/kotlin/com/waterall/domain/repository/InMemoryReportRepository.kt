@@ -53,12 +53,20 @@ class InMemoryReportRepository(
 
     companion object {
         /**
-         * Creates an in-memory repository seeded with initial verified ground truth reports:
+         * Creates an empty in-memory repository by default.
+         * Reports are only populated when the user or peers submit verified reports.
+         */
+        fun createDefault(): InMemoryReportRepository {
+            return InMemoryReportRepository()
+        }
+
+        /**
+         * Creates an in-memory repository seeded with initial verified ground truth reports for testing:
          * - Zone 4: 4 verified reports (75% Running, 25% Low Pressure, latest 12m ago)
          * - Zone 1: 2 verified reports (100% Low Pressure, latest 15m ago)
          * - Zone 7: 2 verified reports (100% Dry, latest 10m ago)
          */
-        fun createDefault(nowMillis: Long = System.currentTimeMillis()): InMemoryReportRepository {
+        fun createSeeded(nowMillis: Long = System.currentTimeMillis()): InMemoryReportRepository {
             val seedReports = listOf(
                 // Zone 4: 4 verified reports today — 75% Running, 25% Low Pressure
                 GroundTruthReport(
