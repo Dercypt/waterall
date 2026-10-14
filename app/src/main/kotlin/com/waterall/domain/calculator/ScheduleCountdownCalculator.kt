@@ -25,17 +25,22 @@ enum class ScheduleFlowState(val badgeLabel: String) {
  * @param targetDateTime The target timestamp counted down towards (closure or opening)
  * @param activeWindow The active supply window if flow is active, null otherwise
  * @param nextWindow The next supply window to open
+ * @param hoursUntilNextOpening Dedicated hours until the next rationing window opening (for reserve estimation)
  */
 data class CountdownCalculationResult(
     val flowState: ScheduleFlowState,
     val remainingSeconds: Long,
     val targetDateTime: LocalDateTime?,
     val activeWindow: SupplyWindow?,
-    val nextWindow: SupplyWindow?
+    val nextWindow: SupplyWindow?,
+    val hoursUntilNextOpening: Double = remainingSeconds / 3600.0
 ) {
     init {
         require(remainingSeconds >= 0L) {
             "Law 2 violation: Countdown seconds must be strictly non-negative."
+        }
+        require(hoursUntilNextOpening >= 0.0) {
+            "Hours until next opening must be non-negative."
         }
     }
 
@@ -98,7 +103,8 @@ object ScheduleCountdownCalculator {
                 remainingSeconds = 0L,
                 targetDateTime = null,
                 activeWindow = null,
-                nextWindow = null
+                nextWindow = null,
+                hoursUntilNextOpening = 0.0
             )
         }
 
@@ -129,12 +135,17 @@ object ScheduleCountdownCalculator {
                 referenceTime = targetDateTime
             )
 
+            val hoursUntilNextOpening = nextOccurrence?.second?.let {
+                maxOf(0L, Duration.between(currentTime, it).seconds) / 3600.0
+            } ?: 0.0
+
             return CountdownCalculationResult(
                 flowState = ScheduleFlowState.FLOW_ACTIVE,
                 remainingSeconds = diffSeconds,
                 targetDateTime = targetDateTime,
                 activeWindow = activeWindow,
-                nextWindow = nextOccurrence?.first
+                nextWindow = nextOccurrence?.first,
+                hoursUntilNextOpening = hoursUntilNextOpening
             )
         }
 
@@ -150,17 +161,20 @@ object ScheduleCountdownCalculator {
                 remainingSeconds = 0L,
                 targetDateTime = null,
                 activeWindow = null,
-                nextWindow = null
+                nextWindow = null,
+                hoursUntilNextOpening = 0.0
             )
 
         val diffSeconds = maxOf(0L, Duration.between(currentTime, nextStartDateTime).seconds)
+        val hoursUntilNextOpening = diffSeconds / 3600.0
 
         return CountdownCalculationResult(
             flowState = ScheduleFlowState.RATIONING_ACTIVE,
             remainingSeconds = diffSeconds,
             targetDateTime = nextStartDateTime,
             activeWindow = null,
-            nextWindow = nextWindow
+            nextWindow = nextWindow,
+            hoursUntilNextOpening = hoursUntilNextOpening
         )
     }
 

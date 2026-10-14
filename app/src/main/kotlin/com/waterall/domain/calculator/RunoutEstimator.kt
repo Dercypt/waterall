@@ -109,7 +109,7 @@ object RunoutEstimator {
     /**
      * Calculates reserve runout duration and deficit interconnected with the schedule engine
      * using [CountdownCalculationResult] from Phase 1.
-     * Auto-populates hoursUntilNextSupply from [CountdownCalculationResult.remainingHours].
+     * Auto-populates hoursUntilNextSupply from [CountdownCalculationResult.hoursUntilNextOpening].
      *
      * @param inventory Current container inventory and fill %
      * @param dailyBurnRateLiters Household or small business consumption per 24 hours
@@ -122,6 +122,6 @@ object RunoutEstimator {
     ): RunoutEstimateResult = calculate(
         inventory = inventory,
         dailyBurnRateLiters = dailyBurnRateLiters,
-        hoursUntilNextSupply = countdownResult.remainingHours
+        hoursUntilNextSupply = countdownResult.hoursUntilNextOpening
     )
 }

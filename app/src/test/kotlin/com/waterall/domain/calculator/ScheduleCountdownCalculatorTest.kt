@@ -45,8 +45,9 @@ class ScheduleCountdownCalculatorTest {
         assertEquals(2.5, result.remainingHours, 0.001)
         assertEquals("02:30:00", result.formattedCountdown)
         assertEquals(LocalDateTime.of(2026, 10, 12, 10, 0, 0), result.targetDateTime)
-        // Next upcoming window is Wednesday 05:00
+        // Next upcoming window is Wednesday 05:00 (45.5 hours from Mon 07:30)
         assertEquals("Wed", result.nextWindow?.dayOfWeek)
+        assertEquals(45.5, result.hoursUntilNextOpening, 0.001)
     }
 
     @Test
@@ -64,6 +65,7 @@ class ScheduleCountdownCalculatorTest {
         assertEquals(2700L, result.remainingSeconds)
         assertEquals("00:45:00", result.formattedCountdown)
         assertEquals(LocalDateTime.of(2026, 10, 12, 6, 0, 0), result.targetDateTime)
+        assertEquals(0.75, result.hoursUntilNextOpening, 0.001)
     }
 
     @Test
@@ -81,6 +83,7 @@ class ScheduleCountdownCalculatorTest {
         // Remaining seconds: from Mon 10:30 to Wed 05:00 = 42.5 hrs = 153000s
         assertEquals(153000L, result.remainingSeconds)
         assertEquals(42.5, result.remainingHours, 0.001)
+        assertEquals(42.5, result.hoursUntilNextOpening, 0.001)
         assertEquals("42:30:00", result.formattedCountdown)
     }
 
@@ -96,7 +99,21 @@ class ScheduleCountdownCalculatorTest {
         // Friday 12:00 to Monday 06:00 = 66 hours
         assertEquals(LocalDateTime.of(2026, 10, 19, 6, 0, 0), result.targetDateTime)
         assertEquals(66 * 3600L, result.remainingSeconds)
+        assertEquals(66.0, result.hoursUntilNextOpening, 0.001)
         assertEquals("66:00:00", result.formattedCountdown)
+    }
+
+    @Test
+    fun testHoursUntilNextOpeningDistinctionDuringActiveFlow() {
+        // Active window: Mon 06:00 - 10:00. Next window: Wed 05:00 - 09:00.
+        val mondayDuringFlow = LocalDateTime.of(2026, 10, 12, 8, 0, 0)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, mondayDuringFlow)
+
+        assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
+        // remainingHours counts down to window end (10:00 AM) -> 2.0 hours
+        assertEquals(2.0, result.remainingHours, 0.001)
+        // hoursUntilNextOpening counts down to NEXT window opening (Wed 05:00 AM) -> 45.0 hours
+        assertEquals(45.0, result.hoursUntilNextOpening, 0.001)
     }
 
     @Test
@@ -152,6 +169,7 @@ class ScheduleCountdownCalculatorTest {
         val result = ScheduleCountdownCalculator.calculate(emptyList(), LocalDateTime.now())
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertEquals(0L, result.remainingSeconds)
+        assertEquals(0.0, result.hoursUntilNextOpening, 0.001)
         assertEquals("00:00:00", result.formattedCountdown)
         assertNull(result.targetDateTime)
     }
