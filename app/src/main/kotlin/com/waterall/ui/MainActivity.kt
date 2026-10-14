@@ -6,6 +6,7 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
+import com.waterall.databinding.ItemScheduleCardBinding
 import com.waterall.domain.calculator.CountdownCalculationResult
 import com.waterall.domain.calculator.RunoutEstimator
 import com.waterall.domain.calculator.ScheduleCountdownCalculator
@@ -26,6 +28,7 @@ import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
+import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -62,6 +65,7 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupZoneSelector()
+        setupModeToggle()
         setupReservesCalculator()
         setupReportFeature()
 
@@ -140,39 +144,58 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupModeToggle() {
+        binding.btnModeDomestic.setOnClickListener {
+            viewModel.setUserMode(UserMode.DOMESTIC)
+        }
+        binding.btnModeCommercial.setOnClickListener {
+            viewModel.setUserMode(UserMode.COMMERCIAL)
+        }
+    }
+
+    private fun updateModeToggleUi(mode: UserMode) {
+        if (mode == UserMode.DOMESTIC) {
+            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_active)
+            binding.btnModeDomestic.setTextColor(getColor(R.color.white))
+            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_inactive)
+            binding.btnModeCommercial.setTextColor(getColor(R.color.ink_soft))
+        } else {
+            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_active)
+            binding.btnModeCommercial.setTextColor(getColor(R.color.white))
+            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_inactive)
+            binding.btnModeDomestic.setTextColor(getColor(R.color.ink_soft))
+        }
+    }
 
     private fun updateScheduleCards() {
-        val schedules = viewModel.selectedZone.value.schedules
+        val schedules = viewModel.selectedZone.value.getSchedules(viewModel.userMode.value)
+        binding.layoutScheduleContainer.removeAllViews()
 
-        val card1 = binding.scheduleItem1
-        val card2 = binding.scheduleItem2
-        val card3 = binding.scheduleItem3
-
-        if (schedules.isNotEmpty()) {
-            card1.root.visibility = View.VISIBLE
-            card1.tvScheduleDayBadge.text = schedules[0].dayOfWeek.first().toString()
-            card1.tvScheduleDay.text = schedules[0].dateLabel.replace(Regex("\\s*\\d+"), "")
-            card1.tvScheduleTime.text = schedules[0].formattedRange
-        } else {
-            card1.root.visibility = View.GONE
+        if (schedules.isEmpty()) {
+            binding.tvNoScheduleMessage.visibility = View.VISIBLE
+            return
         }
+        binding.tvNoScheduleMessage.visibility = View.GONE
 
-        if (schedules.size > 1) {
-            card2.root.visibility = View.VISIBLE
-            card2.tvScheduleDayBadge.text = schedules[1].dayOfWeek.first().toString()
-            card2.tvScheduleDay.text = schedules[1].dateLabel.replace(Regex("\\s*\\d+"), "")
-            card2.tvScheduleTime.text = schedules[1].formattedRange
-        } else {
-            card2.root.visibility = View.GONE
-        }
+        schedules.forEachIndexed { index, schedule ->
+            if (index > 0) {
+                val divider = View(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        (1 * resources.displayMetrics.density).toInt()
+                    ).apply {
+                        marginStart = (48 * resources.displayMetrics.density).toInt()
+                    }
+                    setBackgroundColor(getColor(R.color.hairline))
+                }
+                binding.layoutScheduleContainer.addView(divider)
+            }
 
-        if (schedules.size > 2) {
-            card3.root.visibility = View.VISIBLE
-            card3.tvScheduleDayBadge.text = schedules[2].dayOfWeek.first().toString()
-            card3.tvScheduleDay.text = schedules[2].dateLabel.replace(Regex("\\s*\\d+"), "")
-            card3.tvScheduleTime.text = schedules[2].formattedRange
-        } else {
-            card3.root.visibility = View.GONE
+            val cardBinding = ItemScheduleCardBinding.inflate(layoutInflater, binding.layoutScheduleContainer, false)
+            cardBinding.tvScheduleDayBadge.text = schedule.dayOfWeek.first().toString()
+            cardBinding.tvScheduleDay.text = schedule.dateLabel.replace(Regex("\\s*\\d+"), "")
+            cardBinding.tvScheduleTime.text = schedule.formattedRange
+            binding.layoutScheduleContainer.addView(cardBinding.root)
         }
     }
 
@@ -211,6 +234,7 @@ class MainActivity : AppCompatActivity() {
 
         val calculation = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
 
@@ -409,6 +433,7 @@ class MainActivity : AppCompatActivity() {
     private fun autoPopulateScheduleHours() {
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
         binding.etHoursUntilNextSupply.setText(
@@ -437,6 +462,7 @@ class MainActivity : AppCompatActivity() {
         // Auto-fallback to Phase 1 hoursUntilNextOpening if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
         val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
@@ -640,6 +666,15 @@ class MainActivity : AppCompatActivity() {
                     autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
                     updateConsensusCard()
+                }
+            }
+            launch {
+                viewModel.userMode.collect { mode ->
+                    updateModeToggleUi(mode)
+                    updateScheduleCards()
+                    startLiveCountdown()
+                    autoPopulateScheduleHours()
+                    recalculateRunoutBuffer()
                 }
             }
             launch {
