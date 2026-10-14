@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
@@ -27,6 +28,7 @@ import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Locale
 
@@ -38,48 +40,8 @@ class MainActivity : AppCompatActivity() {
     private var uiCoroutineJob: Job? = null
 
     // Mock Baguio Water District Rotation Data
-    internal val zones = listOf(
-        BarangayZone(
-            id = "brgy4",
-            name = "Zone 4 — Brgy. San Isidro",
-            domesticSchedules = listOf(
-                SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
-                SupplyWindow("Wed", "Wed", 5, 0, 9, 0),
-                SupplyWindow("Fri", "Fri", 6, 0, 11, 0)
-            ),
-            commercialSchedules = listOf(
-                SupplyWindow("Tue", "Tue", 8, 0, 14, 0),
-                SupplyWindow("Thu", "Thu", 8, 0, 14, 0)
-            )
-        ),
-        BarangayZone(
-            id = "brgy1",
-            name = "Zone 1 — Brgy. Cabinet Hill",
-            domesticSchedules = listOf(
-                SupplyWindow("Tue", "Tue", 5, 30, 9, 30),
-                SupplyWindow("Thu", "Thu", 5, 30, 9, 30),
-                SupplyWindow("Sat", "Sat", 6, 0, 12, 0)
-            ),
-            commercialSchedules = listOf(
-                SupplyWindow("Mon", "Mon", 7, 0, 13, 0),
-                SupplyWindow("Wed", "Wed", 7, 0, 13, 0)
-            )
-        ),
-        BarangayZone(
-            id = "brgy7",
-            name = "Zone 7 — Brgy. Trancoville",
-            domesticSchedules = listOf(
-                SupplyWindow("Wed", "Wed", 6, 0, 10, 30),
-                SupplyWindow("Sat", "Sat", 5, 0, 10, 0)
-            ),
-            commercialSchedules = listOf(
-                SupplyWindow("Fri", "Fri", 8, 0, 15, 0)
-            )
-        )
-    )
+    internal val zones: List<BarangayZone> = MainViewModel.DEFAULT_ZONES
 
-    private var selectedZone: BarangayZone = zones[0]
-    private var selectedFillPercentage: Double = 0.0
     private var countdownTimer: CountDownTimer? = null
     private lateinit var viewModel: MainViewModel
     private val reportRepository: ReportRepository
@@ -93,15 +55,15 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
 
         userPreferences = UserPreferences(this)
-        val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
-        selectedZone = zones[savedZoneIndex]
+        if (savedInstanceState == null) {
+            val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
+            viewModel.setSelectedZone(zones[savedZoneIndex])
+        }
 
         setupBottomNavigation()
         setupZoneSelector()
-        startLiveCountdown()
         setupReservesCalculator()
         setupReportFeature()
-        updateConsensusCard()
 
         binding.btnQuickReport.setOnClickListener {
             switchTab(Tab.REPORT)
@@ -141,7 +103,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (tab == Tab.REPORT) {
-            binding.tvReportZoneName.text = selectedZone.name
+            binding.tvReportZoneName.text = viewModel.selectedZone.value.name
         }
 
         // Highlight selected nav tab
@@ -161,20 +123,18 @@ class MainActivity : AppCompatActivity() {
             zones.map { it.name }
         )
         binding.spinnerZones.adapter = adapter
-        val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
-        binding.spinnerZones.setSelection(savedZoneIndex, false)
+        val currentZone = viewModel.selectedZone.value
+        val zoneIndex = zones.indexOfFirst { it.id == currentZone.id }.let { if (it >= 0) it else 0 }
+        binding.spinnerZones.setSelection(zoneIndex, false)
 
         binding.spinnerZones.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedZone = zones[position]
-                userPreferences.selectedZoneId = selectedZone.id
-                binding.tvReportZoneName.text = selectedZone.name
-                updateScheduleCards()
-                startLiveCountdown()
-                autoPopulateScheduleHours()
-                recalculateRunoutBuffer()
-                updateConsensusCard()
-                binding.tvConsensusAcknowledgment.visibility = View.GONE
+                val newZone = zones[position]
+                if (newZone.id != viewModel.selectedZone.value.id) {
+                    viewModel.setSelectedZone(newZone)
+                    userPreferences.selectedZoneId = newZone.id
+                    binding.tvConsensusAcknowledgment.visibility = View.GONE
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
@@ -182,7 +142,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun updateScheduleCards() {
-        val schedules = selectedZone.schedules
+        val schedules = viewModel.selectedZone.value.schedules
 
         val card1 = binding.scheduleItem1
         val card2 = binding.scheduleItem2
@@ -216,12 +176,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun stopCountdownTimer() {
+        countdownTimer?.cancel()
+        countdownTimer = null
+    }
+
     /**
      * Safely unbinds all CountDownTimer instances and UI coroutines per PRINCIPLES.md:37-38.
      */
     private fun stopTimersAndCoroutines() {
-        countdownTimer?.cancel()
-        countdownTimer = null
+        stopCountdownTimer()
         uiCoroutineJob?.cancel()
         uiCoroutineJob = null
     }
@@ -243,10 +207,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startLiveCountdown() {
-        stopTimersAndCoroutines()
+        stopCountdownTimer()
 
         val calculation = ScheduleCountdownCalculator.calculate(
-            zone = selectedZone,
+            zone = viewModel.selectedZone.value,
             currentTime = LocalDateTime.now()
         )
 
@@ -297,7 +261,7 @@ class MainActivity : AppCompatActivity() {
         binding.etDrums200L.setText(userPreferences.drums200LCount.toString())
         binding.etTanks1000L.setText(userPreferences.tanks1000LCount.toString())
         binding.etGallons20L.setText(userPreferences.gallons20LCount.toString())
-        binding.etDailyConsumption.setText("0")
+        binding.etDailyConsumption.setText(formatConsumption(viewModel.dailyConsumption.value))
 
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
         binding.btnDecrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, -1) }
@@ -322,7 +286,11 @@ class MainActivity : AppCompatActivity() {
             persistContainerCounts()
             recalculateRunoutBuffer()
         }
-        binding.etDailyConsumption.doAfterTextChanged {
+        binding.etDailyConsumption.doAfterTextChanged { text ->
+            val value = (text?.toString()?.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
+            if (value != viewModel.dailyConsumption.value) {
+                viewModel.setDailyConsumption(value)
+            }
             recalculateRunoutBuffer()
         }
         binding.etHoursUntilNextSupply.doAfterTextChanged {
@@ -353,37 +321,10 @@ class MainActivity : AppCompatActivity() {
             Triple(binding.btnFillFull, 100.0, "Full to the brim / top rim")
         )
 
-        fun selectFill(percent: Double, hint: String) {
-            selectedFillPercentage = percent
-            val activeBg = R.drawable.bg_pill_active
-            val inactiveBg = R.drawable.bg_pill_inactive
-            val activeColor = getColor(R.color.white)
-            val inactiveColor = getColor(R.color.ink_soft)
-
-            fillButtons.forEach { (btn, p, _) ->
-                if (p == percent) {
-                    btn.setBackgroundResource(activeBg)
-                    btn.setTextColor(activeColor)
-                } else {
-                    btn.setBackgroundResource(inactiveBg)
-                    btn.setTextColor(inactiveColor)
-                }
+        fillButtons.forEach { (btn, percent, _) ->
+            btn.setOnClickListener {
+                viewModel.setSelectedFillPercentage(percent)
             }
-
-            val statusTag = when (percent) {
-                0.0 -> "0% · EMPTY"
-                25.0 -> "25% · 1/4 FULL"
-                50.0 -> "50% · 1/2 FULL"
-                75.0 -> "75% · 3/4 FULL"
-                else -> "100% · FULL"
-            }
-            binding.tvFillPercentageDisplay.text = statusTag
-            binding.tvFillLevelHint.text = hint
-            recalculateRunoutBuffer()
-        }
-
-        fillButtons.forEach { (btn, percent, hint) ->
-            btn.setOnClickListener { selectFill(percent, hint) }
         }
 
         binding.btnFillLevelInfo.setOnClickListener {
@@ -394,7 +335,60 @@ class MainActivity : AppCompatActivity() {
                 .show()
         }
 
-        selectFill(selectedFillPercentage, "Empty / dry")
+        updateFillLevelUi(viewModel.selectedFillPercentage.value)
+    }
+
+    private fun updateFillLevelUi(percent: Double) {
+        val fillButtons = listOf(
+            Triple(binding.btnFillEmpty, 0.0, "Empty / dry"),
+            Triple(binding.btnFillQuarter, 25.0, "Quarter full (quarter-line mark)"),
+            Triple(binding.btnFillHalf, 50.0, "Half full (middle ridge line)"),
+            Triple(binding.btnFillThreeQuarter, 75.0, "Three quarters full (upper ring)"),
+            Triple(binding.btnFillFull, 100.0, "Full to the brim / top rim")
+        )
+        val activeBg = R.drawable.bg_pill_active
+        val inactiveBg = R.drawable.bg_pill_inactive
+        val activeColor = getColor(R.color.white)
+        val inactiveColor = getColor(R.color.ink_soft)
+
+        var selectedHint = "Empty / dry"
+        fillButtons.forEach { (btn, p, hint) ->
+            if (p == percent) {
+                btn.setBackgroundResource(activeBg)
+                btn.setTextColor(activeColor)
+                selectedHint = hint
+            } else {
+                btn.setBackgroundResource(inactiveBg)
+                btn.setTextColor(inactiveColor)
+            }
+        }
+
+        val statusTag = when (percent) {
+            0.0 -> "0% · EMPTY"
+            25.0 -> "25% · 1/4 FULL"
+            50.0 -> "50% · 1/2 FULL"
+            75.0 -> "75% · 3/4 FULL"
+            else -> "100% · FULL"
+        }
+        binding.tvFillPercentageDisplay.text = statusTag
+        binding.tvFillLevelHint.text = selectedHint
+        recalculateRunoutBuffer()
+    }
+
+    private fun formatConsumption(value: Double): String {
+        return if (value % 1.0 == 0.0) {
+            value.toLong().toString()
+        } else {
+            value.toString()
+        }
+    }
+
+    private fun updateDailyConsumptionUi(consumption: Double) {
+        val currentTextValue = binding.etDailyConsumption.text?.toString()?.toDoubleOrNull() ?: 0.0
+        if (currentTextValue != consumption) {
+            binding.etDailyConsumption.setText(formatConsumption(consumption))
+        }
+        recalculateRunoutBuffer()
     }
 
     /**
@@ -414,7 +408,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun autoPopulateScheduleHours() {
         val countdown = ScheduleCountdownCalculator.calculate(
-            zone = selectedZone,
+            zone = viewModel.selectedZone.value,
             currentTime = LocalDateTime.now()
         )
         binding.etHoursUntilNextSupply.setText(
@@ -436,13 +430,13 @@ class MainActivity : AppCompatActivity() {
         val drumsCount = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
         val overheadCount = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
         val gallonsCount = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
-        val fillPercent = selectedFillPercentage.coerceIn(0.0, 100.0)
+        val fillPercent = viewModel.selectedFillPercentage.value.coerceIn(0.0, 100.0)
 
-        val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
+        val dailyBurn = viewModel.dailyConsumption.value.coerceAtLeast(0.0)
 
         // Auto-fallback to Phase 1 hoursUntilNextOpening if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
-            zone = selectedZone,
+            zone = viewModel.selectedZone.value,
             currentTime = LocalDateTime.now()
         )
         val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
@@ -534,7 +528,7 @@ class MainActivity : AppCompatActivity() {
 
     // --- FEATURE 3: Crowdsourced Tap Flow & Pressure Verification ---
     private fun setupReportFeature() {
-        binding.tvReportZoneName.text = selectedZone.name
+        binding.tvReportZoneName.text = viewModel.selectedZone.value.name
 
         binding.btnSubmitReport.setOnClickListener {
             val selectedRadioId = binding.rgWaterStatus.checkedRadioButtonId
@@ -550,10 +544,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             val notes = binding.etReportNotes.text.toString().trim()
+            val currentZone = viewModel.selectedZone.value
             val report = GroundTruthReport(
                 id = "rep_${System.currentTimeMillis()}",
-                zoneId = selectedZone.id,
-                zoneName = selectedZone.name,
+                zoneId = currentZone.id,
+                zoneName = currentZone.name,
                 status = status,
                 notes = notes,
                 timestamp = System.currentTimeMillis()
@@ -587,9 +582,10 @@ class MainActivity : AppCompatActivity() {
      * computing verified report distribution, dominant status, and relative timestamp.
      */
     private fun updateConsensusCard() {
+        val currentZone = viewModel.selectedZone.value
         val consensus = reportRepository.getConsensus(
-            zoneId = selectedZone.id,
-            zoneName = selectedZone.name,
+            zoneId = currentZone.id,
+            zoneName = currentZone.name,
             currentTimeMillis = System.currentTimeMillis()
         )
 
@@ -629,9 +625,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun observeViewModelState() {
+        uiCoroutineJob?.cancel()
+        uiCoroutineJob = lifecycleScope.launch {
+            launch {
+                viewModel.selectedZone.collect { zone ->
+                    val index = zones.indexOfFirst { it.id == zone.id }
+                    if (index >= 0 && binding.spinnerZones.selectedItemPosition != index) {
+                        binding.spinnerZones.setSelection(index, false)
+                    }
+                    binding.tvReportZoneName.text = zone.name
+                    updateScheduleCards()
+                    startLiveCountdown()
+                    autoPopulateScheduleHours()
+                    recalculateRunoutBuffer()
+                    updateConsensusCard()
+                }
+            }
+            launch {
+                viewModel.selectedFillPercentage.collect { percent ->
+                    updateFillLevelUi(percent)
+                }
+            }
+            launch {
+                viewModel.dailyConsumption.collect { consumption ->
+                    updateDailyConsumptionUi(consumption)
+                }
+            }
+        }
+    }
 
     override fun onStart() {
         super.onStart()
+        observeViewModelState()
         startLiveCountdown()
     }
 
@@ -647,4 +673,3 @@ class MainActivity : AppCompatActivity() {
         stopTimersAndCoroutines()
     }
 }
-
