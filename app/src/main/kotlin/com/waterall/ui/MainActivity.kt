@@ -410,7 +410,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Interconnects the reserve estimator with the schedule engine from Phase 1.
-     * Auto-populates hoursUntilNextSupply from CountdownCalculationResult.remainingHours.
+     * Auto-populates hoursUntilNextSupply from CountdownCalculationResult.hoursUntilNextOpening.
      */
     private fun autoPopulateScheduleHours() {
         val countdown = ScheduleCountdownCalculator.calculate(
@@ -418,12 +418,12 @@ class MainActivity : AppCompatActivity() {
             currentTime = LocalDateTime.now()
         )
         binding.etHoursUntilNextSupply.setText(
-            String.format(Locale.US, "%.1f", countdown.remainingHours)
+            String.format(Locale.US, "%.1f", countdown.hoursUntilNextOpening)
         )
         binding.tvScheduleSyncStatus.text = String.format(
             Locale.US,
             "Synced · %.1f hrs · %s",
-            countdown.remainingHours,
+            countdown.hoursUntilNextOpening,
             countdown.flowState.badgeLabel
         )
     }
@@ -440,13 +440,13 @@ class MainActivity : AppCompatActivity() {
 
         val dailyBurn = (binding.etDailyConsumption.text.toString().toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
 
-        // Auto-fallback to Phase 1 remainingHours if input is blank
+        // Auto-fallback to Phase 1 hoursUntilNextOpening if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = selectedZone,
             currentTime = LocalDateTime.now()
         )
         val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
-            ?: countdown.remainingHours).coerceAtLeast(0.0)
+            ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
