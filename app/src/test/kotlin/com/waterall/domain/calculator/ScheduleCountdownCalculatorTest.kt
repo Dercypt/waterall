@@ -138,6 +138,16 @@ class ScheduleCountdownCalculatorTest {
     }
 
     @Test
+    fun testZoneDirectCalculationWithoutUserMode() {
+        val mondayMorning = LocalDateTime.of(2026, 10, 12, 7, 30, 0)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayMorning)
+
+        assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
+        assertEquals("02:30:00", result.formattedCountdown)
+        assertEquals(sampleZone.schedules, sampleZone.domesticSchedules)
+    }
+
+    @Test
     fun testEmptyScheduleHandling() {
         val result = ScheduleCountdownCalculator.calculate(emptyList(), LocalDateTime.now())
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)

@@ -23,7 +23,6 @@ import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
-import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
 import java.time.LocalDateTime
@@ -78,7 +77,6 @@ class MainActivity : AppCompatActivity() {
     )
 
     private var selectedZone: BarangayZone = zones[0]
-    private var currentUserMode: UserMode = UserMode.DOMESTIC
     private var selectedFillPercentage: Double = 100.0
     private var countdownTimer: CountDownTimer? = null
     private lateinit var viewModel: MainViewModel
@@ -98,7 +96,6 @@ class MainActivity : AppCompatActivity() {
 
         setupBottomNavigation()
         setupZoneSelector()
-        setupModeToggle()
         startLiveCountdown()
         setupReservesCalculator()
         setupReportFeature()
@@ -182,39 +179,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun setupModeToggle() {
-        binding.btnModeDomestic.setOnClickListener {
-            currentUserMode = UserMode.DOMESTIC
-            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_active)
-            binding.btnModeDomestic.setTextColor(getColor(R.color.white))
-            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeCommercial.setTextColor(getColor(R.color.ink_soft))
-            updateScheduleCards()
-            startLiveCountdown()
-            autoPopulateScheduleHours()
-            recalculateRunoutBuffer()
-        }
-
-        binding.btnModeCommercial.setOnClickListener {
-            currentUserMode = UserMode.COMMERCIAL
-            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_active)
-            binding.btnModeCommercial.setTextColor(getColor(R.color.white))
-            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeDomestic.setTextColor(getColor(R.color.ink_soft))
-            updateScheduleCards()
-            startLiveCountdown()
-            autoPopulateScheduleHours()
-            recalculateRunoutBuffer()
-        }
-    }
-
-
     private fun updateScheduleCards() {
-        val schedules = if (currentUserMode == UserMode.DOMESTIC) {
-            selectedZone.domesticSchedules
-        } else {
-            selectedZone.commercialSchedules
-        }
+        val schedules = selectedZone.schedules
 
         val card1 = binding.scheduleItem1
         val card2 = binding.scheduleItem2
@@ -279,7 +245,6 @@ class MainActivity : AppCompatActivity() {
 
         val calculation = ScheduleCountdownCalculator.calculate(
             zone = selectedZone,
-            userMode = currentUserMode,
             currentTime = LocalDateTime.now()
         )
 
@@ -424,7 +389,6 @@ class MainActivity : AppCompatActivity() {
     private fun autoPopulateScheduleHours() {
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = selectedZone,
-            userMode = currentUserMode,
             currentTime = LocalDateTime.now()
         )
         binding.etHoursUntilNextSupply.setText(
@@ -453,7 +417,6 @@ class MainActivity : AppCompatActivity() {
         // Auto-fallback to Phase 1 remainingHours if input is blank
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = selectedZone,
-            userMode = currentUserMode,
             currentTime = LocalDateTime.now()
         )
         val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
