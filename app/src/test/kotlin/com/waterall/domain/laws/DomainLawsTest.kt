@@ -173,7 +173,7 @@ class DomainLawsTest : LawsSpecificationStub {
         // Law 2.1: Strict positive duration (end > start)
         val validWindow = SupplyWindow(
             dayOfWeek = "Mon",
-            dateLabel = "Mon 09",
+            dateLabel = "Mon",
             startHour = 6,
             startMinute = 0,
             endHour = 10,
@@ -187,7 +187,7 @@ class DomainLawsTest : LawsSpecificationStub {
         try {
             SupplyWindow(
                 dayOfWeek = "Tue",
-                dateLabel = "Tue 10",
+                dateLabel = "Tue",
                 startHour = 14,
                 startMinute = 0,
                 endHour = 11,
