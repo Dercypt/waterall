@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
 import com.waterall.domain.calculator.CountdownCalculationResult
@@ -383,6 +384,14 @@ class MainActivity : AppCompatActivity() {
 
         fillButtons.forEach { (btn, percent, hint) ->
             btn.setOnClickListener { selectFill(percent, hint) }
+        }
+
+        binding.btnFillLevelInfo.setOnClickListener {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.fill_level_info_title)
+                .setMessage(R.string.fill_level_info_message)
+                .setPositiveButton(R.string.dialog_ok, null)
+                .show()
         }
 
         selectFill(selectedFillPercentage, "Empty / dry")

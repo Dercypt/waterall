@@ -4,4 +4,7 @@
     <string name="tab_calendar">Calendar</string>
     <string name="tab_reserves">Reserves</string>
     <string name="tab_report">Report</string>
+    <string name="fill_level_info_title">Fill Level</string>
+    <string name="fill_level_info_message">Fill level indicates how full your water containers currently are (from 0% Empty to 100% Full).\n\nHydroTrack uses this to calculate your available water reserves in liters and estimate how long your supply will last before the next rationing window.</string>
+    <string name="dialog_ok">Got it</string>
 </resources>
