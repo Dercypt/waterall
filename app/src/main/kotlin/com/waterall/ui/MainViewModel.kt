@@ -12,6 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
+ * Top-level application navigation tabs.
+ */
+enum class Tab {
+    CALENDAR,
+    RESERVES,
+    REPORT
+}
+
+/**
  * ViewModel managing UI state and the crowdsourced report repository across Activity configuration changes (e.g. screen rotation).
  */
 class MainViewModel(
@@ -19,7 +28,8 @@ class MainViewModel(
     initialZone: BarangayZone = DEFAULT_ZONES[0],
     initialFillPercentage: Double = 0.0,
     initialDailyConsumption: Double = 0.0,
-    initialUserMode: UserMode = UserMode.DOMESTIC
+    initialUserMode: UserMode = UserMode.DOMESTIC,
+    initialTab: Tab = Tab.CALENDAR
 ) : ViewModel() {
 
     private val _selectedZone = MutableStateFlow(initialZone)
@@ -33,6 +43,9 @@ class MainViewModel(
 
     private val _userMode = MutableStateFlow(initialUserMode)
     val userMode: StateFlow<UserMode> = _userMode.asStateFlow()
+
+    private val _currentTab = MutableStateFlow(initialTab)
+    val currentTab: StateFlow<Tab> = _currentTab.asStateFlow()
 
     fun setSelectedZone(zone: BarangayZone) {
         _selectedZone.value = zone
@@ -48,6 +61,10 @@ class MainViewModel(
 
     fun setUserMode(mode: UserMode) {
         _userMode.value = mode
+    }
+
+    fun setCurrentTab(tab: Tab) {
+        _currentTab.value = tab
     }
 
     companion object {

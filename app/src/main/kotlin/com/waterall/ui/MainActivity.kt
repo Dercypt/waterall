@@ -82,9 +82,11 @@ class MainActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { switchTab(Tab.CALENDAR) }
     }
 
-    private enum class Tab { CALENDAR, RESERVES, REPORT }
-
     private fun switchTab(tab: Tab) {
+        viewModel.setCurrentTab(tab)
+    }
+
+    private fun applyTab(tab: Tab) {
         binding.viewCalendar.visibility = if (tab == Tab.CALENDAR) View.VISIBLE else View.GONE
         binding.viewReserves.visibility = if (tab == Tab.RESERVES) View.VISIBLE else View.GONE
         binding.viewReport.visibility = if (tab == Tab.REPORT) View.VISIBLE else View.GONE
@@ -102,7 +104,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (tab == Tab.RESERVES) {
-            autoPopulateScheduleHours()
+            if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+                autoPopulateScheduleHours()
+            }
             recalculateRunoutBuffer()
         }
 
@@ -329,7 +333,9 @@ class MainActivity : AppCompatActivity() {
 
         setupFillLevelPresets()
 
-        autoPopulateScheduleHours()
+        if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+            autoPopulateScheduleHours()
+        }
         recalculateRunoutBuffer()
     }
 
@@ -663,7 +669,9 @@ class MainActivity : AppCompatActivity() {
                     binding.tvReportZoneName.text = zone.name
                     updateScheduleCards()
                     startLiveCountdown()
-                    autoPopulateScheduleHours()
+                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+                        autoPopulateScheduleHours()
+                    }
                     recalculateRunoutBuffer()
                     updateConsensusCard()
                 }
@@ -673,8 +681,15 @@ class MainActivity : AppCompatActivity() {
                     updateModeToggleUi(mode)
                     updateScheduleCards()
                     startLiveCountdown()
-                    autoPopulateScheduleHours()
+                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+                        autoPopulateScheduleHours()
+                    }
                     recalculateRunoutBuffer()
+                }
+            }
+            launch {
+                viewModel.currentTab.collect { tab ->
+                    applyTab(tab)
                 }
             }
             launch {
@@ -694,6 +709,11 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         observeViewModelState()
         startLiveCountdown()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        recalculateRunoutBuffer()
     }
 
     override fun onStop() {

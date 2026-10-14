@@ -81,6 +81,7 @@ class MainViewModelTest {
         assertEquals(0.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
     }
 
     @Test
@@ -130,6 +131,21 @@ class MainViewModelTest {
     }
 
     @Test
+    fun testSetCurrentTabUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.RESERVES)
+        assertEquals(Tab.RESERVES, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.REPORT)
+        assertEquals(Tab.REPORT, viewModel.currentTab.value)
+
+        viewModel.setCurrentTab(Tab.CALENDAR)
+        assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
+    }
+
+    @Test
     fun testUiStatePreservationAcrossSimulatedConfigurationChange() {
         val viewModel = MainViewModel()
         val selectedZone = MainViewModel.DEFAULT_ZONES[2]
@@ -137,12 +153,14 @@ class MainViewModelTest {
         viewModel.setSelectedFillPercentage(75.0)
         viewModel.setDailyConsumption(120.0)
         viewModel.setUserMode(UserMode.COMMERCIAL)
+        viewModel.setCurrentTab(Tab.RESERVES)
 
         // Simulate activity recreation retrieving the existing ViewModel instance
         assertEquals(selectedZone, viewModel.selectedZone.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(120.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(Tab.RESERVES, viewModel.currentTab.value)
     }
 
     @Test
@@ -152,12 +170,14 @@ class MainViewModelTest {
             initialZone = zone,
             initialFillPercentage = 50.0,
             initialDailyConsumption = 80.0,
-            initialUserMode = UserMode.COMMERCIAL
+            initialUserMode = UserMode.COMMERCIAL,
+            initialTab = Tab.REPORT
         )
 
         assertEquals(zone, viewModel.selectedZone.value)
         assertEquals(50.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(80.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(Tab.REPORT, viewModel.currentTab.value)
     }
 }
