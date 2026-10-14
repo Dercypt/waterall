@@ -24,6 +24,8 @@ data class ZoneConsensus(
  */
 object ZoneConsensusCalculator {
 
+    const val REPORT_EXPIRATION_WINDOW_MS = 24 * 60 * 60 * 1000L
+
     fun formatRelativeTime(timestamp: Long, now: Long = System.currentTimeMillis()): String =
         GroundTruthReport.formatRelativeTimestamp(timestamp, now)
 
@@ -43,8 +45,10 @@ object ZoneConsensusCalculator {
             }
         }
 
-        // Filter reports specifically for this zone (Law 4: Zone Integrity)
-        val zoneReports = reports.filter { it.zoneId == zoneId }
+        // Filter reports specifically for this zone (Law 4: Zone Integrity) and within 24-hour expiration window
+        val zoneReports = reports.filter {
+            it.zoneId == zoneId && (currentTimeMillis - it.timestamp) <= REPORT_EXPIRATION_WINDOW_MS
+        }
         val totalReports = zoneReports.size
 
         val shortZoneName = zoneName.substringBefore("—").substringBefore("-").trim().ifBlank { zoneName }
