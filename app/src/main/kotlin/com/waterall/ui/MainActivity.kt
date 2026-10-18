@@ -669,9 +669,7 @@ class MainActivity : AppCompatActivity() {
                     binding.tvReportZoneName.text = zone.name
                     updateScheduleCards()
                     startLiveCountdown()
-                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
-                        autoPopulateScheduleHours()
-                    }
+                    autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
                     updateConsensusCard()
                 }
@@ -681,9 +679,7 @@ class MainActivity : AppCompatActivity() {
                     updateModeToggleUi(mode)
                     updateScheduleCards()
                     startLiveCountdown()
-                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
-                        autoPopulateScheduleHours()
-                    }
+                    autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
                 }
             }
