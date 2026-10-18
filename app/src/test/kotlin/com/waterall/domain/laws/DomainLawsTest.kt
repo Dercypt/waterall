@@ -275,11 +275,10 @@ class DomainLawsTest : LawsSpecificationStub {
             assertTrue(e.message?.contains("Invalid start time") == true)
         }
 
-        // Invalid day string
-        val invalidDayWindow = SupplyWindow("Funday", "Funday 01", 6, 0, 10, 0)
+        // Invalid day string must fail fast on construction per Law 2
         try {
-            invalidDayWindow.dayOfWeekEnum
-            fail("Invalid day string must throw Law 2 violation")
+            SupplyWindow("Funday", "Funday 01", 6, 0, 10, 0)
+            fail("Invalid day string must throw Law 2 violation on construction")
         } catch (e: IllegalArgumentException) {
             assertTrue(e.message?.contains("Law 2 violation") == true)
         }
