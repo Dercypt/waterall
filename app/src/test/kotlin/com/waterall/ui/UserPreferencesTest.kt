@@ -43,6 +43,9 @@ class UserPreferencesTest {
         assertEquals(0, preferences.drums200LCount)
         assertEquals(0, preferences.tanks1000LCount)
         assertEquals(0, preferences.gallons20LCount)
+        assertEquals(0.0, preferences.fillPercentage, 0.001)
+        assertEquals(0.0, preferences.dailyConsumption, 0.001)
+        assertEquals(0, preferences.getReports().size)
     }
 
     @Test
@@ -68,5 +71,65 @@ class UserPreferencesTest {
         assertEquals(0, preferences.drums200LCount)
         assertEquals(0, preferences.tanks1000LCount)
         assertEquals(0, preferences.gallons20LCount)
+    }
+
+    @Test
+    fun testPersistAndRetrieveFillPercentage() {
+        preferences.fillPercentage = 75.0
+        assertEquals(75.0, preferences.fillPercentage, 0.001)
+
+        preferences.fillPercentage = 150.0
+        assertEquals(100.0, preferences.fillPercentage, 0.001)
+
+        preferences.fillPercentage = -20.0
+        assertEquals(0.0, preferences.fillPercentage, 0.001)
+    }
+
+    @Test
+    fun testPersistAndRetrieveDailyConsumption() {
+        preferences.dailyConsumption = 120.5
+        assertEquals(120.5, preferences.dailyConsumption, 0.001)
+
+        preferences.dailyConsumption = -50.0
+        assertEquals(0.0, preferences.dailyConsumption, 0.001)
+    }
+
+    @Test
+    fun testPersistAndRetrieveReports() {
+        val now = 1_700_000_000_000L
+        val reports = listOf(
+            com.waterall.domain.model.GroundTruthReport(
+                id = "rep-1",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = com.waterall.domain.model.TapFlowStatus.RUNNING,
+                notes = "Good flow",
+                timestamp = now - 5000L
+            ),
+            com.waterall.domain.model.GroundTruthReport(
+                id = "rep-2",
+                zoneId = "brgy1",
+                zoneName = "Zone 1",
+                status = com.waterall.domain.model.TapFlowStatus.DRY,
+                notes = "No water\nMain pipe shut",
+                timestamp = now - 2000L
+            )
+        )
+
+        preferences.saveReports(reports)
+        val loaded = preferences.getReports()
+
+        assertEquals(2, loaded.size)
+        assertEquals("rep-1", loaded[0].id)
+        assertEquals("brgy4", loaded[0].zoneId)
+        assertEquals(com.waterall.domain.model.TapFlowStatus.RUNNING, loaded[0].status)
+        assertEquals("Good flow", loaded[0].notes)
+        assertEquals(now - 5000L, loaded[0].timestamp)
+
+        assertEquals("rep-2", loaded[1].id)
+        assertEquals("brgy1", loaded[1].zoneId)
+        assertEquals(com.waterall.domain.model.TapFlowStatus.DRY, loaded[1].status)
+        assertEquals("No water Main pipe shut", loaded[1].notes)
+        assertEquals(now - 2000L, loaded[1].timestamp)
     }
 }
