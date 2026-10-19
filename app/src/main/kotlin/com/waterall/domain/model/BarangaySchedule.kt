@@ -28,6 +28,7 @@ data class SupplyWindow(
         require(endTotalMinutes > startTotalMinutes) {
             "Law 2 violation: SupplyWindow must have positive duration (end > start)."
         }
+        dayOfWeekEnum
     }
 
     val dayOfWeekEnum: DayOfWeek

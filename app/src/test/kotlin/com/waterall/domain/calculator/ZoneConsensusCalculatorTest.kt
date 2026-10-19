@@ -324,5 +324,81 @@ class ZoneConsensusCalculatorTest {
         assertEquals("Zone 4: No verified reports today", consensus.summaryText)
         assertTrue(consensus.statusPercentages.isEmpty())
     }
+
+    companion object {
+        fun createSeededRepository(nowMillis: Long): InMemoryReportRepository {
+            val seedReports = listOf(
+                GroundTruthReport(
+                    id = "seed-z4-1",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Strong flow at Purok 1",
+                    timestamp = nowMillis - 45 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-2",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Purok 2 tap running",
+                    timestamp = nowMillis - 30 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-3",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Good pressure for filling drums",
+                    timestamp = nowMillis - 20 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-4",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Pressure dropped slightly at upper road",
+                    timestamp = nowMillis - 12 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z1-1",
+                    zoneId = "brgy1",
+                    zoneName = "Zone 1 — Brgy. Cabinet Hill",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Trickle flow observed",
+                    timestamp = nowMillis - 25 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z1-2",
+                    zoneId = "brgy1",
+                    zoneName = "Zone 1 — Brgy. Cabinet Hill",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Low pressure line",
+                    timestamp = nowMillis - 15 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z7-1",
+                    zoneId = "brgy7",
+                    zoneName = "Zone 7 — Brgy. Trancoville",
+                    status = TapFlowStatus.DRY,
+                    notes = "No supply yet",
+                    timestamp = nowMillis - 50 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z7-2",
+                    zoneId = "brgy7",
+                    zoneName = "Zone 7 — Brgy. Trancoville",
+                    status = TapFlowStatus.DRY,
+                    notes = "Main line dry",
+                    timestamp = nowMillis - 10 * 60 * 1000L
+                )
+            )
+            return InMemoryReportRepository(seedReports)
+        }
+    }
 }
+
+private fun InMemoryReportRepository.Companion.createSeeded(nowMillis: Long = System.currentTimeMillis()): InMemoryReportRepository =
+    ZoneConsensusCalculatorTest.createSeededRepository(nowMillis)
+
 

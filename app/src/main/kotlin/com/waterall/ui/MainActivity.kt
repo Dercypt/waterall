@@ -61,6 +61,12 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
             viewModel.setSelectedZone(zones[savedZoneIndex])
+            viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
+            viewModel.setDailyConsumption(userPreferences.dailyConsumption)
+            val savedReports = userPreferences.getReports()
+            if (reportRepository.getAllReports().isEmpty()) {
+                savedReports.reversed().forEach { reportRepository.addReport(it) }
+            }
         }
 
         setupBottomNavigation()
@@ -318,6 +324,7 @@ class MainActivity : AppCompatActivity() {
             val value = (text?.toString()?.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
             if (value != viewModel.dailyConsumption.value) {
                 viewModel.setDailyConsumption(value)
+                userPreferences.dailyConsumption = value
             }
             recalculateRunoutBuffer()
         }
@@ -354,6 +361,7 @@ class MainActivity : AppCompatActivity() {
         fillButtons.forEach { (btn, percent, _) ->
             btn.setOnClickListener {
                 viewModel.setSelectedFillPercentage(percent)
+                userPreferences.fillPercentage = percent
             }
         }
 
@@ -588,6 +596,7 @@ class MainActivity : AppCompatActivity() {
 
             // Feed report into the in-memory repository to close the feedback loop
             reportRepository.addReport(report)
+            userPreferences.saveReports(reportRepository.getAllReports())
 
             // Immediate UI acknowledgment: Toast notification and consensus card confirmation
             Toast.makeText(
@@ -669,9 +678,7 @@ class MainActivity : AppCompatActivity() {
                     binding.tvReportZoneName.text = zone.name
                     updateScheduleCards()
                     startLiveCountdown()
-                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
-                        autoPopulateScheduleHours()
-                    }
+                    autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
                     updateConsensusCard()
                 }
@@ -681,9 +688,7 @@ class MainActivity : AppCompatActivity() {
                     updateModeToggleUi(mode)
                     updateScheduleCards()
                     startLiveCountdown()
-                    if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
-                        autoPopulateScheduleHours()
-                    }
+                    autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
                 }
             }
@@ -705,26 +710,30 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Retains container counts, fill level, and daily consumption to lightweight SharedPreferences.
+     */
+    private fun persistUserPreferences() {
+        if (!::userPreferences.isInitialized) return
+        persistContainerCounts()
+        userPreferences.fillPercentage = viewModel.selectedFillPercentage.value
+        userPreferences.dailyConsumption = viewModel.dailyConsumption.value
+    }
+
     override fun onStart() {
         super.onStart()
         observeViewModelState()
-        startLiveCountdown()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        recalculateRunoutBuffer()
     }
 
     override fun onStop() {
         super.onStop()
-        persistContainerCounts()
+        persistUserPreferences()
         stopTimersAndCoroutines()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        persistContainerCounts()
+        persistUserPreferences()
         stopTimersAndCoroutines()
     }
 }

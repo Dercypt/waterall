@@ -180,4 +180,30 @@ class MainViewModelTest {
         assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(Tab.REPORT, viewModel.currentTab.value)
     }
+
+    @Test
+    fun testRestorationWithPersistedValuesAndReports() {
+        val repo = InMemoryReportRepository()
+        val report = GroundTruthReport(
+            id = "persisted-rep-1",
+            zoneId = "brgy7",
+            zoneName = "Zone 7",
+            status = TapFlowStatus.DRY,
+            timestamp = System.currentTimeMillis() - 5000L
+        )
+        repo.addReport(report)
+
+        val viewModel = MainViewModel(
+            reportRepository = repo,
+            initialZone = MainViewModel.DEFAULT_ZONES[2],
+            initialFillPercentage = 75.0,
+            initialDailyConsumption = 150.0
+        )
+
+        assertEquals(MainViewModel.DEFAULT_ZONES[2], viewModel.selectedZone.value)
+        assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(150.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(1, viewModel.reportRepository.getAllReports().size)
+        assertEquals(report, viewModel.reportRepository.getAllReports().first())
+    }
 }
