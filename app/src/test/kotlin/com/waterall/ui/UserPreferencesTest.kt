@@ -164,4 +164,27 @@ class UserPreferencesTest {
         assertEquals(1, loaded.size)
         assertEquals("rep-valid", loaded[0].id)
     }
+
+    @Test
+    fun testMixedValidAndInvalidEntriesSkippedGracefully() {
+        val now = System.currentTimeMillis()
+        val futureTime = now + 50_000L
+        val pastTime1 = now - 60_000L
+        val pastTime2 = now - 120_000L
+
+        val raw = listOf(
+            "rep-1\tbrgy4\tZone 4\tRUNNING\t$pastTime1\tFirst valid",
+            "rep-future\tbrgy4\tZone 4\tDRY\t$futureTime\tFuture skew",
+            "rep-corrupt\t\t\tINVALID_STATUS\tnot-a-number\tMalformed",
+            "rep-blank-zone\t  \tBlank Zone\tLOW_PRESSURE\t$pastTime1\tBlank",
+            "rep-2\tbrgy1\tZone 1\tLOW_PRESSURE\t$pastTime2\tSecond valid"
+        ).joinToString("\n")
+
+        storage.putString(UserPreferences.KEY_SUBMITTED_REPORTS, raw)
+
+        val loaded = preferences.getReports()
+        assertEquals(2, loaded.size)
+        assertEquals("rep-1", loaded[0].id)
+        assertEquals("rep-2", loaded[1].id)
+    }
 }
