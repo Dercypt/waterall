@@ -319,4 +319,45 @@ class MainViewModelTest {
         viewModel.setCustomSupplyHours(null)
         assertEquals(null, viewModel.customSupplyHours.value)
     }
+
+    @Test
+    fun testEmptyScheduleZoneShowsNeutralCopyRatherThanActiveSupply() {
+        val emptyZone = com.waterall.domain.model.BarangayZone(
+            id = "empty_brgy",
+            name = "Zone Empty — Barangay Without Rotation",
+            domesticSchedules = emptyList(),
+            commercialSchedules = emptyList()
+        )
+        val viewModel = MainViewModel(initialZone = emptyZone)
+        assertEquals(emptyZone, viewModel.selectedZone.value)
+
+        val countdown = com.waterall.domain.calculator.ScheduleCountdownCalculator.calculate(
+            zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
+            currentTime = java.time.LocalDateTime.now()
+        )
+        // Empty schedule must be RATIONING_ACTIVE with 0.0 hours
+        assertEquals(com.waterall.domain.calculator.ScheduleFlowState.RATIONING_ACTIVE, countdown.flowState)
+        assertEquals(0.0, countdown.hoursUntilNextOpening, 0.001)
+
+        val nextSupplyHours = (viewModel.customSupplyHours.value ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
+        assertEquals(0.0, nextSupplyHours, 0.001)
+
+        val inventory = com.waterall.domain.model.StorageInventory(blueDrums200L = 2, fillPercentage = 100.0)
+        val result = com.waterall.domain.calculator.RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = nextSupplyHours
+        )
+
+        val targetUi = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = countdown.flowState,
+            hoursUntilNextSupply = nextSupplyHours
+        )
+
+        assertEquals(TargetRecommendationFormatter.EMPTY_TARGET_TEXT, targetUi.targetValueText)
+        assertEquals(TargetRecommendationFormatter.EMPTY_SUPPLY_HOURS_SUBTEXT, targetUi.subtext)
+        org.junit.Assert.assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, targetUi.subtext)
+    }
 }

@@ -96,4 +96,66 @@ class TargetRecommendationFormatterTest {
         assertEquals("Reduce use from 200 to 100 L/day to avoid running out.", uiModel.subtext)
         assertTrue(uiModel.isDeficitRisk)
     }
+
+    @Test
+    fun testZeroOrNegativeSupplyHoursUnderRationingShowsNeutralInstructions() {
+        val inventory = StorageInventory(blueDrums200L = 1, fillPercentage = 50.0) // 100L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 100.0,
+            hoursUntilNextSupply = 0.0
+        )
+
+        val negativeHoursModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = ScheduleFlowState.RATIONING_ACTIVE,
+            hoursUntilNextSupply = -1.0
+        )
+
+        assertEquals(TargetRecommendationFormatter.EMPTY_TARGET_TEXT, negativeHoursModel.targetValueText)
+        assertEquals(TargetRecommendationFormatter.EMPTY_SUPPLY_HOURS_SUBTEXT, negativeHoursModel.subtext)
+        assertFalse(negativeHoursModel.isDeficitRisk)
+    }
+
+    @Test
+    fun testZeroConsumptionWithZeroSupplyHoursUnderRationingShowsNeutralInstructions() {
+        // Law 1: 0 burn rate lasts indefinitely
+        val inventory = StorageInventory(blueDrums200L = 2, fillPercentage = 100.0) // 400L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 0.0,
+            hoursUntilNextSupply = 0.0
+        )
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = ScheduleFlowState.RATIONING_ACTIVE,
+            hoursUntilNextSupply = 0.0
+        )
+
+        assertEquals(TargetRecommendationFormatter.EMPTY_TARGET_TEXT, uiModel.targetValueText)
+        assertEquals(TargetRecommendationFormatter.EMPTY_SUPPLY_HOURS_SUBTEXT, uiModel.subtext)
+        assertFalse(uiModel.isDeficitRisk)
+        assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+    }
+
+    @Test
+    fun testActiveFlowStateWithEmptyContainersDirectsResidentToRefill() {
+        val emptyInventory = StorageInventory(blueDrums200L = 0, fillPercentage = 0.0)
+        val result = RunoutEstimator.calculate(
+            inventory = emptyInventory,
+            dailyBurnRateLiters = 150.0,
+            hoursUntilNextSupply = 36.0
+        )
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = ScheduleFlowState.FLOW_ACTIVE,
+            hoursUntilNextSupply = 36.0
+        )
+
+        assertEquals(TargetRecommendationFormatter.UNRESTRICTED_TARGET_TEXT, uiModel.targetValueText)
+        assertEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+        assertFalse(uiModel.isDeficitRisk)
+    }
 }
