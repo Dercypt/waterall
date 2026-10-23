@@ -507,6 +507,15 @@ class MainActivity : AppCompatActivity() {
         recalculateRunoutBuffer()
     }
 
+    /**
+     * Recalculates storage capacity, current volume, remaining runout buffer hours,
+     * and recommended daily consumption target.
+     *
+     * Validates [ScheduleFlowState.FLOW_ACTIVE] directly via [TargetRecommendationFormatter]
+     * rather than inferring flow from infinite daily targets. This prevents empty schedules
+     * or 0-hour supply inputs (which return [ScheduleFlowState.RATIONING_ACTIVE] with 0.0 hours)
+     * from falsely showing residents an active supply refill message.
+     */
     private fun recalculateRunoutBuffer() {
         val drumsCount = viewModel.drums200L.value
         val overheadCount = viewModel.tanks1000L.value
@@ -516,14 +525,12 @@ class MainActivity : AppCompatActivity() {
         val dailyBurn = viewModel.dailyConsumption.value.coerceAtLeast(0.0)
 
         // Auto-fallback to Phase 1 hoursUntilNextOpening if override is not set
-        val nextSupplyHours = viewModel.customSupplyHours.value ?: run {
-            val countdown = ScheduleCountdownCalculator.calculate(
-                zone = viewModel.selectedZone.value,
-                userMode = viewModel.userMode.value,
-                currentTime = LocalDateTime.now()
-            )
-            countdown.hoursUntilNextOpening
-        }.coerceAtLeast(0.0)
+        val countdown = ScheduleCountdownCalculator.calculate(
+            zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
+            currentTime = LocalDateTime.now()
+        )
+        val nextSupplyHours = (viewModel.customSupplyHours.value ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
@@ -556,18 +563,6 @@ class MainActivity : AppCompatActivity() {
                 -result.safetyBufferHours,
                 result.deficitLiters
             )
-
-            // Recommended Daily Consumption Target to avoid emergency water purchases
-            binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_danger)
-            binding.tvTargetLabel.setTextColor(getColor(R.color.status_alert))
-            binding.tvRecommendedTargetValue.text = String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
-            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.status_alert))
-            binding.tvRecommendedTargetSubtext.text = String.format(
-                Locale.US,
-                "Reduce use from %.0f to %.0f L/day to avoid running out.",
-                result.dailyBurnRateLiters,
-                result.recommendedDailyTargetLiters
-            )
         } else {
             // Surplus Buffer (Emerald)
             binding.cardRunoutStatus.setBackgroundResource(R.drawable.bg_card_safe)
@@ -585,27 +580,32 @@ class MainActivity : AppCompatActivity() {
                     result.safetyBufferHours
                 )
             }
+        }
 
-            // Recommended Daily Consumption Target
+        // Recommended Daily Consumption Target
+        val targetUi = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = countdown.flowState,
+            hoursUntilNextSupply = nextSupplyHours
+        )
+
+        if (targetUi.isDeficitRisk) {
+            binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_danger)
+            binding.tvTargetLabel.setTextColor(getColor(R.color.status_alert))
+            binding.tvRecommendedTargetValue.text = targetUi.targetValueText
+            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.status_alert))
+            binding.tvRecommendedTargetSubtext.text = targetUi.subtext
+        } else {
             binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_safe)
             binding.tvTargetLabel.setTextColor(getColor(R.color.ink_muted))
-            val targetStr = if (result.recommendedDailyTargetLiters.isInfinite()) {
-                "Unrestricted"
+            binding.tvRecommendedTargetValue.text = targetUi.targetValueText
+            val valueColor = if (nextSupplyHours <= 0.0 && countdown.flowState == ScheduleFlowState.RATIONING_ACTIVE) {
+                getColor(R.color.ink_muted)
             } else {
-                String.format(Locale.US, "≤ %.0f L/day", result.recommendedDailyTargetLiters)
+                getColor(R.color.status_ok)
             }
-            binding.tvRecommendedTargetValue.text = targetStr
-            binding.tvRecommendedTargetValue.setTextColor(getColor(R.color.status_ok))
-            binding.tvRecommendedTargetSubtext.text = if (result.recommendedDailyTargetLiters.isInfinite()) {
-                "Supply window is active. Refill containers now."
-            } else {
-                String.format(
-                    Locale.US,
-                    "Stay at or below %.0f L/day (currently %.0f) to keep your buffer.",
-                    result.recommendedDailyTargetLiters,
-                    result.dailyBurnRateLiters
-                )
-            }
+            binding.tvRecommendedTargetValue.setTextColor(valueColor)
+            binding.tvRecommendedTargetSubtext.text = targetUi.subtext
         }
     }
 
