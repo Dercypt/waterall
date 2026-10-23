@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
             viewModel.setSelectedZone(zones[savedZoneIndex])
+            viewModel.setUserMode(userPreferences.userMode)
             viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
             viewModel.setDailyConsumption(userPreferences.dailyConsumption)
             viewModel.setDrums200L(userPreferences.drums200LCount)
@@ -120,7 +121,6 @@ class MainActivity : AppCompatActivity() {
             if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
                 autoPopulateScheduleHours()
             }
-            recalculateRunoutBuffer()
         }
 
         if (tab == Tab.REPORT) {
@@ -166,12 +166,14 @@ class MainActivity : AppCompatActivity() {
         binding.btnModeDomestic.setOnClickListener {
             if (viewModel.userMode.value != UserMode.DOMESTIC) {
                 viewModel.setUserMode(UserMode.DOMESTIC)
+                userPreferences.userMode = UserMode.DOMESTIC
                 autoPopulateScheduleHours()
             }
         }
         binding.btnModeCommercial.setOnClickListener {
             if (viewModel.userMode.value != UserMode.COMMERCIAL) {
                 viewModel.setUserMode(UserMode.COMMERCIAL)
+                userPreferences.userMode = UserMode.COMMERCIAL
                 autoPopulateScheduleHours()
             }
         }
@@ -308,38 +310,44 @@ class MainActivity : AppCompatActivity() {
         binding.etDailyConsumption.setText(formatConsumption(viewModel.dailyConsumption.value))
 
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
-        binding.btnDecrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, -1) }
-        binding.btnIncrementDrums200L.setOnClickListener { adjustContainerCount(binding.etDrums200L, 1) }
+        binding.btnDecrementDrums200L.setOnClickListener {
+            viewModel.setDrums200L(maxOf(0, viewModel.drums200L.value - 1))
+        }
+        binding.btnIncrementDrums200L.setOnClickListener {
+            viewModel.setDrums200L(viewModel.drums200L.value + 1)
+        }
 
-        binding.btnDecrementTanks1000L.setOnClickListener { adjustContainerCount(binding.etTanks1000L, -1) }
-        binding.btnIncrementTanks1000L.setOnClickListener { adjustContainerCount(binding.etTanks1000L, 1) }
+        binding.btnDecrementTanks1000L.setOnClickListener {
+            viewModel.setTanks1000L(maxOf(0, viewModel.tanks1000L.value - 1))
+        }
+        binding.btnIncrementTanks1000L.setOnClickListener {
+            viewModel.setTanks1000L(viewModel.tanks1000L.value + 1)
+        }
 
-        binding.btnDecrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, -1) }
-        binding.btnIncrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, 1) }
+        binding.btnDecrementGallons20L.setOnClickListener {
+            viewModel.setGallons20L(maxOf(0, viewModel.gallons20L.value - 1))
+        }
+        binding.btnIncrementGallons20L.setOnClickListener {
+            viewModel.setGallons20L(viewModel.gallons20L.value + 1)
+        }
 
         // Live text watchers for automatic real-time calculation as inputs change
         binding.etDrums200L.doAfterTextChanged { text ->
             val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
             if (viewModel.drums200L.value != count) {
                 viewModel.setDrums200L(count)
-                persistContainerCounts()
-                recalculateRunoutBuffer()
             }
         }
         binding.etTanks1000L.doAfterTextChanged { text ->
             val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
             if (viewModel.tanks1000L.value != count) {
                 viewModel.setTanks1000L(count)
-                persistContainerCounts()
-                recalculateRunoutBuffer()
             }
         }
         binding.etGallons20L.doAfterTextChanged { text ->
             val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
             if (viewModel.gallons20L.value != count) {
                 viewModel.setGallons20L(count)
-                persistContainerCounts()
-                recalculateRunoutBuffer()
             }
         }
         binding.etDailyConsumption.doAfterTextChanged { text ->
@@ -347,7 +355,6 @@ class MainActivity : AppCompatActivity() {
             if (value != viewModel.dailyConsumption.value) {
                 viewModel.setDailyConsumption(value)
                 userPreferences.dailyConsumption = value
-                recalculateRunoutBuffer()
             }
         }
         binding.etHoursUntilNextSupply.doAfterTextChanged { text ->
@@ -355,12 +362,9 @@ class MainActivity : AppCompatActivity() {
                 val hours = text?.toString()?.toDoubleOrNull()
                 if (viewModel.customSupplyHours.value != hours) {
                     viewModel.setCustomSupplyHours(hours)
-                    if (hours != null) {
-                        binding.tvScheduleSyncStatus.text = "Manual override"
-                    } else {
+                    if (hours == null) {
                         binding.tvScheduleSyncStatus.text = "Synced with zone schedule"
                     }
-                    recalculateRunoutBuffer()
                 }
             }
         }
@@ -384,7 +388,6 @@ class MainActivity : AppCompatActivity() {
         } else if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
             autoPopulateScheduleHours()
         }
-        recalculateRunoutBuffer()
     }
 
     /**
@@ -451,7 +454,6 @@ class MainActivity : AppCompatActivity() {
         }
         binding.tvFillPercentageDisplay.text = statusTag
         binding.tvFillLevelHint.text = selectedHint
-        recalculateRunoutBuffer()
     }
 
     private fun formatConsumption(value: Double): String {
@@ -467,18 +469,6 @@ class MainActivity : AppCompatActivity() {
         if (currentTextValue != consumption) {
             binding.etDailyConsumption.setText(formatConsumption(consumption))
         }
-        recalculateRunoutBuffer()
-    }
-
-    /**
-     * Increments or decrements container counts enforcing Law 3 discrete whole vessel quantization.
-     */
-    private fun adjustContainerCount(editText: EditText, delta: Int) {
-        val current = editText.text.toString().toIntOrNull() ?: 0
-        val updated = maxOf(0, current + delta)
-        editText.setText(updated.toString())
-        persistContainerCounts()
-        recalculateRunoutBuffer()
     }
 
     /**
@@ -506,7 +496,6 @@ class MainActivity : AppCompatActivity() {
             countdown.hoursUntilNextOpening,
             countdown.flowState.badgeLabel
         )
-        recalculateRunoutBuffer()
     }
 
     /**
@@ -730,6 +719,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Observes all 9 StateFlows from [MainViewModel], keeping UI components in sync
+     * and driving reserve buffer calculations via a single unified combine pipeline.
+     */
     private fun observeViewModelState() {
         uiCoroutineJob?.cancel()
         uiCoroutineJob = lifecycleScope.launch {
@@ -745,7 +738,6 @@ class MainActivity : AppCompatActivity() {
                     updateModeToggleUi(mode)
                     updateScheduleCards()
                     startLiveCountdown()
-                    recalculateRunoutBuffer()
                     updateConsensusCard()
                 }
             }
@@ -764,15 +756,67 @@ class MainActivity : AppCompatActivity() {
                     updateDailyConsumptionUi(consumption)
                 }
             }
+            launch {
+                viewModel.drums200L.collect { count ->
+                    if (binding.etDrums200L.text?.toString()?.toIntOrNull() != count) {
+                        binding.etDrums200L.setText(count.toString())
+                    }
+                    persistContainerCounts()
+                }
+            }
+            launch {
+                viewModel.tanks1000L.collect { count ->
+                    if (binding.etTanks1000L.text?.toString()?.toIntOrNull() != count) {
+                        binding.etTanks1000L.setText(count.toString())
+                    }
+                    persistContainerCounts()
+                }
+            }
+            launch {
+                viewModel.gallons20L.collect { count ->
+                    if (binding.etGallons20L.text?.toString()?.toIntOrNull() != count) {
+                        binding.etGallons20L.setText(count.toString())
+                    }
+                    persistContainerCounts()
+                }
+            }
+            launch {
+                viewModel.customSupplyHours.collect { hours ->
+                    if (hours != null) {
+                        val currentVal = binding.etHoursUntilNextSupply.text?.toString()?.toDoubleOrNull()
+                        if (currentVal != hours) {
+                            isAutoPopulatingScheduleHours = true
+                            try {
+                                binding.etHoursUntilNextSupply.setText(String.format(Locale.US, "%.1f", hours))
+                            } finally {
+                                isAutoPopulatingScheduleHours = false
+                            }
+                        }
+                        binding.tvScheduleSyncStatus.text = "Manual override"
+                    }
+                }
+            }
+            launch {
+                combine(
+                    combine(viewModel.selectedZone, viewModel.userMode) { zone, mode -> zone to mode },
+                    combine(viewModel.drums200L, viewModel.tanks1000L, viewModel.gallons20L) { d, t, g -> Triple(d, t, g) },
+                    combine(viewModel.selectedFillPercentage, viewModel.dailyConsumption, viewModel.customSupplyHours) { f, c, h -> Triple(f, c, h) }
+                ) { _, _, _ ->
+                    Unit
+                }.collect {
+                    recalculateRunoutBuffer()
+                }
+            }
         }
     }
 
     /**
-     * Retains container counts, fill level, and daily consumption to lightweight SharedPreferences.
+     * Retains container counts, user mode, fill level, and daily consumption to lightweight SharedPreferences.
      */
     private fun persistUserPreferences() {
         if (!::userPreferences.isInitialized) return
         persistContainerCounts()
+        userPreferences.userMode = viewModel.userMode.value
         userPreferences.fillPercentage = viewModel.selectedFillPercentage.value
         userPreferences.dailyConsumption = viewModel.dailyConsumption.value
     }
