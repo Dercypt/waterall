@@ -8,6 +8,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.DayOfWeek
 import java.time.LocalDateTime
 
 class ScheduleCountdownCalculatorTest {
@@ -38,7 +39,7 @@ class ScheduleCountdownCalculatorTest {
 
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
         assertNotNull(result.activeWindow)
-        assertEquals("Mon", result.activeWindow?.dayOfWeek)
+        assertEquals(DayOfWeek.MONDAY, result.activeWindow?.dayOfWeek)
 
         // Remaining time to 10:00 AM = 2 hours and 30 minutes = 9000 seconds
         assertEquals(9000L, result.remainingSeconds)
@@ -46,7 +47,7 @@ class ScheduleCountdownCalculatorTest {
         assertEquals("02:30:00", result.formattedCountdown)
         assertEquals(LocalDateTime.of(2026, 10, 12, 10, 0, 0), result.targetDateTime)
         // Next upcoming window is Wednesday 05:00 (45.5 hours from Mon 07:30)
-        assertEquals("Wed", result.nextWindow?.dayOfWeek)
+        assertEquals(DayOfWeek.WEDNESDAY, result.nextWindow?.dayOfWeek)
         assertEquals(45.5, result.hoursUntilNextOpening, 0.001)
     }
 
@@ -59,7 +60,7 @@ class ScheduleCountdownCalculatorTest {
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertNull(result.activeWindow)
         assertNotNull(result.nextWindow)
-        assertEquals("Mon", result.nextWindow?.dayOfWeek)
+        assertEquals(DayOfWeek.MONDAY, result.nextWindow?.dayOfWeek)
 
         // 45 minutes until opening = 2700 seconds
         assertEquals(2700L, result.remainingSeconds)
@@ -77,7 +78,7 @@ class ScheduleCountdownCalculatorTest {
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertNull(result.activeWindow)
         // Next window is Wednesday 05:00 AM (in 42.5 hours)
-        assertEquals("Wed", result.nextWindow?.dayOfWeek)
+        assertEquals(DayOfWeek.WEDNESDAY, result.nextWindow?.dayOfWeek)
         assertEquals(LocalDateTime.of(2026, 10, 14, 5, 0, 0), result.targetDateTime)
 
         // Remaining seconds: from Mon 10:30 to Wed 05:00 = 42.5 hrs = 153000s
@@ -95,7 +96,7 @@ class ScheduleCountdownCalculatorTest {
         val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, fridayAfternoon)
 
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
-        assertEquals("Mon", result.nextWindow?.dayOfWeek)
+        assertEquals(DayOfWeek.MONDAY, result.nextWindow?.dayOfWeek)
         // Friday 12:00 to Monday 06:00 = 66 hours
         assertEquals(LocalDateTime.of(2026, 10, 19, 6, 0, 0), result.targetDateTime)
         assertEquals(66 * 3600L, result.remainingSeconds)
@@ -183,5 +184,19 @@ class ScheduleCountdownCalculatorTest {
                 window.dateLabel.none { it.isDigit() }
             )
         }
+    }
+
+    @Test
+    fun testSupplyWindowDayOfWeekDirectStorage() {
+        val window = SupplyWindow(
+            dayOfWeek = DayOfWeek.MONDAY,
+            startHour = 6,
+            startMinute = 0,
+            endHour = 10,
+            endMinute = 0
+        )
+        assertEquals(DayOfWeek.MONDAY, window.dayOfWeek)
+        assertEquals("Mon", window.dateLabel)
+        assertEquals(DayOfWeek.MONDAY, window.dayOfWeekEnum)
     }
 }

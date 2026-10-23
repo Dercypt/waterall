@@ -9,8 +9,7 @@ enum class UserMode {
 }
 
 data class SupplyWindow(
-    val dayOfWeek: String,
-    val dateLabel: String,
+    val dayOfWeek: DayOfWeek,
     val startHour: Int,
     val startMinute: Int,
     val endHour: Int,
@@ -28,20 +27,13 @@ data class SupplyWindow(
         require(endTotalMinutes > startTotalMinutes) {
             "Law 2 violation: SupplyWindow must have positive duration (end > start)."
         }
-        dayOfWeekEnum
     }
 
     val dayOfWeekEnum: DayOfWeek
-        get() = when (dayOfWeek.trim().take(3).lowercase(Locale.US)) {
-            "mon" -> DayOfWeek.MONDAY
-            "tue" -> DayOfWeek.TUESDAY
-            "wed" -> DayOfWeek.WEDNESDAY
-            "thu" -> DayOfWeek.THURSDAY
-            "fri" -> DayOfWeek.FRIDAY
-            "sat" -> DayOfWeek.SATURDAY
-            "sun" -> DayOfWeek.SUNDAY
-            else -> throw IllegalArgumentException("Law 2 violation: Invalid dayOfWeek '$dayOfWeek'.")
-        }
+        get() = dayOfWeek
+
+    val dateLabel: String
+        get() = dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT, Locale.US)
 
     val durationMinutes: Int
         get() = (endHour * 60 + endMinute) - (startHour * 60 + startMinute)
@@ -62,6 +54,35 @@ data class SupplyWindow(
             }
             return String.format("%d:%02d %s – %d:%02d %s", displayStartH, startMinute, startAmPm, displayEndH, endMinute, endAmPm)
         }
+
+    @Suppress("UNUSED_PARAMETER")
+    constructor(
+        dayOfWeek: String,
+        dateLabel: String = dayOfWeek,
+        startHour: Int,
+        startMinute: Int,
+        endHour: Int,
+        endMinute: Int
+    ) : this(
+        dayOfWeek = parseDayOfWeek(dayOfWeek),
+        startHour = startHour,
+        startMinute = startMinute,
+        endHour = endHour,
+        endMinute = endMinute
+    )
+
+    companion object {
+        fun parseDayOfWeek(raw: String): DayOfWeek = when (raw.trim().take(3).lowercase(Locale.US)) {
+            "mon" -> DayOfWeek.MONDAY
+            "tue" -> DayOfWeek.TUESDAY
+            "wed" -> DayOfWeek.WEDNESDAY
+            "thu" -> DayOfWeek.THURSDAY
+            "fri" -> DayOfWeek.FRIDAY
+            "sat" -> DayOfWeek.SATURDAY
+            "sun" -> DayOfWeek.SUNDAY
+            else -> throw IllegalArgumentException("Law 2 violation: Invalid dayOfWeek '$raw'.")
+        }
+    }
 }
 
 data class BarangayZone(
