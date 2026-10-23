@@ -271,4 +271,52 @@ class MainViewModelTest {
         assertEquals(1, viewModel.reportRepository.getAllReports().size)
         assertEquals(report, viewModel.reportRepository.getAllReports().first())
     }
+
+    @Test
+    fun testConstructorClampingForNegativeInitialContainerCounts() {
+        val viewModel = MainViewModel(
+            initialDrums200L = -5,
+            initialTanks1000L = -2,
+            initialGallons20L = -10,
+            initialCustomSupplyHours = -4.5
+        )
+
+        assertEquals(0, viewModel.drums200L.value)
+        assertEquals(0, viewModel.tanks1000L.value)
+        assertEquals(0, viewModel.gallons20L.value)
+        assertEquals(0.0, viewModel.customSupplyHours.value!!, 0.001)
+    }
+
+    @Test
+    fun testContainerCountsBatchClampingEdgeCases() {
+        val viewModel = MainViewModel()
+        viewModel.setContainerCounts(drums = -10, tanks = 0, gallons = -99)
+        assertEquals(0, viewModel.drums200L.value)
+        assertEquals(0, viewModel.tanks1000L.value)
+        assertEquals(0, viewModel.gallons20L.value)
+
+        viewModel.setContainerCounts(drums = 100, tanks = 50, gallons = 200)
+        assertEquals(100, viewModel.drums200L.value)
+        assertEquals(50, viewModel.tanks1000L.value)
+        assertEquals(200, viewModel.gallons20L.value)
+    }
+
+    @Test
+    fun testCustomSupplyHoursResetAndEdgeCases() {
+        val viewModel = MainViewModel()
+        // Default is null (meaning un-overridden, following scheduled countdown)
+        assertEquals(null, viewModel.customSupplyHours.value)
+
+        // User enters custom supply hours (e.g. 6.5 hrs)
+        viewModel.setCustomSupplyHours(6.5)
+        assertEquals(6.5, viewModel.customSupplyHours.value!!, 0.001)
+
+        // Immediate supply window opening (0.0 hrs)
+        viewModel.setCustomSupplyHours(0.0)
+        assertEquals(0.0, viewModel.customSupplyHours.value!!, 0.001)
+
+        // Resyncing clears override back to null
+        viewModel.setCustomSupplyHours(null)
+        assertEquals(null, viewModel.customSupplyHours.value)
+    }
 }
