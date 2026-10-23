@@ -247,6 +247,33 @@ class ZoneConsensusCalculatorTest {
     }
 
     @Test
+    fun testInMemoryReportRepositorySkipsFutureSkewedReportsWhenClockShiftsBackward() {
+        val pastReport = GroundTruthReport(
+            id = "rep-valid",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            timestamp = baseTime - 10_000L
+        )
+        val futureSkewedReport = GroundTruthReport(
+            id = "rep-future",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.DRY,
+            timestamp = baseTime + 50_000L
+        )
+        val repo = InMemoryReportRepository(listOf(pastReport, futureSkewedReport))
+
+        // Device clock shifted backward to baseTime, making rep-future appear 50s in the future
+        val consensus = repo.getConsensus("brgy4", "Zone 4", baseTime)
+
+        assertEquals(1, consensus.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensus.dominantStatus)
+        assertEquals(100, consensus.statusPercentages[TapFlowStatus.RUNNING])
+        assertEquals("Reported just now", consensus.formattedRelativeTime)
+    }
+
+    @Test
     fun testStaleReportsOlderThan24HoursAreExcludedFromConsensus() {
         val mixedReports = listOf(
             // Stale report 5 days ago
