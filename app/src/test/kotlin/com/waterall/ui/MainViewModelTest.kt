@@ -82,6 +82,55 @@ class MainViewModelTest {
         assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
         assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
+        assertEquals(0, viewModel.drums200L.value)
+        assertEquals(0, viewModel.tanks1000L.value)
+        assertEquals(0, viewModel.gallons20L.value)
+        assertEquals(null, viewModel.customSupplyHours.value)
+    }
+
+    @Test
+    fun testSetContainerCountsUpdatesStateFlows() {
+        val viewModel = MainViewModel()
+        viewModel.setDrums200L(3)
+        assertEquals(3, viewModel.drums200L.value)
+
+        viewModel.setTanks1000L(2)
+        assertEquals(2, viewModel.tanks1000L.value)
+
+        viewModel.setGallons20L(8)
+        assertEquals(8, viewModel.gallons20L.value)
+
+        // Non-negative clamping (Law 3 invariant)
+        viewModel.setDrums200L(-4)
+        assertEquals(0, viewModel.drums200L.value)
+
+        viewModel.setTanks1000L(-1)
+        assertEquals(0, viewModel.tanks1000L.value)
+
+        viewModel.setGallons20L(-10)
+        assertEquals(0, viewModel.gallons20L.value)
+
+        viewModel.setContainerCounts(drums = 4, tanks = 1, gallons = 12)
+        assertEquals(4, viewModel.drums200L.value)
+        assertEquals(1, viewModel.tanks1000L.value)
+        assertEquals(12, viewModel.gallons20L.value)
+    }
+
+    @Test
+    fun testSetCustomSupplyHoursUpdatesStateFlow() {
+        val viewModel = MainViewModel()
+        assertEquals(null, viewModel.customSupplyHours.value)
+
+        viewModel.setCustomSupplyHours(14.5)
+        assertEquals(14.5, viewModel.customSupplyHours.value!!, 0.001)
+
+        // Reset to null when user resyncs with schedule
+        viewModel.setCustomSupplyHours(null)
+        assertEquals(null, viewModel.customSupplyHours.value)
+
+        // Coerce negative input to 0.0
+        viewModel.setCustomSupplyHours(-3.0)
+        assertEquals(0.0, viewModel.customSupplyHours.value!!, 0.001)
     }
 
     @Test
@@ -154,6 +203,10 @@ class MainViewModelTest {
         viewModel.setDailyConsumption(120.0)
         viewModel.setUserMode(UserMode.COMMERCIAL)
         viewModel.setCurrentTab(Tab.RESERVES)
+        viewModel.setDrums200L(3)
+        viewModel.setTanks1000L(2)
+        viewModel.setGallons20L(10)
+        viewModel.setCustomSupplyHours(18.5)
 
         // Simulate activity recreation retrieving the existing ViewModel instance
         assertEquals(selectedZone, viewModel.selectedZone.value)
@@ -161,6 +214,10 @@ class MainViewModelTest {
         assertEquals(120.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(Tab.RESERVES, viewModel.currentTab.value)
+        assertEquals(3, viewModel.drums200L.value)
+        assertEquals(2, viewModel.tanks1000L.value)
+        assertEquals(10, viewModel.gallons20L.value)
+        assertEquals(18.5, viewModel.customSupplyHours.value!!, 0.001)
     }
 
     @Test
@@ -171,7 +228,11 @@ class MainViewModelTest {
             initialFillPercentage = 50.0,
             initialDailyConsumption = 80.0,
             initialUserMode = UserMode.COMMERCIAL,
-            initialTab = Tab.REPORT
+            initialTab = Tab.REPORT,
+            initialDrums200L = 2,
+            initialTanks1000L = 1,
+            initialGallons20L = 5,
+            initialCustomSupplyHours = 12.0
         )
 
         assertEquals(zone, viewModel.selectedZone.value)
@@ -179,6 +240,10 @@ class MainViewModelTest {
         assertEquals(80.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(Tab.REPORT, viewModel.currentTab.value)
+        assertEquals(2, viewModel.drums200L.value)
+        assertEquals(1, viewModel.tanks1000L.value)
+        assertEquals(5, viewModel.gallons20L.value)
+        assertEquals(12.0, viewModel.customSupplyHours.value!!, 0.001)
     }
 
     @Test
