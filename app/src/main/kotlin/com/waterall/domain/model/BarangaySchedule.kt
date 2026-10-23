@@ -8,6 +8,10 @@ enum class UserMode {
     COMMERCIAL
 }
 
+/**
+ * Represents a scheduled BWD water supply window on a specific [dayOfWeek] with 24-hour start and end times.
+ * Stores [DayOfWeek] directly to guarantee type-safe scheduling and eliminate fragile string parsing and regex stripping.
+ */
 data class SupplyWindow(
     val dayOfWeek: DayOfWeek,
     val startHour: Int,
