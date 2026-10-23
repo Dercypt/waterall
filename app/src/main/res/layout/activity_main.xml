@@ -282,6 +282,17 @@
                         android:textSize="13sp"
                         android:background="@drawable/bg_button_outline"
                         android:textColor="@color/ink" />
+
+                    <Button
+                        android:id="@+id/btnLoadSampleReports"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:minHeight="0dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Load sample community reports"
+                        android:textSize="13sp"
+                        android:background="@drawable/bg_button_outline"
+                        android:textColor="@color/ink_muted" />
                 </LinearLayout>
 
             </LinearLayout>

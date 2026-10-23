@@ -449,4 +449,24 @@ class MainViewModelTest {
             job.cancel()
         }
     }
+
+    @Test
+    fun testLoadSampleReportsPopulatesRepositoryAcrossZones() {
+        val viewModel = MainViewModel()
+        assertEquals(0, viewModel.reportRepository.getAllReports().size)
+
+        val now = 1_700_000_000_000L
+        viewModel.loadSampleReports(now)
+
+        val reports = viewModel.reportRepository.getAllReports()
+        assertEquals(8, reports.size)
+        assertEquals(4, viewModel.reportRepository.getReportsForZone("brgy4").size)
+        assertEquals(2, viewModel.reportRepository.getReportsForZone("brgy1").size)
+        assertEquals(2, viewModel.reportRepository.getReportsForZone("brgy7").size)
+
+        val consensusZone4 = viewModel.reportRepository.getConsensus("brgy4", "Zone 4", now)
+        assertEquals(4, consensusZone4.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensusZone4.dominantStatus)
+        assertEquals(75, consensusZone4.statusPercentages[TapFlowStatus.RUNNING])
+    }
 }

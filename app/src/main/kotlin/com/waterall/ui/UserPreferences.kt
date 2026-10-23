@@ -96,10 +96,16 @@ class UserPreferences(private val storage: PreferenceStorage) {
 
     /**
      * Serializes submitted ground truth reports into preference storage.
+     * Sanitizes tabs, newlines, and carriage returns to prevent line splitting and data truncation.
      */
     fun saveReports(reports: List<com.waterall.domain.model.GroundTruthReport>) {
         val serialized = reports.joinToString("\n") { report ->
-            "${report.id}\t${report.zoneId}\t${report.zoneName}\t${report.status.name}\t${report.timestamp}\t${report.notes.replace("\t", " ").replace("\n", " ")}"
+            val sanitizedNotes = report.notes
+                .replace("\r\n", " ")
+                .replace("\r", " ")
+                .replace("\n", " ")
+                .replace("\t", " ")
+            "${report.id}\t${report.zoneId}\t${report.zoneName}\t${report.status.name}\t${report.timestamp}\t$sanitizedNotes"
         }
         storage.putString(KEY_SUBMITTED_REPORTS, serialized)
     }
@@ -110,7 +116,7 @@ class UserPreferences(private val storage: PreferenceStorage) {
     fun getReports(): List<com.waterall.domain.model.GroundTruthReport> {
         val raw = storage.getString(KEY_SUBMITTED_REPORTS, "")
         if (raw.isBlank()) return emptyList()
-        return raw.lines().mapNotNull { line ->
+        return raw.replace("\r\n", "\n").split("\n").mapNotNull { line ->
             if (line.isBlank()) return@mapNotNull null
             val parts = line.split("\t")
             if (parts.size >= 5) {

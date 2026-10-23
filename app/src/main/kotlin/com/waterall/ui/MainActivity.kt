@@ -86,6 +86,21 @@ class MainActivity : AppCompatActivity() {
         binding.btnQuickReport.setOnClickListener {
             switchTab(Tab.REPORT)
         }
+
+        binding.btnLoadSampleReports.setOnClickListener {
+            val now = System.currentTimeMillis()
+            viewModel.loadSampleReports(now)
+            val activeReports = reportRepository.getAllReports().filter { activeReport ->
+                (now - activeReport.timestamp) <= ZoneConsensusCalculator.REPORT_EXPIRATION_WINDOW_MS
+            }
+            userPreferences.saveReports(activeReports)
+            Toast.makeText(
+                this,
+                "Sample community reports loaded for live demo",
+                Toast.LENGTH_SHORT
+            ).show()
+            updateConsensusCard()
+        }
     }
 
 
@@ -218,8 +233,8 @@ class MainActivity : AppCompatActivity() {
             }
 
             val cardBinding = ItemScheduleCardBinding.inflate(layoutInflater, binding.layoutScheduleContainer, false)
-            cardBinding.tvScheduleDayBadge.text = schedule.dayOfWeek.first().toString()
-            cardBinding.tvScheduleDay.text = schedule.dateLabel.replace(Regex("\\s*\\d+"), "")
+            cardBinding.tvScheduleDayBadge.text = schedule.dayOfWeek.name.take(1)
+            cardBinding.tvScheduleDay.text = schedule.dateLabel
             cardBinding.tvScheduleTime.text = schedule.formattedRange
             binding.layoutScheduleContainer.addView(cardBinding.root)
         }

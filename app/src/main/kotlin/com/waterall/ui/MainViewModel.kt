@@ -10,6 +10,7 @@ import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.DayOfWeek
 
 /**
  * Top-level application navigation tabs.
@@ -106,6 +107,20 @@ class MainViewModel(
         _customSupplyHours.value = hours?.coerceAtLeast(0.0)
     }
 
+    /**
+     * Seeds the report repository with realistic sample reports across zones.
+     * Enables live multi-report crowdsourced consensus demonstration when offline.
+     */
+    fun loadSampleReports(nowMillis: Long = System.currentTimeMillis()) {
+        if (reportRepository is InMemoryReportRepository) {
+            reportRepository.seedSampleReports(nowMillis)
+        } else {
+            InMemoryReportRepository.getSampleReports(nowMillis).forEach { report ->
+                reportRepository.addReport(report)
+            }
+        }
+    }
+
     companion object {
         // Mock Baguio Water District Rotation Data
         val DEFAULT_ZONES = listOf(
@@ -113,37 +128,37 @@ class MainViewModel(
                 id = "brgy4",
                 name = "Zone 4 — Brgy. San Isidro",
                 domesticSchedules = listOf(
-                    SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
-                    SupplyWindow("Wed", "Wed", 5, 0, 9, 0),
-                    SupplyWindow("Fri", "Fri", 6, 0, 11, 0)
+                    SupplyWindow(DayOfWeek.MONDAY, 6, 0, 10, 0),
+                    SupplyWindow(DayOfWeek.WEDNESDAY, 5, 0, 9, 0),
+                    SupplyWindow(DayOfWeek.FRIDAY, 6, 0, 11, 0)
                 ),
                 commercialSchedules = listOf(
-                    SupplyWindow("Tue", "Tue", 8, 0, 14, 0),
-                    SupplyWindow("Thu", "Thu", 8, 0, 14, 0)
+                    SupplyWindow(DayOfWeek.TUESDAY, 8, 0, 14, 0),
+                    SupplyWindow(DayOfWeek.THURSDAY, 8, 0, 14, 0)
                 )
             ),
             BarangayZone(
                 id = "brgy1",
                 name = "Zone 1 — Brgy. Cabinet Hill",
                 domesticSchedules = listOf(
-                    SupplyWindow("Tue", "Tue", 5, 30, 9, 30),
-                    SupplyWindow("Thu", "Thu", 5, 30, 9, 30),
-                    SupplyWindow("Sat", "Sat", 6, 0, 12, 0)
+                    SupplyWindow(DayOfWeek.TUESDAY, 5, 30, 9, 30),
+                    SupplyWindow(DayOfWeek.THURSDAY, 5, 30, 9, 30),
+                    SupplyWindow(DayOfWeek.SATURDAY, 6, 0, 12, 0)
                 ),
                 commercialSchedules = listOf(
-                    SupplyWindow("Mon", "Mon", 7, 0, 13, 0),
-                    SupplyWindow("Wed", "Wed", 7, 0, 13, 0)
+                    SupplyWindow(DayOfWeek.MONDAY, 7, 0, 13, 0),
+                    SupplyWindow(DayOfWeek.WEDNESDAY, 7, 0, 13, 0)
                 )
             ),
             BarangayZone(
                 id = "brgy7",
                 name = "Zone 7 — Brgy. Trancoville",
                 domesticSchedules = listOf(
-                    SupplyWindow("Wed", "Wed", 6, 0, 10, 30),
-                    SupplyWindow("Sat", "Sat", 5, 0, 10, 0)
+                    SupplyWindow(DayOfWeek.WEDNESDAY, 6, 0, 10, 30),
+                    SupplyWindow(DayOfWeek.SATURDAY, 5, 0, 10, 0)
                 ),
                 commercialSchedules = listOf(
-                    SupplyWindow("Fri", "Fri", 8, 0, 15, 0)
+                    SupplyWindow(DayOfWeek.FRIDAY, 8, 0, 15, 0)
                 )
             )
         )

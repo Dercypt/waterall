@@ -116,7 +116,7 @@ object ScheduleCountdownCalculator {
 
         // Check if currentTime falls within an active supply window
         val activeWindow = schedules.firstOrNull { window ->
-            if (window.dayOfWeekEnum == currentDay) {
+            if (window.dayOfWeek == currentDay) {
                 val start = LocalTime.of(window.startHour, window.startMinute)
                 val end = LocalTime.of(window.endHour, window.endMinute)
                 !currentTimeOfDay.isBefore(start) && currentTimeOfDay.isBefore(end)
@@ -182,7 +182,7 @@ object ScheduleCountdownCalculator {
      * Enforces Law 2 Invariant 2: No two supply windows in the schedule may overlap in time.
      */
     fun validateNonOverlapping(windows: List<SupplyWindow>) {
-        val grouped = windows.groupBy { it.dayOfWeekEnum }
+        val grouped = windows.groupBy { it.dayOfWeek }
         for ((day, dayWindows) in grouped) {
             val sorted = dayWindows.sortedBy { it.startHour * 60 + it.startMinute }
             for (i in 0 until sorted.size - 1) {
@@ -212,7 +212,7 @@ object ScheduleCountdownCalculator {
         var nearestPair: Pair<SupplyWindow, LocalDateTime>? = null
 
         for (window in schedules) {
-            val targetDayVal = window.dayOfWeekEnum.value
+            val targetDayVal = window.dayOfWeek.value
             val daysAhead = (targetDayVal - currentDayVal + 7) % 7
             val windowStartTime = LocalTime.of(window.startHour, window.startMinute)
 

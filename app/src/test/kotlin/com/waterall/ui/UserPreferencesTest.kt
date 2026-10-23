@@ -154,6 +154,54 @@ class UserPreferencesTest {
     }
 
     @Test
+    fun testPersistAndRetrieveReportsWithCarriageReturnsAndTabs() {
+        val now = 1_700_000_000_000L
+        val reports = listOf(
+            com.waterall.domain.model.GroundTruthReport(
+                id = "rep-cr-1",
+                zoneId = "brgy4",
+                zoneName = "Zone 4",
+                status = com.waterall.domain.model.TapFlowStatus.RUNNING,
+                notes = "Line 1\rLine 2\r\nLine 3\tTabbed detail",
+                timestamp = now - 3000L
+            ),
+            com.waterall.domain.model.GroundTruthReport(
+                id = "rep-cr-2",
+                zoneId = "brgy7",
+                zoneName = "Zone 7",
+                status = com.waterall.domain.model.TapFlowStatus.LOW_PRESSURE,
+                notes = "Second report\r\nWith carriage returns\rand tabs\there",
+                timestamp = now - 1000L
+            )
+        )
+
+        preferences.saveReports(reports)
+        val loaded = preferences.getReports()
+
+        assertEquals(2, loaded.size)
+        assertEquals("rep-cr-1", loaded[0].id)
+        assertEquals("Line 1 Line 2 Line 3 Tabbed detail", loaded[0].notes)
+        assertEquals("rep-cr-2", loaded[1].id)
+        assertEquals("Second report With carriage returns and tabs here", loaded[1].notes)
+    }
+
+    @Test
+    fun testLegacyReportWithCarriageReturnInStorageDoesNotCorruptSubsequentLines() {
+        val pastTime1 = System.currentTimeMillis() - 5000L
+        val pastTime2 = System.currentTimeMillis() - 2000L
+
+        // A legacy report serialized with a carriage return inside the note, followed by another report
+        val rawSerialized = "rep-legacy\tbrgy4\tZone 4\tRUNNING\t$pastTime1\tFirst line\rSecond line\n" +
+                "rep-next\tbrgy1\tZone 1\tDRY\t$pastTime2\tNext report valid"
+        storage.putString(UserPreferences.KEY_SUBMITTED_REPORTS, rawSerialized)
+
+        val loaded = preferences.getReports()
+        assertEquals(2, loaded.size)
+        assertEquals("rep-legacy", loaded[0].id)
+        assertEquals("rep-next", loaded[1].id)
+    }
+
+    @Test
     fun testSkippingFutureSkewedReportsWhenClockShiftsBackward() {
         val now = System.currentTimeMillis()
         val futureTime = now + 100_000L // 100s in the future (e.g. clock stepped backward)
