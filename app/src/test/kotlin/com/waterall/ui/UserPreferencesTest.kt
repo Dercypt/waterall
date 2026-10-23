@@ -1,5 +1,6 @@
 package com.waterall.ui
 
+import com.waterall.domain.model.UserMode
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -40,12 +41,31 @@ class UserPreferencesTest {
     @Test
     fun testDefaultValuesMatchSpecification() {
         assertEquals(UserPreferences.DEFAULT_ZONE_ID, preferences.selectedZoneId)
+        assertEquals(UserMode.DOMESTIC, preferences.userMode)
         assertEquals(0, preferences.drums200LCount)
         assertEquals(0, preferences.tanks1000LCount)
         assertEquals(0, preferences.gallons20LCount)
         assertEquals(0.0, preferences.fillPercentage, 0.001)
         assertEquals(0.0, preferences.dailyConsumption, 0.001)
         assertEquals(0, preferences.getReports().size)
+    }
+
+    @Test
+    fun testPersistAndRetrieveUserMode() {
+        preferences.userMode = UserMode.COMMERCIAL
+        assertEquals(UserMode.COMMERCIAL, preferences.userMode)
+
+        preferences.userMode = UserMode.DOMESTIC
+        assertEquals(UserMode.DOMESTIC, preferences.userMode)
+    }
+
+    @Test
+    fun testFallbackForCorruptedOrUnknownUserMode() {
+        storage.putString(UserPreferences.KEY_USER_MODE, "INVALID_OR_UNKNOWN_MODE")
+        assertEquals(UserMode.DOMESTIC, preferences.userMode)
+
+        storage.putString(UserPreferences.KEY_USER_MODE, "")
+        assertEquals(UserMode.DOMESTIC, preferences.userMode)
     }
 
     @Test

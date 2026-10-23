@@ -2,6 +2,7 @@ package com.waterall.ui
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.waterall.domain.model.UserMode
 
 /**
  * Abstraction for preference storage allowing pure JVM testing without Android SDK mocks.
@@ -51,6 +52,15 @@ class UserPreferences(private val storage: PreferenceStorage) {
     var selectedZoneId: String
         get() = storage.getString(KEY_SELECTED_ZONE_ID, DEFAULT_ZONE_ID)
         set(value) = storage.putString(KEY_SELECTED_ZONE_ID, value)
+
+    var userMode: UserMode
+        get() {
+            val raw = storage.getString(KEY_USER_MODE, DEFAULT_USER_MODE.name)
+            return runCatching { UserMode.valueOf(raw) }.getOrDefault(DEFAULT_USER_MODE)
+        }
+        set(value) {
+            storage.putString(KEY_USER_MODE, value.name)
+        }
 
     var drums200LCount: Int
         get() = storage.getInt(KEY_DRUMS_200L, DEFAULT_DRUMS)
@@ -128,6 +138,7 @@ class UserPreferences(private val storage: PreferenceStorage) {
 
     companion object {
         const val KEY_SELECTED_ZONE_ID = "selected_zone_id"
+        const val KEY_USER_MODE = "user_mode"
         const val KEY_DRUMS_200L = "drums_200l_count"
         const val KEY_TANKS_1000L = "tanks_1000l_count"
         const val KEY_GALLONS_20L = "gallons_20l_count"
@@ -136,6 +147,7 @@ class UserPreferences(private val storage: PreferenceStorage) {
         const val KEY_SUBMITTED_REPORTS = "submitted_reports"
 
         const val DEFAULT_ZONE_ID = "brgy4"
+        val DEFAULT_USER_MODE = UserMode.DOMESTIC
         const val DEFAULT_DRUMS = 0
         const val DEFAULT_TANKS = 0
         const val DEFAULT_GALLONS = 0
