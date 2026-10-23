@@ -39,10 +39,15 @@ class InMemoryReportRepository(
         zoneName: String,
         currentTimeMillis: Long
     ): ZoneConsensus {
+        // Gracefully filter out reports with expired or future-skewed timestamps
+        // when device clock adjusts backward, matching UserPreferences.getReports
+        val validReports = reports.filter { report ->
+            report.timestamp in (currentTimeMillis - ZoneConsensusCalculator.REPORT_EXPIRATION_WINDOW_MS)..(currentTimeMillis + GroundTruthReport.CLOCK_SKEW_TOLERANCE_MS)
+        }
         return ZoneConsensusCalculator.calculate(
             zoneId = zoneId,
             zoneName = zoneName,
-            reports = reports,
+            reports = validReports,
             currentTimeMillis = currentTimeMillis
         )
     }

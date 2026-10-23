@@ -247,6 +247,69 @@ class ZoneConsensusCalculatorTest {
     }
 
     @Test
+    fun testInMemoryReportRepositorySkipsFutureSkewedReportsWhenClockShiftsBackward() {
+        val pastReport = GroundTruthReport(
+            id = "rep-valid",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            timestamp = baseTime - 10_000L
+        )
+        val futureSkewedReport = GroundTruthReport(
+            id = "rep-future",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.DRY,
+            timestamp = baseTime + 50_000L
+        )
+        val repo = InMemoryReportRepository(listOf(pastReport, futureSkewedReport))
+
+        // Device clock shifted backward to baseTime, making rep-future appear 50s in the future
+        val consensus = repo.getConsensus("brgy4", "Zone 4", baseTime)
+
+        assertEquals(1, consensus.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensus.dominantStatus)
+        assertEquals(100, consensus.statusPercentages[TapFlowStatus.RUNNING])
+        assertEquals("Reported just now", consensus.formattedRelativeTime)
+    }
+
+    @Test
+    fun testInMemoryReportRepositoryAllFutureSkewedReportsReturnsEmptyConsensus() {
+        val futureReport = GroundTruthReport(
+            id = "rep-future-only",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            timestamp = baseTime + 100_000L
+        )
+        val repo = InMemoryReportRepository(listOf(futureReport))
+
+        val consensus = repo.getConsensus("brgy4", "Zone 4", baseTime)
+        assertEquals(0, consensus.totalReports)
+        assertNull(consensus.dominantStatus)
+        assertNull(consensus.latestReport)
+        assertNull(consensus.formattedRelativeTime)
+        assertEquals("Zone 4: No verified reports today", consensus.summaryText)
+    }
+
+    @Test
+    fun testInMemoryReportRepositoryMixedMultiZoneAndClockSkewReports() {
+        val repo = InMemoryReportRepository(
+            listOf(
+                GroundTruthReport("r1", "brgy4", "Zone 4", TapFlowStatus.RUNNING, timestamp = baseTime - 20_000L),
+                GroundTruthReport("r2", "brgy4", "Zone 4", TapFlowStatus.DRY, timestamp = baseTime + 60_000L),
+                GroundTruthReport("r3", "brgy1", "Zone 1", TapFlowStatus.LOW_PRESSURE, timestamp = baseTime - 10_000L),
+                GroundTruthReport("r4", "brgy1", "Zone 1", TapFlowStatus.RUNNING, timestamp = baseTime + 30_000L)
+            )
+        )
+
+        val consensus = repo.getConsensus("brgy4", "Zone 4", baseTime)
+        assertEquals(1, consensus.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensus.dominantStatus)
+        assertEquals("Reported just now", consensus.formattedRelativeTime)
+    }
+
+    @Test
     fun testStaleReportsOlderThan24HoursAreExcludedFromConsensus() {
         val mixedReports = listOf(
             // Stale report 5 days ago
