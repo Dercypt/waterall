@@ -262,14 +262,29 @@ class MainViewModelTest {
             reportRepository = repo,
             initialZone = MainViewModel.DEFAULT_ZONES[2],
             initialFillPercentage = 75.0,
-            initialDailyConsumption = 150.0
+            initialDailyConsumption = 150.0,
+            initialUserMode = UserMode.COMMERCIAL
         )
 
         assertEquals(MainViewModel.DEFAULT_ZONES[2], viewModel.selectedZone.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(150.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(1, viewModel.reportRepository.getAllReports().size)
         assertEquals(report, viewModel.reportRepository.getAllReports().first())
+    }
+
+    @Test
+    fun testUserModePreferencesRestorationWorkflow() {
+        val viewModel = MainViewModel()
+        // Simulate startup with saved commercial user mode
+        val savedMode = UserMode.COMMERCIAL
+        viewModel.setUserMode(savedMode)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+
+        // Switching back to domestic
+        viewModel.setUserMode(UserMode.DOMESTIC)
+        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
     }
 
     @Test

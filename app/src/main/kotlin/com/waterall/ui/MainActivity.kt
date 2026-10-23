@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null) {
             val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
             viewModel.setSelectedZone(zones[savedZoneIndex])
+            viewModel.setUserMode(userPreferences.userMode)
             viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
             viewModel.setDailyConsumption(userPreferences.dailyConsumption)
             viewModel.setDrums200L(userPreferences.drums200LCount)
@@ -166,12 +167,14 @@ class MainActivity : AppCompatActivity() {
         binding.btnModeDomestic.setOnClickListener {
             if (viewModel.userMode.value != UserMode.DOMESTIC) {
                 viewModel.setUserMode(UserMode.DOMESTIC)
+                userPreferences.userMode = UserMode.DOMESTIC
                 autoPopulateScheduleHours()
             }
         }
         binding.btnModeCommercial.setOnClickListener {
             if (viewModel.userMode.value != UserMode.COMMERCIAL) {
                 viewModel.setUserMode(UserMode.COMMERCIAL)
+                userPreferences.userMode = UserMode.COMMERCIAL
                 autoPopulateScheduleHours()
             }
         }
@@ -773,6 +776,7 @@ class MainActivity : AppCompatActivity() {
     private fun persistUserPreferences() {
         if (!::userPreferences.isInitialized) return
         persistContainerCounts()
+        userPreferences.userMode = viewModel.userMode.value
         userPreferences.fillPercentage = viewModel.selectedFillPercentage.value
         userPreferences.dailyConsumption = viewModel.dailyConsumption.value
     }
