@@ -598,7 +598,11 @@ class MainActivity : AppCompatActivity() {
 
             // Feed report into the in-memory repository to close the feedback loop
             reportRepository.addReport(report)
-            userPreferences.saveReports(reportRepository.getAllReports())
+            val now = System.currentTimeMillis()
+            val activeReports = reportRepository.getAllReports().filter { activeReport ->
+                (now - activeReport.timestamp) <= ZoneConsensusCalculator.REPORT_EXPIRATION_WINDOW_MS
+            }
+            userPreferences.saveReports(activeReports)
 
             // Immediate UI acknowledgment: Toast notification and consensus card confirmation
             Toast.makeText(
