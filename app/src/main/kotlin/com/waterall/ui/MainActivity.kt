@@ -671,11 +671,26 @@ class MainActivity : AppCompatActivity() {
      */
     private fun updateConsensusCard() {
         val currentZone = viewModel.selectedZone.value
-        val consensus = reportRepository.getConsensus(
-            zoneId = currentZone.id,
-            zoneName = currentZone.name,
-            currentTimeMillis = System.currentTimeMillis()
-        )
+        val consensus = try {
+            reportRepository.getConsensus(
+                zoneId = currentZone.id,
+                zoneName = currentZone.name,
+                currentTimeMillis = System.currentTimeMillis()
+            )
+        } catch (e: IllegalArgumentException) {
+            val shortZoneName = currentZone.name.substringBefore("—").substringBefore("-").trim().ifBlank { currentZone.name }
+            ZoneConsensus(
+                zoneId = currentZone.id,
+                zoneName = currentZone.name,
+                totalReports = 0,
+                statusCounts = emptyMap(),
+                statusPercentages = emptyMap(),
+                dominantStatus = null,
+                summaryText = "$shortZoneName: No verified reports today",
+                latestReport = null,
+                formattedRelativeTime = null
+            )
+        }
 
         binding.tvConsensusSummary.text = consensus.summaryText
 
