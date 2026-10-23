@@ -110,14 +110,16 @@ class UserPreferences(private val storage: PreferenceStorage) {
                     ?: return@mapNotNull null
                 val timestamp = parts[4].toLongOrNull() ?: return@mapNotNull null
                 val notes = if (parts.size >= 6) parts.subList(5, parts.size).joinToString("\t") else ""
-                com.waterall.domain.model.GroundTruthReport(
-                    id = id,
-                    zoneId = zoneId,
-                    zoneName = zoneName,
-                    status = status,
-                    notes = notes,
-                    timestamp = timestamp
-                )
+                runCatching {
+                    com.waterall.domain.model.GroundTruthReport(
+                        id = id,
+                        zoneId = zoneId,
+                        zoneName = zoneName,
+                        status = status,
+                        notes = notes,
+                        timestamp = timestamp
+                    )
+                }.getOrNull()
             } else {
                 null
             }
