@@ -65,7 +65,9 @@ class MainActivity : AppCompatActivity() {
             viewModel.setDailyConsumption(userPreferences.dailyConsumption)
             val savedReports = userPreferences.getReports()
             if (reportRepository.getAllReports().isEmpty()) {
-                savedReports.reversed().forEach { reportRepository.addReport(it) }
+                savedReports.reversed().forEach { report ->
+                    runCatching { reportRepository.addReport(report) }.getOrNull()
+                }
             }
         }
 
