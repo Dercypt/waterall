@@ -86,6 +86,21 @@ class MainActivity : AppCompatActivity() {
         binding.btnQuickReport.setOnClickListener {
             switchTab(Tab.REPORT)
         }
+
+        binding.btnLoadSampleReports.setOnClickListener {
+            val now = System.currentTimeMillis()
+            viewModel.loadSampleReports(now)
+            val activeReports = reportRepository.getAllReports().filter { activeReport ->
+                (now - activeReport.timestamp) <= ZoneConsensusCalculator.REPORT_EXPIRATION_WINDOW_MS
+            }
+            userPreferences.saveReports(activeReports)
+            Toast.makeText(
+                this,
+                "Sample community reports loaded for live demo",
+                Toast.LENGTH_SHORT
+            ).show()
+            updateConsensusCard()
+        }
     }
 
 

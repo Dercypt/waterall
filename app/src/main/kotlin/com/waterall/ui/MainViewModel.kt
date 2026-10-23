@@ -107,6 +107,20 @@ class MainViewModel(
         _customSupplyHours.value = hours?.coerceAtLeast(0.0)
     }
 
+    /**
+     * Seeds the report repository with realistic sample reports across zones.
+     * Enables live multi-report crowdsourced consensus demonstration when offline.
+     */
+    fun loadSampleReports(nowMillis: Long = System.currentTimeMillis()) {
+        if (reportRepository is InMemoryReportRepository) {
+            reportRepository.seedSampleReports(nowMillis)
+        } else {
+            InMemoryReportRepository.getSampleReports(nowMillis).forEach { report ->
+                reportRepository.addReport(report)
+            }
+        }
+    }
+
     companion object {
         // Mock Baguio Water District Rotation Data
         val DEFAULT_ZONES = listOf(
