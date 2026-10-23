@@ -507,6 +507,15 @@ class MainActivity : AppCompatActivity() {
         recalculateRunoutBuffer()
     }
 
+    /**
+     * Recalculates storage capacity, current volume, remaining runout buffer hours,
+     * and recommended daily consumption target.
+     *
+     * Validates [ScheduleFlowState.FLOW_ACTIVE] directly via [TargetRecommendationFormatter]
+     * rather than inferring flow from infinite daily targets. This prevents empty schedules
+     * or 0-hour supply inputs (which return [ScheduleFlowState.RATIONING_ACTIVE] with 0.0 hours)
+     * from falsely showing residents an active supply refill message.
+     */
     private fun recalculateRunoutBuffer() {
         val drumsCount = viewModel.drums200L.value
         val overheadCount = viewModel.tanks1000L.value
