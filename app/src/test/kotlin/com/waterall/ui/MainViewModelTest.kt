@@ -4,6 +4,10 @@ import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -374,5 +378,75 @@ class MainViewModelTest {
         assertEquals(TargetRecommendationFormatter.EMPTY_TARGET_TEXT, targetUi.targetValueText)
         assertEquals(TargetRecommendationFormatter.EMPTY_SUPPLY_HOURS_SUBTEXT, targetUi.subtext)
         org.junit.Assert.assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, targetUi.subtext)
+    }
+
+    @Test
+    fun testReservesInputsCombineEmitsDeterministicallyAcrossAllNineStateFlows() {
+        val viewModel = MainViewModel()
+        var calculationCount = 0
+
+        val combinedFlow = combine(
+            combine(viewModel.selectedZone, viewModel.userMode) { zone, mode -> zone to mode },
+            combine(viewModel.drums200L, viewModel.tanks1000L, viewModel.gallons20L) { d, t, g -> Triple(d, t, g) },
+            combine(viewModel.selectedFillPercentage, viewModel.dailyConsumption, viewModel.customSupplyHours) { f, c, h -> Triple(f, c, h) }
+        ) { _, _, _ ->
+            calculationCount++
+        }
+
+        runBlocking {
+            val job = launch {
+                combinedFlow.collect {}
+            }
+            delay(50)
+            // Initial emission
+            assertEquals(1, calculationCount)
+
+            // Modify drums
+            viewModel.setDrums200L(5)
+            delay(50)
+            assertEquals(2, calculationCount)
+
+            // Modify tanks
+            viewModel.setTanks1000L(1)
+            delay(50)
+            assertEquals(3, calculationCount)
+
+            // Modify gallons
+            viewModel.setGallons20L(2)
+            delay(50)
+            assertEquals(4, calculationCount)
+
+            // Modify fill percentage
+            viewModel.setSelectedFillPercentage(50.0)
+            delay(50)
+            assertEquals(5, calculationCount)
+
+            // Modify daily consumption
+            viewModel.setDailyConsumption(120.0)
+            delay(50)
+            assertEquals(6, calculationCount)
+
+            // Modify custom supply hours
+            viewModel.setCustomSupplyHours(8.0)
+            delay(50)
+            assertEquals(7, calculationCount)
+
+            // Modify user mode
+            viewModel.setUserMode(UserMode.COMMERCIAL)
+            delay(50)
+            assertEquals(8, calculationCount)
+
+            // Modify zone
+            viewModel.setSelectedZone(MainViewModel.DEFAULT_ZONES[1])
+            delay(50)
+            assertEquals(9, calculationCount)
+
+            // Duplicate values should NOT cause extra calculations in StateFlow
+            viewModel.setDrums200L(5)
+            delay(50)
+            assertEquals(9, calculationCount)
+
+            job.cancel()
+        }
     }
 }
