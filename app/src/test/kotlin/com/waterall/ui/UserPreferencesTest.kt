@@ -132,4 +132,36 @@ class UserPreferencesTest {
         assertEquals("No water Main pipe shut", loaded[1].notes)
         assertEquals(now - 2000L, loaded[1].timestamp)
     }
+
+    @Test
+    fun testSkippingFutureSkewedReportsWhenClockShiftsBackward() {
+        val now = System.currentTimeMillis()
+        val futureTime = now + 100_000L // 100s in the future (e.g. clock stepped backward)
+        val pastTime = now - 10_000L
+
+        // Store two reports: one valid past report, one future-skewed report
+        val rawSerialized = "rep-future\tbrgy4\tZone 4\tRUNNING\t$futureTime\tFuture note\n" +
+                "rep-valid\tbrgy1\tZone 1\tDRY\t$pastTime\tValid note"
+        storage.putString(UserPreferences.KEY_SUBMITTED_REPORTS, rawSerialized)
+
+        // getReports should not throw IllegalArgumentException, and should skip the future report
+        val loaded = preferences.getReports()
+        assertEquals(1, loaded.size)
+        assertEquals("rep-valid", loaded[0].id)
+        assertEquals("brgy1", loaded[0].zoneId)
+        assertEquals(com.waterall.domain.model.TapFlowStatus.DRY, loaded[0].status)
+    }
+
+    @Test
+    fun testSkippingCorruptedOrInvalidStoredReports() {
+        val pastTime = System.currentTimeMillis() - 5000L
+        // One entry with blank zoneId (violates Law 4), one valid entry
+        val rawSerialized = "rep-blank-zone\t   \tBlank Zone\tRUNNING\t$pastTime\tNote\n" +
+                "rep-valid\tbrgy4\tZone 4\tRUNNING\t$pastTime\tValid"
+        storage.putString(UserPreferences.KEY_SUBMITTED_REPORTS, rawSerialized)
+
+        val loaded = preferences.getReports()
+        assertEquals(1, loaded.size)
+        assertEquals("rep-valid", loaded[0].id)
+    }
 }
