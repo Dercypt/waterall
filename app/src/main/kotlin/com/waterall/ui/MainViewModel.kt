@@ -21,7 +21,8 @@ enum class Tab {
 }
 
 /**
- * ViewModel managing UI state and the crowdsourced report repository across Activity configuration changes (e.g. screen rotation).
+ * ViewModel managing UI state, container inventories, custom supply-hour overrides, and the crowdsourced
+ * report repository across Activity configuration changes (e.g. screen rotation).
  */
 class MainViewModel(
     val reportRepository: ReportRepository = InMemoryReportRepository.createDefault(),
