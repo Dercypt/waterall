@@ -31,6 +31,7 @@ import com.waterall.domain.model.TapFlowStatus
 import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Locale
@@ -41,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var userPreferences: UserPreferences
     private var uiCoroutineJob: Job? = null
+    private var isAutoPopulatingScheduleHours = false
 
     // Mock Baguio Water District Rotation Data
     internal val zones: List<BarangayZone> = MainViewModel.DEFAULT_ZONES
@@ -63,6 +65,9 @@ class MainActivity : AppCompatActivity() {
             viewModel.setSelectedZone(zones[savedZoneIndex])
             viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
             viewModel.setDailyConsumption(userPreferences.dailyConsumption)
+            viewModel.setDrums200L(userPreferences.drums200LCount)
+            viewModel.setTanks1000L(userPreferences.tanks1000LCount)
+            viewModel.setGallons20L(userPreferences.gallons20LCount)
             val savedReports = userPreferences.getReports()
             if (reportRepository.getAllReports().isEmpty()) {
                 savedReports.reversed().forEach { report ->
@@ -150,6 +155,7 @@ class MainActivity : AppCompatActivity() {
                     viewModel.setSelectedZone(newZone)
                     userPreferences.selectedZoneId = newZone.id
                     binding.tvConsensusAcknowledgment.visibility = View.GONE
+                    autoPopulateScheduleHours()
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -158,10 +164,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupModeToggle() {
         binding.btnModeDomestic.setOnClickListener {
-            viewModel.setUserMode(UserMode.DOMESTIC)
+            if (viewModel.userMode.value != UserMode.DOMESTIC) {
+                viewModel.setUserMode(UserMode.DOMESTIC)
+                autoPopulateScheduleHours()
+            }
         }
         binding.btnModeCommercial.setOnClickListener {
-            viewModel.setUserMode(UserMode.COMMERCIAL)
+            if (viewModel.userMode.value != UserMode.COMMERCIAL) {
+                viewModel.setUserMode(UserMode.COMMERCIAL)
+                autoPopulateScheduleHours()
+            }
         }
     }
 
@@ -230,15 +242,11 @@ class MainActivity : AppCompatActivity() {
      */
     private fun persistContainerCounts() {
         if (!::userPreferences.isInitialized) return
-        val defaultDrums = userPreferences.drums200LCount
-        val defaultTanks = userPreferences.tanks1000LCount
-        val defaultGallons = userPreferences.gallons20LCount
-
-        val drums = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
-        val tanks = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
-        val gallons = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
-
-        userPreferences.saveContainerCounts(drums, tanks, gallons)
+        userPreferences.saveContainerCounts(
+            drums = viewModel.drums200L.value,
+            tanks = viewModel.tanks1000L.value,
+            gallons = viewModel.gallons20L.value
+        )
     }
 
     private fun startLiveCountdown() {
@@ -294,9 +302,9 @@ class MainActivity : AppCompatActivity() {
 
     // --- FEATURE 2: Drum Reserve & Supply Runout Estimator (SDG 6 Exclusive) ---
     private fun setupReservesCalculator() {
-        binding.etDrums200L.setText(userPreferences.drums200LCount.toString())
-        binding.etTanks1000L.setText(userPreferences.tanks1000LCount.toString())
-        binding.etGallons20L.setText(userPreferences.gallons20LCount.toString())
+        binding.etDrums200L.setText(viewModel.drums200L.value.toString())
+        binding.etTanks1000L.setText(viewModel.tanks1000L.value.toString())
+        binding.etGallons20L.setText(viewModel.gallons20L.value.toString())
         binding.etDailyConsumption.setText(formatConsumption(viewModel.dailyConsumption.value))
 
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
@@ -310,39 +318,68 @@ class MainActivity : AppCompatActivity() {
         binding.btnIncrementGallons20L.setOnClickListener { adjustContainerCount(binding.etGallons20L, 1) }
 
         // Live text watchers for automatic real-time calculation as inputs change
-        binding.etDrums200L.doAfterTextChanged {
-            persistContainerCounts()
-            recalculateRunoutBuffer()
+        binding.etDrums200L.doAfterTextChanged { text ->
+            val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
+            if (viewModel.drums200L.value != count) {
+                viewModel.setDrums200L(count)
+                persistContainerCounts()
+                recalculateRunoutBuffer()
+            }
         }
-        binding.etTanks1000L.doAfterTextChanged {
-            persistContainerCounts()
-            recalculateRunoutBuffer()
+        binding.etTanks1000L.doAfterTextChanged { text ->
+            val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
+            if (viewModel.tanks1000L.value != count) {
+                viewModel.setTanks1000L(count)
+                persistContainerCounts()
+                recalculateRunoutBuffer()
+            }
         }
-        binding.etGallons20L.doAfterTextChanged {
-            persistContainerCounts()
-            recalculateRunoutBuffer()
+        binding.etGallons20L.doAfterTextChanged { text ->
+            val count = (text?.toString()?.toIntOrNull() ?: 0).coerceAtLeast(0)
+            if (viewModel.gallons20L.value != count) {
+                viewModel.setGallons20L(count)
+                persistContainerCounts()
+                recalculateRunoutBuffer()
+            }
         }
         binding.etDailyConsumption.doAfterTextChanged { text ->
             val value = (text?.toString()?.toDoubleOrNull() ?: 0.0).coerceAtLeast(0.0)
             if (value != viewModel.dailyConsumption.value) {
                 viewModel.setDailyConsumption(value)
                 userPreferences.dailyConsumption = value
+                recalculateRunoutBuffer()
             }
-            recalculateRunoutBuffer()
         }
-        binding.etHoursUntilNextSupply.doAfterTextChanged {
-            recalculateRunoutBuffer()
+        binding.etHoursUntilNextSupply.doAfterTextChanged { text ->
+            if (!isAutoPopulatingScheduleHours) {
+                val hours = text?.toString()?.toDoubleOrNull()
+                if (viewModel.customSupplyHours.value != hours) {
+                    viewModel.setCustomSupplyHours(hours)
+                    if (hours != null) {
+                        binding.tvScheduleSyncStatus.text = "Manual override"
+                    }
+                    recalculateRunoutBuffer()
+                }
+            }
         }
 
         // Sync with Phase 1 Schedule Countdown button
         binding.btnSyncScheduleHours.setOnClickListener {
             autoPopulateScheduleHours()
-            recalculateRunoutBuffer()
         }
 
         setupFillLevelPresets()
 
-        if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+        val customHours = viewModel.customSupplyHours.value
+        if (customHours != null) {
+            isAutoPopulatingScheduleHours = true
+            try {
+                binding.etHoursUntilNextSupply.setText(String.format(Locale.US, "%.1f", customHours))
+            } finally {
+                isAutoPopulatingScheduleHours = false
+            }
+            binding.tvScheduleSyncStatus.text = "Manual override"
+        } else if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
             autoPopulateScheduleHours()
         }
         recalculateRunoutBuffer()
@@ -452,37 +489,41 @@ class MainActivity : AppCompatActivity() {
             userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
-        binding.etHoursUntilNextSupply.setText(
-            String.format(Locale.US, "%.1f", countdown.hoursUntilNextOpening)
-        )
+        viewModel.setCustomSupplyHours(null)
+        isAutoPopulatingScheduleHours = true
+        try {
+            binding.etHoursUntilNextSupply.setText(
+                String.format(Locale.US, "%.1f", countdown.hoursUntilNextOpening)
+            )
+        } finally {
+            isAutoPopulatingScheduleHours = false
+        }
         binding.tvScheduleSyncStatus.text = String.format(
             Locale.US,
             "Synced · %.1f hrs · %s",
             countdown.hoursUntilNextOpening,
             countdown.flowState.badgeLabel
         )
+        recalculateRunoutBuffer()
     }
 
     private fun recalculateRunoutBuffer() {
-        val defaultDrums = if (::userPreferences.isInitialized) userPreferences.drums200LCount else UserPreferences.DEFAULT_DRUMS
-        val defaultTanks = if (::userPreferences.isInitialized) userPreferences.tanks1000LCount else UserPreferences.DEFAULT_TANKS
-        val defaultGallons = if (::userPreferences.isInitialized) userPreferences.gallons20LCount else UserPreferences.DEFAULT_GALLONS
-
-        val drumsCount = (binding.etDrums200L.text.toString().toIntOrNull() ?: defaultDrums).coerceAtLeast(0)
-        val overheadCount = (binding.etTanks1000L.text.toString().toIntOrNull() ?: defaultTanks).coerceAtLeast(0)
-        val gallonsCount = (binding.etGallons20L.text.toString().toIntOrNull() ?: defaultGallons).coerceAtLeast(0)
+        val drumsCount = viewModel.drums200L.value
+        val overheadCount = viewModel.tanks1000L.value
+        val gallonsCount = viewModel.gallons20L.value
         val fillPercent = viewModel.selectedFillPercentage.value.coerceIn(0.0, 100.0)
 
         val dailyBurn = viewModel.dailyConsumption.value.coerceAtLeast(0.0)
 
-        // Auto-fallback to Phase 1 hoursUntilNextOpening if input is blank
-        val countdown = ScheduleCountdownCalculator.calculate(
-            zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
-            currentTime = LocalDateTime.now()
-        )
-        val nextSupplyHours = (binding.etHoursUntilNextSupply.text.toString().toDoubleOrNull()
-            ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
+        // Auto-fallback to Phase 1 hoursUntilNextOpening if override is not set
+        val nextSupplyHours = viewModel.customSupplyHours.value ?: run {
+            val countdown = ScheduleCountdownCalculator.calculate(
+                zone = viewModel.selectedZone.value,
+                userMode = viewModel.userMode.value,
+                currentTime = LocalDateTime.now()
+            )
+            countdown.hoursUntilNextOpening
+        }.coerceAtLeast(0.0)
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
@@ -676,26 +717,19 @@ class MainActivity : AppCompatActivity() {
         uiCoroutineJob?.cancel()
         uiCoroutineJob = lifecycleScope.launch {
             launch {
-                viewModel.selectedZone.collect { zone ->
+                combine(viewModel.selectedZone, viewModel.userMode) { zone, mode ->
+                    zone to mode
+                }.collect { (zone, mode) ->
                     val index = zones.indexOfFirst { it.id == zone.id }
                     if (index >= 0 && binding.spinnerZones.selectedItemPosition != index) {
                         binding.spinnerZones.setSelection(index, false)
                     }
                     binding.tvReportZoneName.text = zone.name
-                    updateScheduleCards()
-                    startLiveCountdown()
-                    autoPopulateScheduleHours()
-                    recalculateRunoutBuffer()
-                    updateConsensusCard()
-                }
-            }
-            launch {
-                viewModel.userMode.collect { mode ->
                     updateModeToggleUi(mode)
                     updateScheduleCards()
                     startLiveCountdown()
-                    autoPopulateScheduleHours()
                     recalculateRunoutBuffer()
+                    updateConsensusCard()
                 }
             }
             launch {

@@ -21,7 +21,8 @@ enum class Tab {
 }
 
 /**
- * ViewModel managing UI state and the crowdsourced report repository across Activity configuration changes (e.g. screen rotation).
+ * ViewModel managing UI state, container inventories, custom supply-hour overrides, and the crowdsourced
+ * report repository across Activity configuration changes (e.g. screen rotation).
  */
 class MainViewModel(
     val reportRepository: ReportRepository = InMemoryReportRepository.createDefault(),
@@ -29,7 +30,11 @@ class MainViewModel(
     initialFillPercentage: Double = 0.0,
     initialDailyConsumption: Double = 0.0,
     initialUserMode: UserMode = UserMode.DOMESTIC,
-    initialTab: Tab = Tab.CALENDAR
+    initialTab: Tab = Tab.CALENDAR,
+    initialDrums200L: Int = 0,
+    initialTanks1000L: Int = 0,
+    initialGallons20L: Int = 0,
+    initialCustomSupplyHours: Double? = null
 ) : ViewModel() {
 
     private val _selectedZone = MutableStateFlow(initialZone)
@@ -46,6 +51,18 @@ class MainViewModel(
 
     private val _currentTab = MutableStateFlow(initialTab)
     val currentTab: StateFlow<Tab> = _currentTab.asStateFlow()
+
+    private val _drums200L = MutableStateFlow(initialDrums200L.coerceAtLeast(0))
+    val drums200L: StateFlow<Int> = _drums200L.asStateFlow()
+
+    private val _tanks1000L = MutableStateFlow(initialTanks1000L.coerceAtLeast(0))
+    val tanks1000L: StateFlow<Int> = _tanks1000L.asStateFlow()
+
+    private val _gallons20L = MutableStateFlow(initialGallons20L.coerceAtLeast(0))
+    val gallons20L: StateFlow<Int> = _gallons20L.asStateFlow()
+
+    private val _customSupplyHours = MutableStateFlow(initialCustomSupplyHours?.coerceAtLeast(0.0))
+    val customSupplyHours: StateFlow<Double?> = _customSupplyHours.asStateFlow()
 
     fun setSelectedZone(zone: BarangayZone) {
         _selectedZone.value = zone
@@ -65,6 +82,28 @@ class MainViewModel(
 
     fun setCurrentTab(tab: Tab) {
         _currentTab.value = tab
+    }
+
+    fun setDrums200L(count: Int) {
+        _drums200L.value = maxOf(0, count)
+    }
+
+    fun setTanks1000L(count: Int) {
+        _tanks1000L.value = maxOf(0, count)
+    }
+
+    fun setGallons20L(count: Int) {
+        _gallons20L.value = maxOf(0, count)
+    }
+
+    fun setContainerCounts(drums: Int, tanks: Int, gallons: Int) {
+        setDrums200L(drums)
+        setTanks1000L(tanks)
+        setGallons20L(gallons)
+    }
+
+    fun setCustomSupplyHours(hours: Double?) {
+        _customSupplyHours.value = hours?.coerceAtLeast(0.0)
     }
 
     companion object {
