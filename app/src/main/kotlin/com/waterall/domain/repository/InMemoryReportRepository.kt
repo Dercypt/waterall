@@ -56,6 +56,14 @@ class InMemoryReportRepository(
         reports.clear()
     }
 
+    /**
+     * Seeds the repository with realistic multi-report crowdsourced sample data.
+     */
+    fun seedSampleReports(nowMillis: Long = System.currentTimeMillis()) {
+        val sampleReports = getSampleReports(nowMillis)
+        sampleReports.forEach { addReport(it) }
+    }
+
     companion object {
         /**
          * Creates an empty in-memory repository by default.
@@ -63,6 +71,86 @@ class InMemoryReportRepository(
          */
         fun createDefault(): InMemoryReportRepository {
             return InMemoryReportRepository()
+        }
+
+        /**
+         * Creates a seeded in-memory repository populated with realistic sample reports across zones.
+         * Useful for offline demonstrations and testing multi-report consensus algorithms.
+         */
+        fun createSeeded(nowMillis: Long = System.currentTimeMillis()): InMemoryReportRepository {
+            return InMemoryReportRepository(getSampleReports(nowMillis))
+        }
+
+        /**
+         * Returns a list of realistic sample reports across Baguio zones.
+         */
+        fun getSampleReports(nowMillis: Long = System.currentTimeMillis()): List<GroundTruthReport> {
+            return listOf(
+                GroundTruthReport(
+                    id = "seed-z4-1",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Strong flow at Purok 1",
+                    timestamp = nowMillis - 45 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-2",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Purok 2 tap running",
+                    timestamp = nowMillis - 30 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-3",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.RUNNING,
+                    notes = "Good pressure for filling drums",
+                    timestamp = nowMillis - 20 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z4-4",
+                    zoneId = "brgy4",
+                    zoneName = "Zone 4 — Brgy. San Isidro",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Pressure dropped slightly at upper road",
+                    timestamp = nowMillis - 12 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z1-1",
+                    zoneId = "brgy1",
+                    zoneName = "Zone 1 — Brgy. Cabinet Hill",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Trickle flow observed",
+                    timestamp = nowMillis - 25 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z1-2",
+                    zoneId = "brgy1",
+                    zoneName = "Zone 1 — Brgy. Cabinet Hill",
+                    status = TapFlowStatus.LOW_PRESSURE,
+                    notes = "Low pressure line",
+                    timestamp = nowMillis - 15 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z7-1",
+                    zoneId = "brgy7",
+                    zoneName = "Zone 7 — Brgy. Trancoville",
+                    status = TapFlowStatus.DRY,
+                    notes = "No supply yet",
+                    timestamp = nowMillis - 50 * 60 * 1000L
+                ),
+                GroundTruthReport(
+                    id = "seed-z7-2",
+                    zoneId = "brgy7",
+                    zoneName = "Zone 7 — Brgy. Trancoville",
+                    status = TapFlowStatus.DRY,
+                    notes = "Main line dry",
+                    timestamp = nowMillis - 10 * 60 * 1000L
+                )
+            )
         }
     }
 }
