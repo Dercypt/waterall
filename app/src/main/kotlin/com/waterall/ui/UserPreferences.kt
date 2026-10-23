@@ -43,7 +43,8 @@ class SharedPreferencesStorage(private val sharedPreferences: SharedPreferences)
 
 /**
  * Lightweight persistence for user selections across app launches using SharedPreferences.
- * Retains container counts (enforcing Law 3 non-negative quantization) and selected Barangay zone.
+ * Retains container counts (enforcing Law 3 non-negative quantization), user mode (Domestic vs Commercial),
+ * and selected Barangay zone.
  */
 class UserPreferences(private val storage: PreferenceStorage) {
 

@@ -719,6 +719,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Observes all 9 StateFlows from [MainViewModel], keeping UI components in sync
+     * and driving reserve buffer calculations via a single unified combine pipeline.
+     */
     private fun observeViewModelState() {
         uiCoroutineJob?.cancel()
         uiCoroutineJob = lifecycleScope.launch {
@@ -807,7 +811,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Retains container counts, fill level, and daily consumption to lightweight SharedPreferences.
+     * Retains container counts, user mode, fill level, and daily consumption to lightweight SharedPreferences.
      */
     private fun persistUserPreferences() {
         if (!::userPreferences.isInitialized) return
