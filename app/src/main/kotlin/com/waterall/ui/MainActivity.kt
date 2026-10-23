@@ -357,6 +357,8 @@ class MainActivity : AppCompatActivity() {
                     viewModel.setCustomSupplyHours(hours)
                     if (hours != null) {
                         binding.tvScheduleSyncStatus.text = "Manual override"
+                    } else {
+                        binding.tvScheduleSyncStatus.text = "Synced with zone schedule"
                     }
                     recalculateRunoutBuffer()
                 }
