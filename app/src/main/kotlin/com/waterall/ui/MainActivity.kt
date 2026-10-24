@@ -515,6 +515,8 @@ class MainActivity : AppCompatActivity() {
      * rather than inferring flow from infinite daily targets. This prevents empty schedules
      * or 0-hour supply inputs (which return [ScheduleFlowState.RATIONING_ACTIVE] with 0.0 hours)
      * from falsely showing residents an active supply refill message.
+     * When a manual supply hours override is active, [ScheduleFlowState.RATIONING_ACTIVE] is supplied
+     * to ensure the manual override target is properly formatted instead of showing "Unrestricted".
      */
     private fun recalculateRunoutBuffer() {
         val drumsCount = viewModel.drums200L.value
@@ -583,9 +585,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Recommended Daily Consumption Target
+        val effectiveFlowState = if (viewModel.customSupplyHours.value != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdown.flowState
+        }
+
         val targetUi = TargetRecommendationFormatter.format(
             result = result,
-            flowState = countdown.flowState,
+            flowState = effectiveFlowState,
             hoursUntilNextSupply = nextSupplyHours
         )
 
@@ -599,7 +607,7 @@ class MainActivity : AppCompatActivity() {
             binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_safe)
             binding.tvTargetLabel.setTextColor(getColor(R.color.ink_muted))
             binding.tvRecommendedTargetValue.text = targetUi.targetValueText
-            val valueColor = if (nextSupplyHours <= 0.0 && countdown.flowState == ScheduleFlowState.RATIONING_ACTIVE) {
+            val valueColor = if (nextSupplyHours <= 0.0 && effectiveFlowState == ScheduleFlowState.RATIONING_ACTIVE) {
                 getColor(R.color.ink_muted)
             } else {
                 getColor(R.color.status_ok)
