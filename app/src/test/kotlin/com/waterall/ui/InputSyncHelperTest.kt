@@ -98,4 +98,85 @@ class InputSyncHelperTest {
         assertEquals(2, InputSyncHelper.calculateEndCursorPosition("25"))
         assertEquals(5, InputSyncHelper.calculateEndCursorPosition("150.0"))
     }
+
+    @Test
+    fun testSyncContainerCountInvokesCallbackWithEndCursorPositionWhenCountChanges() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncContainerCount("2", 3) { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("3", updatedText)
+        assertEquals(1, updatedCursor)
+    }
+
+    @Test
+    fun testSyncContainerCountPreservesDoubleDigitCursorPosition() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncContainerCount("9", 10) { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("10", updatedText)
+        assertEquals(2, updatedCursor)
+    }
+
+    @Test
+    fun testSyncContainerCountDoesNotInvokeCallbackWhenCountMatches() {
+        var called = false
+
+        val changed = InputSyncHelper.syncContainerCount("5", 5) { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
+
+    @Test
+    fun testSyncContainerCountDoesNotOverwriteBlankWhenCountIsZero() {
+        var called = false
+
+        val changed = InputSyncHelper.syncContainerCount("", 0) { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
+
+    @Test
+    fun testSyncConsumptionInvokesCallbackWithEndCursorPositionWhenChanged() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncConsumption("100.0", 150.0, "150") { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("150", updatedText)
+        assertEquals(3, updatedCursor)
+    }
+
+    @Test
+    fun testSyncConsumptionDoesNotInvokeCallbackWhenUnchanged() {
+        var called = false
+
+        val changed = InputSyncHelper.syncConsumption("150.0", 150.0, "150") { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
 }
