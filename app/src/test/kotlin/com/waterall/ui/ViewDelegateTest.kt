@@ -99,4 +99,72 @@ class ViewDelegateTest {
         delegates.forEach { it.cleanup() }
         assertTrue(delegates.all { it.isCleanedUp })
     }
+
+    @Test
+    fun testSequentialTabTransitionsAcrossAllScreens() {
+        val calendar = FakeViewDelegate()
+        val reserves = FakeViewDelegate()
+        val report = FakeViewDelegate()
+
+        // Helper mimicking MainActivity.applyTab
+        fun selectTab(tab: Tab) {
+            calendar.setVisible(tab == Tab.CALENDAR)
+            reserves.setVisible(tab == Tab.RESERVES)
+            report.setVisible(tab == Tab.REPORT)
+            when (tab) {
+                Tab.CALENDAR -> calendar.onTabSelected()
+                Tab.RESERVES -> reserves.onTabSelected()
+                Tab.REPORT -> report.onTabSelected()
+            }
+        }
+
+        // Start on CALENDAR
+        selectTab(Tab.CALENDAR)
+        assertTrue(calendar.visibleState)
+        assertFalse(reserves.visibleState)
+        assertFalse(report.visibleState)
+        assertEquals(1, calendar.tabSelectedCount)
+        assertEquals(0, reserves.tabSelectedCount)
+        assertEquals(0, report.tabSelectedCount)
+
+        // Switch to RESERVES
+        selectTab(Tab.RESERVES)
+        assertFalse(calendar.visibleState)
+        assertTrue(reserves.visibleState)
+        assertFalse(report.visibleState)
+        assertEquals(1, calendar.tabSelectedCount)
+        assertEquals(1, reserves.tabSelectedCount)
+        assertEquals(0, report.tabSelectedCount)
+
+        // Switch to REPORT
+        selectTab(Tab.REPORT)
+        assertFalse(calendar.visibleState)
+        assertFalse(reserves.visibleState)
+        assertTrue(report.visibleState)
+        assertEquals(1, calendar.tabSelectedCount)
+        assertEquals(1, reserves.tabSelectedCount)
+        assertEquals(1, report.tabSelectedCount)
+
+        // Back to CALENDAR
+        selectTab(Tab.CALENDAR)
+        assertTrue(calendar.visibleState)
+        assertFalse(reserves.visibleState)
+        assertFalse(report.visibleState)
+        assertEquals(2, calendar.tabSelectedCount)
+        assertEquals(1, reserves.tabSelectedCount)
+        assertEquals(1, report.tabSelectedCount)
+    }
+
+    @Test
+    fun testDefaultInterfaceImplementations() {
+        val minimalDelegate = object : ViewDelegate {
+            override fun setup() {}
+            override fun observeState(scope: CoroutineScope) {}
+            override fun setVisible(visible: Boolean) {}
+        }
+
+        // Verify default methods do not throw UnsupportedOperationException
+        minimalDelegate.onTabSelected()
+        minimalDelegate.cleanup()
+    }
 }
