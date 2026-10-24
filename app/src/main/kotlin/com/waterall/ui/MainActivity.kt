@@ -60,6 +60,11 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
 
         userPreferences = UserPreferences(this)
+        // Hydrate from UserPreferences whenever ViewModel is freshly created.
+        // We check !viewModel.isInitialized instead of savedInstanceState == null so that
+        // when Android recreates the Activity after process death (where savedInstanceState != null
+        // but ViewModelProvider returns a fresh zero-initialized ViewModel), user preferences are
+        // properly restored rather than skipped and subsequently overwritten with zero defaults.
         if (!viewModel.isInitialized) {
             viewModel.hydrateFromPreferences(userPreferences, zones)
         }
