@@ -60,21 +60,13 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
 
         userPreferences = UserPreferences(this)
-        if (savedInstanceState == null) {
-            val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
-            viewModel.setSelectedZone(zones[savedZoneIndex])
-            viewModel.setUserMode(userPreferences.userMode)
-            viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
-            viewModel.setDailyConsumption(userPreferences.dailyConsumption)
-            viewModel.setDrums200L(userPreferences.drums200LCount)
-            viewModel.setTanks1000L(userPreferences.tanks1000LCount)
-            viewModel.setGallons20L(userPreferences.gallons20LCount)
-            val savedReports = userPreferences.getReports()
-            if (reportRepository.getAllReports().isEmpty()) {
-                savedReports.reversed().forEach { report ->
-                    runCatching { reportRepository.addReport(report) }.getOrNull()
-                }
-            }
+        // Hydrate from UserPreferences whenever ViewModel is freshly created.
+        // We check !viewModel.isInitialized instead of savedInstanceState == null so that
+        // when Android recreates the Activity after process death (where savedInstanceState != null
+        // but ViewModelProvider returns a fresh zero-initialized ViewModel), user preferences are
+        // properly restored rather than skipped and subsequently overwritten with zero defaults.
+        if (!viewModel.isInitialized) {
+            viewModel.hydrateFromPreferences(userPreferences, zones)
         }
 
         setupBottomNavigation()
@@ -258,7 +250,7 @@ class MainActivity : AppCompatActivity() {
      * Retains container counts to lightweight SharedPreferences enforcing Law 3 invariants.
      */
     private fun persistContainerCounts() {
-        if (!::userPreferences.isInitialized) return
+        if (!::userPreferences.isInitialized || !::viewModel.isInitialized || !viewModel.isInitialized) return
         userPreferences.saveContainerCounts(
             drums = viewModel.drums200L.value,
             tanks = viewModel.tanks1000L.value,
@@ -528,6 +520,8 @@ class MainActivity : AppCompatActivity() {
      * rather than inferring flow from infinite daily targets. This prevents empty schedules
      * or 0-hour supply inputs (which return [ScheduleFlowState.RATIONING_ACTIVE] with 0.0 hours)
      * from falsely showing residents an active supply refill message.
+     * When a manual supply hours override is active, [ScheduleFlowState.RATIONING_ACTIVE] is supplied
+     * to ensure the manual override target is properly formatted instead of showing "Unrestricted".
      */
     private fun recalculateRunoutBuffer() {
         val drumsCount = viewModel.drums200L.value
@@ -596,9 +590,15 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Recommended Daily Consumption Target
+        val effectiveFlowState = if (viewModel.customSupplyHours.value != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdown.flowState
+        }
+
         val targetUi = TargetRecommendationFormatter.format(
             result = result,
-            flowState = countdown.flowState,
+            flowState = effectiveFlowState,
             hoursUntilNextSupply = nextSupplyHours
         )
 
@@ -612,7 +612,7 @@ class MainActivity : AppCompatActivity() {
             binding.cardRecommendedTarget.setBackgroundResource(R.drawable.bg_target_box_safe)
             binding.tvTargetLabel.setTextColor(getColor(R.color.ink_muted))
             binding.tvRecommendedTargetValue.text = targetUi.targetValueText
-            val valueColor = if (nextSupplyHours <= 0.0 && countdown.flowState == ScheduleFlowState.RATIONING_ACTIVE) {
+            val valueColor = if (nextSupplyHours <= 0.0 && effectiveFlowState == ScheduleFlowState.RATIONING_ACTIVE) {
                 getColor(R.color.ink_muted)
             } else {
                 getColor(R.color.status_ok)
@@ -830,7 +830,7 @@ class MainActivity : AppCompatActivity() {
      * Retains container counts, user mode, fill level, and daily consumption to lightweight SharedPreferences.
      */
     private fun persistUserPreferences() {
-        if (!::userPreferences.isInitialized) return
+        if (!::userPreferences.isInitialized || !::viewModel.isInitialized || !viewModel.isInitialized) return
         persistContainerCounts()
         userPreferences.userMode = viewModel.userMode.value
         userPreferences.fillPercentage = viewModel.selectedFillPercentage.value

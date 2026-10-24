@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -494,5 +495,175 @@ class MainViewModelTest {
         assertEquals(4, consensusZone4.totalReports)
         assertEquals(TapFlowStatus.RUNNING, consensusZone4.dominantStatus)
         assertEquals(75, consensusZone4.statusPercentages[TapFlowStatus.RUNNING])
+    }
+
+    private class InMemoryPreferenceStorage : PreferenceStorage {
+        private val stringMap = mutableMapOf<String, String>()
+        private val intMap = mutableMapOf<String, Int>()
+
+        override fun getString(key: String, defaultValue: String): String =
+            stringMap[key] ?: defaultValue
+
+        override fun putString(key: String, value: String) {
+            stringMap[key] = value
+        }
+
+        override fun getInt(key: String, defaultValue: Int): Int =
+            intMap[key] ?: defaultValue
+
+        override fun putInt(key: String, value: Int) {
+            intMap[key] = value
+        }
+    }
+
+    @Test
+    fun testIsInitializedDefaultsToFalseAndCanBeUpdated() {
+        val viewModel = MainViewModel()
+        assertFalse(viewModel.isInitialized)
+
+        viewModel.isInitialized = true
+        assertTrue(viewModel.isInitialized)
+    }
+
+    @Test
+    fun testHydrateFromPreferencesPopulatesZeroedViewModelAndSetsInitialized() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+        prefs.selectedZoneId = "brgy7"
+        prefs.userMode = UserMode.COMMERCIAL
+        prefs.fillPercentage = 75.0
+        prefs.dailyConsumption = 180.0
+        prefs.saveContainerCounts(drums = 3, tanks = 1, gallons = 6)
+
+        val report = GroundTruthReport(
+            id = "saved-rep-1",
+            zoneId = "brgy7",
+            zoneName = "Zone 7 — Brgy. Trancoville",
+            status = TapFlowStatus.RUNNING,
+            timestamp = 1_700_000_000_000L
+        )
+        prefs.saveReports(listOf(report))
+
+        val viewModel = MainViewModel()
+        assertFalse(viewModel.isInitialized)
+
+        viewModel.hydrateFromPreferences(prefs)
+
+        assertTrue(viewModel.isInitialized)
+        assertEquals("brgy7", viewModel.selectedZone.value.id)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(180.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(3, viewModel.drums200L.value)
+        assertEquals(1, viewModel.tanks1000L.value)
+        assertEquals(6, viewModel.gallons20L.value)
+
+        val restoredReports = viewModel.reportRepository.getAllReports()
+        assertEquals(1, restoredReports.size)
+        assertEquals("saved-rep-1", restoredReports.first().id)
+    }
+
+    @Test
+    fun testProcessDeathRecreationHydratesNewViewModelWithoutOverwritingPreferences() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+
+        // User previously configured preferences before app was backgrounded
+        prefs.selectedZoneId = "brgy1"
+        prefs.userMode = UserMode.DOMESTIC
+        prefs.fillPercentage = 50.0
+        prefs.dailyConsumption = 220.0
+        prefs.saveContainerCounts(drums = 2, tanks = 0, gallons = 4)
+
+        // Process death occurs: OS kills process and recreates ViewModel with zeros via zero-arg Factory
+        val recreatedViewModel = MainViewModel.Factory.create(MainViewModel::class.java)
+        assertFalse("Recreated ViewModel must not be initialized yet", recreatedViewModel.isInitialized)
+        assertEquals(0, recreatedViewModel.drums200L.value)
+
+        // MainActivity.onCreate executes restoration check: if (!viewModel.isInitialized)
+        if (!recreatedViewModel.isInitialized) {
+            recreatedViewModel.hydrateFromPreferences(prefs)
+        }
+
+        assertTrue(recreatedViewModel.isInitialized)
+        assertEquals("brgy1", recreatedViewModel.selectedZone.value.id)
+        assertEquals(2, recreatedViewModel.drums200L.value)
+        assertEquals(0, recreatedViewModel.tanks1000L.value)
+        assertEquals(4, recreatedViewModel.gallons20L.value)
+        assertEquals(50.0, recreatedViewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(220.0, recreatedViewModel.dailyConsumption.value, 0.001)
+
+        // Preferences in storage must still hold the original non-zero user values
+        assertEquals(2, prefs.drums200LCount)
+        assertEquals(4, prefs.gallons20LCount)
+        assertEquals(220.0, prefs.dailyConsumption, 0.001)
+    }
+
+    @Test
+    fun testConfigurationChangeDoesNotRehydrateOrOverwriteUncommittedChanges() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+        prefs.selectedZoneId = "brgy4"
+        prefs.saveContainerCounts(drums = 1, tanks = 0, gallons = 0)
+
+        val viewModel = MainViewModel()
+        viewModel.hydrateFromPreferences(prefs)
+        assertTrue(viewModel.isInitialized)
+
+        // User increments drums in memory to 5
+        viewModel.setDrums200L(5)
+        assertEquals(5, viewModel.drums200L.value)
+
+        // Configuration change (e.g. rotation): Activity is recreated, but ViewModel survives in ViewModelStore
+        if (!viewModel.isInitialized) {
+            viewModel.hydrateFromPreferences(prefs)
+        }
+
+        // ViewModel must keep in-memory value of 5 instead of reverting back to 1
+        assertEquals(5, viewModel.drums200L.value)
+    }
+
+    @Test
+    fun testHydrateFromPreferencesWithUnknownZoneIdFallsBackToFirstZone() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+        prefs.selectedZoneId = "non_existent_zone_xyz"
+
+        val viewModel = MainViewModel()
+        viewModel.hydrateFromPreferences(prefs)
+
+        assertTrue(viewModel.isInitialized)
+        assertEquals(MainViewModel.DEFAULT_ZONES[0], viewModel.selectedZone.value)
+    }
+
+    @Test
+    fun testHydrateFromPreferencesDoesNotDuplicateExistingReports() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+        val report = GroundTruthReport(
+            id = "pref-report",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.DRY,
+            timestamp = 1_700_000_000_000L
+        )
+        prefs.saveReports(listOf(report))
+
+        val viewModel = MainViewModel()
+        // Pre-populate with existing repository report
+        val existingReport = GroundTruthReport(
+            id = "existing-repo-report",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            timestamp = 1_700_000_000_000L
+        )
+        viewModel.reportRepository.addReport(existingReport)
+
+        viewModel.hydrateFromPreferences(prefs)
+
+        val allReports = viewModel.reportRepository.getAllReports()
+        assertEquals(1, allReports.size)
+        assertEquals("existing-repo-report", allReports.first().id)
     }
 }
