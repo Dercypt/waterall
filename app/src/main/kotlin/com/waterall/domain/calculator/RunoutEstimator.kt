@@ -85,7 +85,7 @@ object RunoutEstimator {
         val runoutHours = if (hourlyBurn > 0.0) stored / hourlyBurn else Double.POSITIVE_INFINITY
 
         val safetyBufferHours = runoutHours - hoursUntilNextSupply
-        val isDepletedBefore = runoutHours < hoursUntilNextSupply
+        val isDepletedBefore = runoutHours < hoursUntilNextSupply || (stored == 0.0 && hourlyBurn > 0.0)
 
         val deficitLiters = if (isDepletedBefore) {
             max(0.0, (hoursUntilNextSupply - runoutHours) * hourlyBurn)

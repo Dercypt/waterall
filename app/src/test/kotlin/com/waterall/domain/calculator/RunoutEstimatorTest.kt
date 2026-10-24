@@ -155,4 +155,37 @@ class RunoutEstimatorTest {
         assertFalse(result.isDepletedBeforeNextSupply)
         assertEquals(0.0, result.deficitLiters, 0.001)
     }
+
+    @Test
+    fun testEmptyReserveWithZeroSupplyHoursEvaluatesToDepletedNotSurplus() {
+        // Empty reserve: 0L stored, household burns 150 L/day, supply window opens now (0.0 hrs)
+        val emptyInventory = StorageInventory(blueDrums200L = 0, fillPercentage = 0.0)
+        val result = RunoutEstimator.calculate(
+            inventory = emptyInventory,
+            dailyBurnRateLiters = 150.0,
+            hoursUntilNextSupply = 0.0
+        )
+
+        assertEquals(0.0, result.currentStoredLiters, 0.001)
+        assertEquals(0.0, result.runoutHours, 0.001)
+        assertEquals(0.0, result.safetyBufferHours, 0.001)
+        assertEquals(0.0, result.deficitLiters, 0.001)
+        assertTrue("Empty reserve with positive burn rate must evaluate to depleted", result.isDepletedBeforeNextSupply)
+        assertTrue(result.runoutSummaryText.startsWith("CRITICAL DEFICIT"))
+        assertFalse("Must never categorize empty reserve as safe surplus", result.runoutSummaryText.startsWith("SAFE SURPLUS"))
+    }
+
+    @Test
+    fun testEmptyReserveWithZeroConsumptionEvaluatesToIndefiniteSurplus() {
+        val emptyInventory = StorageInventory(blueDrums200L = 0, fillPercentage = 0.0)
+        val result = RunoutEstimator.calculate(
+            inventory = emptyInventory,
+            dailyBurnRateLiters = 0.0,
+            hoursUntilNextSupply = 0.0
+        )
+
+        assertTrue(result.runoutHours.isInfinite())
+        assertFalse(result.isDepletedBeforeNextSupply)
+        assertEquals("Stored supply will last indefinitely (0 consumption).", result.runoutSummaryText)
+    }
 }
