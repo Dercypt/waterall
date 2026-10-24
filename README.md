@@ -12,7 +12,7 @@ Rotational water rationing leaves Baguio residents uncertain about supply window
 - **Conservation of Water & Deficit Calculation:** Quantifies current reserves, daily consumption rates, runout hours ($T_{\text{runout}}$), and projected deficit before the next supply window.
 - **Rationing Window Chronology:** Tracks non-overlapping barangay supply windows with lifecycle-aware monotonic countdown timers.
 - **Discrete Vessel Quantization:** Standardized capacity tracking across physical containers (blue drums, overhead tanks, slim/gallon containers).
-- **Crowdsourced Tap Verification:** Real-time ground-truth tap status reports (`RUNNING`, `LOW_PRESSURE`, `DRY`) bound to active barangay zones, with built-in multi-report peer seeding (`InMemoryReportRepository.createSeeded`) and a "Load sample community reports" toggle for live demonstration when offline.
+- **Crowdsourced Tap Verification:** Real-time ground-truth tap status reports (`RUNNING`, `LOW_PRESSURE`, `DRY`) bound to active barangay zones, with built-in multi-report peer seeding (`InMemoryReportRepository.createSeeded`), ID-level deduplication, and an idempotent "Load sample community reports" toggle for live demonstration when offline.
 
 Domain invariants and engineering principles are specified in [LAWS.md](LAWS.md) and [PRINCIPLES.md](PRINCIPLES.md).
 

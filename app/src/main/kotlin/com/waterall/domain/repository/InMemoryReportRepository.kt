@@ -19,6 +19,11 @@ class InMemoryReportRepository(
         reports.addAll(initialReports.distinctBy { it.id })
     }
 
+    /**
+     * Adds a verified report to the repository.
+     * Deduplicates by report ID before insertion so that repeated submissions or sample re-seeding
+     * replace existing entries rather than duplicating records indefinitely.
+     */
     override fun addReport(report: GroundTruthReport) {
         require(report.timestamp <= System.currentTimeMillis() + GroundTruthReport.CLOCK_SKEW_TOLERANCE_MS) {
             "Law 4 violation: Report timestamp cannot be in the future."
