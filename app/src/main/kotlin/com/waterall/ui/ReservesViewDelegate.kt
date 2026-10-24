@@ -35,9 +35,13 @@ class ReservesViewDelegate(
 
     override fun setup() {
         binding.etDrums200L.setText(viewModel.drums200L.value.toString())
+        binding.etDrums200L.setSelection(binding.etDrums200L.text.length)
         binding.etTanks1000L.setText(viewModel.tanks1000L.value.toString())
+        binding.etTanks1000L.setSelection(binding.etTanks1000L.text.length)
         binding.etGallons20L.setText(viewModel.gallons20L.value.toString())
+        binding.etGallons20L.setSelection(binding.etGallons20L.text.length)
         binding.etDailyConsumption.setText(formatConsumption(viewModel.dailyConsumption.value))
+        binding.etDailyConsumption.setSelection(binding.etDailyConsumption.text.length)
 
         // Quick-adjust stepper controls (+ / -) for standard Baguio containers (Law 3)
         binding.btnDecrementDrums200L.setOnClickListener {
@@ -111,6 +115,7 @@ class ReservesViewDelegate(
             isAutoPopulatingScheduleHours = true
             try {
                 binding.etHoursUntilNextSupply.setText(String.format(Locale.US, "%.1f", customHours))
+                binding.etHoursUntilNextSupply.setSelection(binding.etHoursUntilNextSupply.text.length)
             } finally {
                 isAutoPopulatingScheduleHours = false
             }
@@ -157,6 +162,7 @@ class ReservesViewDelegate(
                         isAutoPopulatingScheduleHours = true
                         try {
                             binding.etHoursUntilNextSupply.setText(String.format(Locale.US, "%.1f", hours))
+                            binding.etHoursUntilNextSupply.setSelection(binding.etHoursUntilNextSupply.text.length)
                         } finally {
                             isAutoPopulatingScheduleHours = false
                         }
@@ -200,6 +206,7 @@ class ReservesViewDelegate(
             binding.etHoursUntilNextSupply.setText(
                 String.format(Locale.US, "%.1f", countdown.hoursUntilNextOpening)
             )
+            binding.etHoursUntilNextSupply.setSelection(binding.etHoursUntilNextSupply.text.length)
         } finally {
             isAutoPopulatingScheduleHours = false
         }
@@ -378,15 +385,17 @@ class ReservesViewDelegate(
         }
     }
 
-    private fun updateDailyConsumptionUi(consumption: Double) {
+    internal fun updateDailyConsumptionUi(consumption: Double) {
         if (InputSyncHelper.shouldUpdateConsumption(binding.etDailyConsumption.text, consumption)) {
             binding.etDailyConsumption.setText(formatConsumption(consumption))
+            binding.etDailyConsumption.setSelection(binding.etDailyConsumption.text.length)
         }
     }
 
-    private fun updateContainerCountUi(editText: EditText, count: Int) {
+    internal fun updateContainerCountUi(editText: EditText, count: Int) {
         if (InputSyncHelper.shouldUpdateContainerCount(editText.text, count)) {
             editText.setText(count.toString())
+            editText.setSelection(editText.text.length)
         }
     }
 
