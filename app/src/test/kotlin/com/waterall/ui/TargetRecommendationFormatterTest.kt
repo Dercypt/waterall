@@ -158,4 +158,68 @@ class TargetRecommendationFormatterTest {
         assertEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
         assertFalse(uiModel.isDeficitRisk)
     }
+
+    @Test
+    fun testManualOverrideDuringActiveFlowUsesRationingActiveTarget() {
+        // When active flow is ongoing, countdown.flowState is FLOW_ACTIVE.
+        // However, when a resident sets an explicit manual override in etHoursUntilNextSupply (e.g. 24.0 hours),
+        // recalculateRunoutBuffer passes effectiveFlowState = ScheduleFlowState.RATIONING_ACTIVE.
+        val inventory = StorageInventory(blueDrums200L = 2, fillPercentage = 100.0) // 400L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = 24.0
+        )
+
+        val countdownFlowState = ScheduleFlowState.FLOW_ACTIVE
+        val customSupplyHours: Double? = 24.0
+
+        val effectiveFlowState = if (customSupplyHours != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdownFlowState
+        }
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = effectiveFlowState,
+            hoursUntilNextSupply = customSupplyHours ?: 0.0
+        )
+
+        // Manual override must calculate rationing daily target instead of "Unrestricted"
+        assertEquals("≤ 400 L/day", uiModel.targetValueText)
+        assertEquals("Stay at or below 400 L/day (currently 200) to keep your buffer.", uiModel.subtext)
+        assertFalse(uiModel.isDeficitRisk)
+        assertNotEquals(TargetRecommendationFormatter.UNRESTRICTED_TARGET_TEXT, uiModel.targetValueText)
+        assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+    }
+
+    @Test
+    fun testWithoutManualOverrideDuringActiveFlowShowsUnrestricted() {
+        val inventory = StorageInventory(blueDrums200L = 2, fillPercentage = 100.0) // 400L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = 24.0
+        )
+
+        val countdownFlowState = ScheduleFlowState.FLOW_ACTIVE
+        val customSupplyHours: Double? = null
+
+        val effectiveFlowState = if (customSupplyHours != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdownFlowState
+        }
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = effectiveFlowState,
+            hoursUntilNextSupply = 24.0
+        )
+
+        assertEquals(TargetRecommendationFormatter.UNRESTRICTED_TARGET_TEXT, uiModel.targetValueText)
+        assertEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+        assertFalse(uiModel.isDeficitRisk)
+    }
 }
