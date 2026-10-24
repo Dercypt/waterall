@@ -222,4 +222,66 @@ class TargetRecommendationFormatterTest {
         assertEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
         assertFalse(uiModel.isDeficitRisk)
     }
+
+    @Test
+    fun testManualOverrideWithZeroHoursDuringActiveFlowShowsNeutralPromptNotUnrestricted() {
+        val inventory = StorageInventory(blueDrums200L = 2, fillPercentage = 100.0) // 400L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = 0.0
+        )
+
+        val countdownFlowState = ScheduleFlowState.FLOW_ACTIVE
+        val customSupplyHours: Double? = 0.0
+
+        val effectiveFlowState = if (customSupplyHours != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdownFlowState
+        }
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = effectiveFlowState,
+            hoursUntilNextSupply = customSupplyHours ?: 0.0
+        )
+
+        assertEquals(TargetRecommendationFormatter.EMPTY_TARGET_TEXT, uiModel.targetValueText)
+        assertEquals(TargetRecommendationFormatter.EMPTY_SUPPLY_HOURS_SUBTEXT, uiModel.subtext)
+        assertFalse(uiModel.isDeficitRisk)
+        assertNotEquals(TargetRecommendationFormatter.UNRESTRICTED_TARGET_TEXT, uiModel.targetValueText)
+        assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+    }
+
+    @Test
+    fun testManualOverrideCausingDeficitDuringActiveFlowShowsDeficitTarget() {
+        val inventory = StorageInventory(blueDrums200L = 1, fillPercentage = 100.0) // 200L stored
+        val result = RunoutEstimator.calculate(
+            inventory = inventory,
+            dailyBurnRateLiters = 200.0,
+            hoursUntilNextSupply = 48.0
+        )
+
+        val countdownFlowState = ScheduleFlowState.FLOW_ACTIVE
+        val customSupplyHours: Double? = 48.0
+
+        val effectiveFlowState = if (customSupplyHours != null) {
+            ScheduleFlowState.RATIONING_ACTIVE
+        } else {
+            countdownFlowState
+        }
+
+        val uiModel = TargetRecommendationFormatter.format(
+            result = result,
+            flowState = effectiveFlowState,
+            hoursUntilNextSupply = customSupplyHours ?: 0.0
+        )
+
+        assertTrue(uiModel.isDeficitRisk)
+        assertEquals("≤ 100 L/day", uiModel.targetValueText)
+        assertEquals("Reduce use from 200 to 100 L/day to avoid running out.", uiModel.subtext)
+        assertNotEquals(TargetRecommendationFormatter.UNRESTRICTED_TARGET_TEXT, uiModel.targetValueText)
+        assertNotEquals(TargetRecommendationFormatter.ACTIVE_FLOW_SUBTEXT, uiModel.subtext)
+    }
 }
