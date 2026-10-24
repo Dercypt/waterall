@@ -400,6 +400,119 @@ class ZoneConsensusCalculatorTest {
         assertEquals(0, emptyRepo.getAllReports().size)
         emptyRepo.seedSampleReports(baseTime)
         assertEquals(8, emptyRepo.getAllReports().size)
+
+        // Repeated seeding must be idempotent and not duplicate seed data
+        emptyRepo.seedSampleReports(baseTime + 1000L)
+        assertEquals(8, emptyRepo.getAllReports().size)
+        assertEquals(4, emptyRepo.getReportsForZone("brgy4").size)
+        assertEquals(2, emptyRepo.getReportsForZone("brgy1").size)
+        assertEquals(2, emptyRepo.getReportsForZone("brgy7").size)
+    }
+
+    @Test
+    fun testAddReportDeduplicatesById() {
+        val repo = InMemoryReportRepository.createDefault()
+        val report1 = GroundTruthReport(
+            id = "rep-dup-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            status = TapFlowStatus.RUNNING,
+            notes = "First observation",
+            timestamp = baseTime - 10_000L
+        )
+        val report2 = GroundTruthReport(
+            id = "rep-dup-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            status = TapFlowStatus.DRY,
+            notes = "Updated observation",
+            timestamp = baseTime - 5_000L
+        )
+
+        repo.addReport(report1)
+        assertEquals(1, repo.getAllReports().size)
+        assertEquals(TapFlowStatus.RUNNING, repo.getAllReports().first().status)
+
+        // Adding a report with identical ID replaces the previous entry
+        repo.addReport(report2)
+        assertEquals(1, repo.getAllReports().size)
+        assertEquals(TapFlowStatus.DRY, repo.getAllReports().first().status)
+        assertEquals("Updated observation", repo.getAllReports().first().notes)
+    }
+
+    @Test
+    fun testInitialReportsDeduplicatesById() {
+        val r1 = GroundTruthReport(
+            id = "rep-init-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            notes = "First instance",
+            timestamp = baseTime - 10_000L
+        )
+        val r1Duplicate = GroundTruthReport(
+            id = "rep-init-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.LOW_PRESSURE,
+            notes = "Duplicate instance",
+            timestamp = baseTime - 9_000L
+        )
+        val r2 = GroundTruthReport(
+            id = "rep-init-2",
+            zoneId = "brgy1",
+            zoneName = "Zone 1",
+            status = TapFlowStatus.DRY,
+            notes = "Distinct report",
+            timestamp = baseTime - 8_000L
+        )
+
+        val repo = InMemoryReportRepository(listOf(r1, r1Duplicate, r2))
+        assertEquals(2, repo.getAllReports().size)
+        assertEquals("rep-init-1", repo.getAllReports()[0].id)
+        assertEquals("rep-init-2", repo.getAllReports()[1].id)
+    }
+
+    @Test
+    fun testAddReportReplacesPositionToHeadOnDuplicate() {
+        val repo = InMemoryReportRepository.createDefault()
+        val r1 = GroundTruthReport(
+            id = "rep-pos-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.RUNNING,
+            notes = "Report 1",
+            timestamp = baseTime - 10_000L
+        )
+        val r2 = GroundTruthReport(
+            id = "rep-pos-2",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.LOW_PRESSURE,
+            notes = "Report 2",
+            timestamp = baseTime - 8_000L
+        )
+        val r1Updated = GroundTruthReport(
+            id = "rep-pos-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4",
+            status = TapFlowStatus.DRY,
+            notes = "Report 1 Updated",
+            timestamp = baseTime - 2_000L
+        )
+
+        repo.addReport(r1) // [r1]
+        repo.addReport(r2) // [r2, r1]
+        assertEquals(2, repo.getAllReports().size)
+        assertEquals("rep-pos-2", repo.getAllReports()[0].id)
+        assertEquals("rep-pos-1", repo.getAllReports()[1].id)
+
+        // Adding updated r1 should remove earlier r1 and place updated r1 at head
+        repo.addReport(r1Updated) // [r1Updated, r2]
+        assertEquals(2, repo.getAllReports().size)
+        assertEquals("rep-pos-1", repo.getAllReports()[0].id)
+        assertEquals(TapFlowStatus.DRY, repo.getAllReports()[0].status)
+        assertEquals("rep-pos-2", repo.getAllReports()[1].id)
     }
 
     companion object {
