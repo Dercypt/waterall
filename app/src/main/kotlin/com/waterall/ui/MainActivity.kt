@@ -60,21 +60,8 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this, MainViewModel.Factory)[MainViewModel::class.java]
 
         userPreferences = UserPreferences(this)
-        if (savedInstanceState == null) {
-            val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
-            viewModel.setSelectedZone(zones[savedZoneIndex])
-            viewModel.setUserMode(userPreferences.userMode)
-            viewModel.setSelectedFillPercentage(userPreferences.fillPercentage)
-            viewModel.setDailyConsumption(userPreferences.dailyConsumption)
-            viewModel.setDrums200L(userPreferences.drums200LCount)
-            viewModel.setTanks1000L(userPreferences.tanks1000LCount)
-            viewModel.setGallons20L(userPreferences.gallons20LCount)
-            val savedReports = userPreferences.getReports()
-            if (reportRepository.getAllReports().isEmpty()) {
-                savedReports.reversed().forEach { report ->
-                    runCatching { reportRepository.addReport(report) }.getOrNull()
-                }
-            }
+        if (!viewModel.isInitialized) {
+            viewModel.hydrateFromPreferences(userPreferences, zones)
         }
 
         setupBottomNavigation()
@@ -258,7 +245,7 @@ class MainActivity : AppCompatActivity() {
      * Retains container counts to lightweight SharedPreferences enforcing Law 3 invariants.
      */
     private fun persistContainerCounts() {
-        if (!::userPreferences.isInitialized) return
+        if (!::userPreferences.isInitialized || !::viewModel.isInitialized || !viewModel.isInitialized) return
         userPreferences.saveContainerCounts(
             drums = viewModel.drums200L.value,
             tanks = viewModel.tanks1000L.value,
@@ -830,7 +817,7 @@ class MainActivity : AppCompatActivity() {
      * Retains container counts, user mode, fill level, and daily consumption to lightweight SharedPreferences.
      */
     private fun persistUserPreferences() {
-        if (!::userPreferences.isInitialized) return
+        if (!::userPreferences.isInitialized || !::viewModel.isInitialized || !viewModel.isInitialized) return
         persistContainerCounts()
         userPreferences.userMode = viewModel.userMode.value
         userPreferences.fillPercentage = viewModel.selectedFillPercentage.value
