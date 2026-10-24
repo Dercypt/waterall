@@ -31,4 +31,51 @@ object InputSyncHelper {
         val current = currentText?.toString()?.toDoubleOrNull() ?: 0.0
         return current != newConsumption
     }
+
+    /**
+     * Calculates the cursor selection offset that positions the cursor at the end of [text],
+     * preventing cursor jumping to position 0 when EditText contents are refreshed.
+     */
+    fun calculateEndCursorPosition(text: CharSequence?): Int {
+        return text?.length ?: 0
+    }
+
+    /**
+     * Synchronizes a container count text input with [newCount] if an update is needed.
+     * When updated, [onUpdate] is invoked with the string representation of [newCount]
+     * and the target cursor index at the end of the text.
+     *
+     * @return true if an update was triggered, false otherwise.
+     */
+    fun syncContainerCount(
+        currentText: CharSequence?,
+        newCount: Int,
+        onUpdate: (formattedText: String, cursorPosition: Int) -> Unit
+    ): Boolean {
+        if (shouldUpdateContainerCount(currentText, newCount)) {
+            val text = newCount.toString()
+            onUpdate(text, calculateEndCursorPosition(text))
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Synchronizes a daily consumption text input with [newConsumption] and [formattedText] if an update is needed.
+     * When updated, [onUpdate] is invoked with [formattedText] and the target cursor index at the end of the text.
+     *
+     * @return true if an update was triggered, false otherwise.
+     */
+    fun syncConsumption(
+        currentText: CharSequence?,
+        newConsumption: Double,
+        formattedText: String,
+        onUpdate: (formattedText: String, cursorPosition: Int) -> Unit
+    ): Boolean {
+        if (shouldUpdateConsumption(currentText, newConsumption)) {
+            onUpdate(formattedText, calculateEndCursorPosition(formattedText))
+            return true
+        }
+        return false
+    }
 }

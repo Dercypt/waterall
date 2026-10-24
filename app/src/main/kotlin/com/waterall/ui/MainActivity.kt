@@ -2,12 +2,14 @@ package com.waterall.ui
 
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
 import com.waterall.domain.model.BarangayZone
+import com.waterall.ui.InputSyncHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
@@ -173,6 +175,17 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
         persistUserPreferences()
         stopTimersAndCoroutines()
+    }
+
+    /**
+     * Synchronizes a container count [EditText] with [count] using [InputSyncHelper.shouldUpdateContainerCount]
+     * and sets cursor position to the end of the text to prevent cursor jump/resets.
+     */
+    internal fun updateContainerCountUi(editText: EditText, count: Int) {
+        if (InputSyncHelper.shouldUpdateContainerCount(editText.text, count)) {
+            editText.setText(count.toString())
+            editText.setSelection(editText.text.length)
+        }
     }
 
     override fun onDestroy() {

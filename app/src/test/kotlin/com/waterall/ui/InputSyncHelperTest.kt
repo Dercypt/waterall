@@ -1,5 +1,6 @@
 package com.waterall.ui
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -86,5 +87,169 @@ class InputSyncHelperTest {
         assertTrue(InputSyncHelper.shouldUpdateConsumption("100.0", 150.0))
         assertTrue(InputSyncHelper.shouldUpdateConsumption("", 200.0))
         assertTrue(InputSyncHelper.shouldUpdateConsumption("50.0", 0.0))
+    }
+
+    @Test
+    fun testCalculateEndCursorPositionMatchesTextLength() {
+        assertEquals(0, InputSyncHelper.calculateEndCursorPosition(null))
+        assertEquals(0, InputSyncHelper.calculateEndCursorPosition(""))
+        assertEquals(1, InputSyncHelper.calculateEndCursorPosition("0"))
+        assertEquals(1, InputSyncHelper.calculateEndCursorPosition("5"))
+        assertEquals(2, InputSyncHelper.calculateEndCursorPosition("25"))
+        assertEquals(5, InputSyncHelper.calculateEndCursorPosition("150.0"))
+    }
+
+    @Test
+    fun testSyncContainerCountInvokesCallbackWithEndCursorPositionWhenCountChanges() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncContainerCount("2", 3) { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("3", updatedText)
+        assertEquals(1, updatedCursor)
+    }
+
+    @Test
+    fun testSyncContainerCountPreservesDoubleDigitCursorPosition() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncContainerCount("9", 10) { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("10", updatedText)
+        assertEquals(2, updatedCursor)
+    }
+
+    @Test
+    fun testSyncContainerCountDoesNotInvokeCallbackWhenCountMatches() {
+        var called = false
+
+        val changed = InputSyncHelper.syncContainerCount("5", 5) { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
+
+    @Test
+    fun testSyncContainerCountDoesNotOverwriteBlankWhenCountIsZero() {
+        var called = false
+
+        val changed = InputSyncHelper.syncContainerCount("", 0) { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
+
+    @Test
+    fun testSyncConsumptionInvokesCallbackWithEndCursorPositionWhenChanged() {
+        var updatedText = ""
+        var updatedCursor = -1
+
+        val changed = InputSyncHelper.syncConsumption("100.0", 150.0, "150") { text, cursor ->
+            updatedText = text
+            updatedCursor = cursor
+        }
+
+        assertTrue(changed)
+        assertEquals("150", updatedText)
+        assertEquals(3, updatedCursor)
+    }
+
+    @Test
+    fun testSyncConsumptionDoesNotInvokeCallbackWhenUnchanged() {
+        var called = false
+
+        val changed = InputSyncHelper.syncConsumption("150.0", 150.0, "150") { _, _ ->
+            called = true
+        }
+
+        assertFalse(changed)
+        assertFalse(called)
+    }
+
+    @Test
+    fun testSequentialStepperInteractionsPreserveEndCursorAcrossMagnitudeBoundaries() {
+        var currentText = "0"
+        var currentCursor = 1
+
+        val simulateStepperStep: (Int) -> Unit = { newCount ->
+            InputSyncHelper.syncContainerCount(currentText, newCount) { text, cursor ->
+                currentText = text
+                currentCursor = cursor
+            }
+        }
+
+        // Stepper: 0 -> 1 -> 9 -> 10 -> 99 -> 100
+        simulateStepperStep(1)
+        assertEquals("1", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(9)
+        assertEquals("9", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(10)
+        assertEquals("10", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(99)
+        assertEquals("99", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(100)
+        assertEquals("100", currentText)
+        assertEquals(3, currentCursor)
+
+        // Decrement stepper: 100 -> 99 -> 10 -> 9 -> 0
+        simulateStepperStep(99)
+        assertEquals("99", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(10)
+        assertEquals("10", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(9)
+        assertEquals("9", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(0)
+        assertEquals("0", currentText)
+        assertEquals(1, currentCursor)
+    }
+
+    @Test
+    fun testCursorPositionInvariantIsAlwaysEqualToFormattedTextLength() {
+        val testCases = listOf(
+            0 to "0",
+            1 to "1",
+            12 to "12",
+            123 to "123",
+            9999 to "9999"
+        )
+
+        for ((count, expectedString) in testCases) {
+            var observedCursor = -1
+            var observedText = ""
+            InputSyncHelper.syncContainerCount("-1", count) { text, cursor ->
+                observedText = text
+                observedCursor = cursor
+            }
+            assertEquals(expectedString, observedText)
+            assertEquals(observedText.length, observedCursor)
+        }
     }
 }
