@@ -12,6 +12,7 @@ This document governs engineering practices, default patterns, and mandatory esc
 2. **Architecture:**
    - Model-View-ViewModel (MVVM) with StateFlow / LiveData or clean observer delegates.
    - ViewBinding for zero-reflection, type-safe XML layout binding.
+   - Screen View Delegates (`CalendarViewDelegate`, `ReservesViewDelegate`, `ReportViewDelegate`) decouple screen-specific view binding, state observation, and listeners from `MainActivity`, keeping activity controllers lightweight and focused on navigation routing and lifecycle coordination.
 3. **Data Immutability:**
    - Domain models are Kotlin `data class` types with `val` properties. State transformations return new immutable copies.
 
