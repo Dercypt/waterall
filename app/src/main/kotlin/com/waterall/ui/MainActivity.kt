@@ -486,6 +486,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun updateContainerCountUi(editText: EditText, count: Int) {
+        val current = editText.text?.toString()?.toIntOrNull() ?: 0
+        if (current != count) {
+            editText.setText(count.toString())
+        }
+    }
+
     /**
      * Interconnects the reserve estimator with the schedule engine from Phase 1.
      * Auto-populates hoursUntilNextSupply from CountdownCalculationResult.hoursUntilNextOpening.
@@ -773,25 +780,19 @@ class MainActivity : AppCompatActivity() {
             }
             launch {
                 viewModel.drums200L.collect { count ->
-                    if (binding.etDrums200L.text?.toString()?.toIntOrNull() != count) {
-                        binding.etDrums200L.setText(count.toString())
-                    }
+                    updateContainerCountUi(binding.etDrums200L, count)
                     persistContainerCounts()
                 }
             }
             launch {
                 viewModel.tanks1000L.collect { count ->
-                    if (binding.etTanks1000L.text?.toString()?.toIntOrNull() != count) {
-                        binding.etTanks1000L.setText(count.toString())
-                    }
+                    updateContainerCountUi(binding.etTanks1000L, count)
                     persistContainerCounts()
                 }
             }
             launch {
                 viewModel.gallons20L.collect { count ->
-                    if (binding.etGallons20L.text?.toString()?.toIntOrNull() != count) {
-                        binding.etGallons20L.setText(count.toString())
-                    }
+                    updateContainerCountUi(binding.etGallons20L, count)
                     persistContainerCounts()
                 }
             }
