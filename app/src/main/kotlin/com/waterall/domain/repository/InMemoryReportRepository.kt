@@ -16,7 +16,7 @@ class InMemoryReportRepository(
     private val reports = mutableListOf<GroundTruthReport>()
 
     init {
-        reports.addAll(initialReports)
+        reports.addAll(initialReports.distinctBy { it.id })
     }
 
     override fun addReport(report: GroundTruthReport) {
