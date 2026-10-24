@@ -31,4 +31,12 @@ object InputSyncHelper {
         val current = currentText?.toString()?.toDoubleOrNull() ?: 0.0
         return current != newConsumption
     }
+
+    /**
+     * Calculates the cursor selection offset that positions the cursor at the end of [text],
+     * preventing cursor jumping to position 0 when EditText contents are refreshed.
+     */
+    fun calculateEndCursorPosition(text: CharSequence?): Int {
+        return text?.length ?: 0
+    }
 }

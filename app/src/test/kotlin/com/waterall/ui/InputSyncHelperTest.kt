@@ -1,5 +1,6 @@
 package com.waterall.ui
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -86,5 +87,15 @@ class InputSyncHelperTest {
         assertTrue(InputSyncHelper.shouldUpdateConsumption("100.0", 150.0))
         assertTrue(InputSyncHelper.shouldUpdateConsumption("", 200.0))
         assertTrue(InputSyncHelper.shouldUpdateConsumption("50.0", 0.0))
+    }
+
+    @Test
+    fun testCalculateEndCursorPositionMatchesTextLength() {
+        assertEquals(0, InputSyncHelper.calculateEndCursorPosition(null))
+        assertEquals(0, InputSyncHelper.calculateEndCursorPosition(""))
+        assertEquals(1, InputSyncHelper.calculateEndCursorPosition("0"))
+        assertEquals(1, InputSyncHelper.calculateEndCursorPosition("5"))
+        assertEquals(2, InputSyncHelper.calculateEndCursorPosition("25"))
+        assertEquals(5, InputSyncHelper.calculateEndCursorPosition("150.0"))
     }
 }
