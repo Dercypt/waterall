@@ -93,13 +93,12 @@ class ReservesViewDelegate(
         }
         binding.etHoursUntilNextSupply.doAfterTextChanged { text ->
             if (!isAutoPopulatingScheduleHours) {
-                val hours = text?.toString()?.toDoubleOrNull()
+                val raw = text?.toString()?.trim()
+                val hours = if (raw.isNullOrEmpty()) 0.0 else raw.toDoubleOrNull() ?: 0.0
                 if (viewModel.customSupplyHours.value != hours) {
                     viewModel.setCustomSupplyHours(hours)
-                    if (hours == null) {
-                        binding.tvScheduleSyncStatus.text = "Synced with zone schedule"
-                    }
                 }
+                binding.tvScheduleSyncStatus.text = "Manual override"
             }
         }
 
@@ -157,8 +156,7 @@ class ReservesViewDelegate(
         scope.launch {
             viewModel.customSupplyHours.collect { hours ->
                 if (hours != null) {
-                    val currentVal = binding.etHoursUntilNextSupply.text?.toString()?.toDoubleOrNull()
-                    if (currentVal != hours) {
+                    if (InputSyncHelper.shouldUpdateSupplyHours(binding.etHoursUntilNextSupply.text, hours)) {
                         isAutoPopulatingScheduleHours = true
                         try {
                             binding.etHoursUntilNextSupply.setText(String.format(Locale.US, "%.1f", hours))
@@ -189,7 +187,7 @@ class ReservesViewDelegate(
     }
 
     override fun onTabSelected() {
-        if (binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
+        if (viewModel.customSupplyHours.value == null && binding.etHoursUntilNextSupply.text.isNullOrBlank()) {
             autoPopulateScheduleHours()
         }
     }
@@ -231,7 +229,12 @@ class ReservesViewDelegate(
             userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
-        val nextSupplyHours = (viewModel.customSupplyHours.value ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
+        val isSupplyHoursBlank = binding.etHoursUntilNextSupply.text.isNullOrBlank()
+        val nextSupplyHours = if (isSupplyHoursBlank) {
+            0.0
+        } else {
+            (viewModel.customSupplyHours.value ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
+        }
 
         val inventory = StorageInventory(
             blueDrums200L = drumsCount,
@@ -282,7 +285,7 @@ class ReservesViewDelegate(
             }
         }
 
-        val effectiveFlowState = if (viewModel.customSupplyHours.value != null) {
+        val effectiveFlowState = if (viewModel.customSupplyHours.value != null || isSupplyHoursBlank) {
             ScheduleFlowState.RATIONING_ACTIVE
         } else {
             countdown.flowState

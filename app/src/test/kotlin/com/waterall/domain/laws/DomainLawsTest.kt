@@ -79,6 +79,17 @@ class DomainLawsTest : LawsSpecificationStub {
         assertTrue(zeroBurnResult.runoutHours.isInfinite())
         assertEquals(0.0, zeroBurnResult.deficitLiters, 0.001)
         assertFalse(zeroBurnResult.isDepletedBeforeNextSupply)
+
+        // Test 4: Empty reserve with positive burn rate at zero supply hours must be depleted (not surplus)
+        val emptyReserve = StorageInventory(blueDrums200L = 0, fillPercentage = 0.0)
+        val emptyResult = RunoutEstimator.calculate(
+            inventory = emptyReserve,
+            dailyBurnRateLiters = 250.0,
+            hoursUntilNextSupply = 0.0
+        )
+        assertTrue("Empty reserve with positive burn rate must be flagged as depleted", emptyResult.isDepletedBeforeNextSupply)
+        assertEquals(0.0, emptyResult.deficitLiters, 0.001)
+        assertTrue(emptyResult.runoutSummaryText.startsWith("CRITICAL DEFICIT"))
     }
 
     @Test

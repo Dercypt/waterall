@@ -382,6 +382,48 @@ class MainViewModelTest {
     }
 
     @Test
+    fun testBlankSupplyHoursInputDefaultsExplicitlyToZeroAndAvoidsSilentScheduleFallback() {
+        val viewModel = MainViewModel()
+        val countdown = com.waterall.domain.calculator.ScheduleCountdownCalculator.calculate(
+            zone = viewModel.selectedZone.value,
+            userMode = viewModel.userMode.value,
+            currentTime = java.time.LocalDateTime.now()
+        )
+
+        // When a user enters custom supply hours (e.g. 10.0)
+        viewModel.setCustomSupplyHours(10.0)
+        assertEquals(10.0, viewModel.customSupplyHours.value!!, 0.001)
+
+        // When a user deletes their input in etHoursUntilNextSupply:
+        // Text is blank, which maps explicitly to 0.0 rather than silently falling back to countdown schedule
+        val rawDeletedInput: String = ""
+        val hours = if (rawDeletedInput.isBlank()) 0.0 else rawDeletedInput.toDoubleOrNull() ?: 0.0
+        viewModel.setCustomSupplyHours(hours)
+        assertEquals(0.0, viewModel.customSupplyHours.value!!, 0.001)
+
+        // Recalculate runout buffer logic
+        val isSupplyHoursBlank = rawDeletedInput.isBlank()
+        val nextSupplyHours = if (isSupplyHoursBlank) {
+            0.0
+        } else {
+            (viewModel.customSupplyHours.value ?: countdown.hoursUntilNextOpening).coerceAtLeast(0.0)
+        }
+        assertEquals(0.0, nextSupplyHours, 0.001)
+
+        // If household storage is 0L with positive burn rate, it must evaluate to depleted risk (not surplus)
+        val emptyInventory = com.waterall.domain.model.StorageInventory(blueDrums200L = 0, fillPercentage = 0.0)
+        val result = com.waterall.domain.calculator.RunoutEstimator.calculate(
+            inventory = emptyInventory,
+            dailyBurnRateLiters = 180.0,
+            hoursUntilNextSupply = nextSupplyHours
+        )
+        assertTrue("0L storage with positive burn rate must be depleted", result.isDepletedBeforeNextSupply)
+        assertEquals(0.0, result.deficitLiters, 0.001)
+        assertTrue(result.runoutSummaryText.startsWith("CRITICAL DEFICIT"))
+        assertFalse(result.runoutSummaryText.startsWith("SAFE SURPLUS"))
+    }
+
+    @Test
     fun testReservesInputsCombineEmitsDeterministicallyAcrossAllNineStateFlows() {
         val viewModel = MainViewModel()
         var calculationCount = 0

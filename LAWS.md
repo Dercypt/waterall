@@ -15,7 +15,7 @@ $$\forall t, \quad 0.0 \le \text{currentVolumeLiters}(t) \le \text{totalCapacity
 3. **Deficit Non-Negativity:**
    - The projected water deficit before the next BWD supply window ($T_{\text{next}}$ hours away) is:
      $$\text{Deficit} = \max\left(0.0, (T_{\text{next}} - T_{\text{runout}}) \times \frac{R}{24.0}\right)$$
-   - A surplus reserve must yield $\text{Deficit} = 0.0$ liters and positive buffer hours.
+   - A surplus reserve must yield $\text{Deficit} = 0.0$ liters and positive buffer hours. An empty reserve ($V_{\text{current}} = 0.0$) with active consumption ($R > 0.0$) is strictly categorized as depleted before supply ($T_{\text{runout}} \le T_{\text{next}}$), never as a surplus reserve.
 
 ---
 

@@ -40,5 +40,5 @@ Any developer or agent encountering the following situations must halt, report, 
 3. **Time Formatting:**
    - All countdown and schedule timestamps must format as two-digit padded strings (`02:47:13`, `06:00 AM – 10:00 AM`).
 4. **Input Synchronization & Cursor Preservation:**
-   - Any programmatically updated `EditText` (e.g., from StateFlow collectors or stepper buttons) must use `InputSyncHelper.shouldUpdateContainerCount` or `InputSyncHelper.shouldUpdateConsumption` to avoid overwriting user edits or backspaced blank states.
+   - Any programmatically updated `EditText` (e.g., from StateFlow collectors or stepper buttons) must use `InputSyncHelper.shouldUpdateContainerCount`, `InputSyncHelper.shouldUpdateConsumption`, or `InputSyncHelper.shouldUpdateSupplyHours` to avoid overwriting user edits or backspaced blank states.
    - Always append `editText.setSelection(editText.text.length)` after `setText` calls so that the cursor stays anchored at the end of the input instead of jumping to index 0.

@@ -252,4 +252,47 @@ class InputSyncHelperTest {
             assertEquals(observedText.length, observedCursor)
         }
     }
+
+    @Test
+    fun testShouldUpdateSupplyHoursWithBlankTextAndZeroAvoidsOverwriting() {
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("", 0.0))
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours(null, 0.0))
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("   ", 0.0))
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("0", 0.0))
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("0.0", 0.0))
+    }
+
+    @Test
+    fun testShouldUpdateSupplyHoursWithMatchingValueReturnsFalse() {
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("12.0", 12.0))
+        assertFalse(InputSyncHelper.shouldUpdateSupplyHours("6.5", 6.5))
+    }
+
+    @Test
+    fun testShouldUpdateSupplyHoursWithDivergentValueReturnsTrue() {
+        assertTrue(InputSyncHelper.shouldUpdateSupplyHours("", 12.0))
+        assertTrue(InputSyncHelper.shouldUpdateSupplyHours("10.0", 15.5))
+        assertTrue(InputSyncHelper.shouldUpdateSupplyHours("5.0", 0.0))
+    }
+
+    @Test
+    fun testSyncSupplyHoursInvokesCallbackWithCorrectEndCursor() {
+        var observedText = ""
+        var observedCursor = -1
+
+        val updated = InputSyncHelper.syncSupplyHours("", 12.5, "12.5") { text, cursor ->
+            observedText = text
+            observedCursor = cursor
+        }
+
+        assertTrue(updated)
+        assertEquals("12.5", observedText)
+        assertEquals(4, observedCursor)
+
+        // When values match, callback should not be invoked
+        val noUpdate = InputSyncHelper.syncSupplyHours("12.5", 12.5, "12.5") { _, _ ->
+            org.junit.Assert.fail("Should not invoke update when supply hours match")
+        }
+        assertFalse(noUpdate)
+    }
 }
