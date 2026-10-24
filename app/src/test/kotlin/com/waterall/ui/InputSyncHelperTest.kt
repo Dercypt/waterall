@@ -179,4 +179,77 @@ class InputSyncHelperTest {
         assertFalse(changed)
         assertFalse(called)
     }
+
+    @Test
+    fun testSequentialStepperInteractionsPreserveEndCursorAcrossMagnitudeBoundaries() {
+        var currentText = "0"
+        var currentCursor = 1
+
+        val simulateStepperStep: (Int) -> Unit = { newCount ->
+            InputSyncHelper.syncContainerCount(currentText, newCount) { text, cursor ->
+                currentText = text
+                currentCursor = cursor
+            }
+        }
+
+        // Stepper: 0 -> 1 -> 9 -> 10 -> 99 -> 100
+        simulateStepperStep(1)
+        assertEquals("1", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(9)
+        assertEquals("9", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(10)
+        assertEquals("10", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(99)
+        assertEquals("99", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(100)
+        assertEquals("100", currentText)
+        assertEquals(3, currentCursor)
+
+        // Decrement stepper: 100 -> 99 -> 10 -> 9 -> 0
+        simulateStepperStep(99)
+        assertEquals("99", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(10)
+        assertEquals("10", currentText)
+        assertEquals(2, currentCursor)
+
+        simulateStepperStep(9)
+        assertEquals("9", currentText)
+        assertEquals(1, currentCursor)
+
+        simulateStepperStep(0)
+        assertEquals("0", currentText)
+        assertEquals(1, currentCursor)
+    }
+
+    @Test
+    fun testCursorPositionInvariantIsAlwaysEqualToFormattedTextLength() {
+        val testCases = listOf(
+            0 to "0",
+            1 to "1",
+            12 to "12",
+            123 to "123",
+            9999 to "9999"
+        )
+
+        for ((count, expectedString) in testCases) {
+            var observedCursor = -1
+            var observedText = ""
+            InputSyncHelper.syncContainerCount("-1", count) { text, cursor ->
+                observedText = text
+                observedCursor = cursor
+            }
+            assertEquals(expectedString, observedText)
+            assertEquals(observedText.length, observedCursor)
+        }
+    }
 }
