@@ -23,6 +23,7 @@ class InMemoryReportRepository(
         require(report.timestamp <= System.currentTimeMillis() + GroundTruthReport.CLOCK_SKEW_TOLERANCE_MS) {
             "Law 4 violation: Report timestamp cannot be in the future."
         }
+        reports.removeAll { it.id == report.id }
         reports.add(0, report)
     }
 

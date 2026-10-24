@@ -400,6 +400,44 @@ class ZoneConsensusCalculatorTest {
         assertEquals(0, emptyRepo.getAllReports().size)
         emptyRepo.seedSampleReports(baseTime)
         assertEquals(8, emptyRepo.getAllReports().size)
+
+        // Repeated seeding must be idempotent and not duplicate seed data
+        emptyRepo.seedSampleReports(baseTime + 1000L)
+        assertEquals(8, emptyRepo.getAllReports().size)
+        assertEquals(4, emptyRepo.getReportsForZone("brgy4").size)
+        assertEquals(2, emptyRepo.getReportsForZone("brgy1").size)
+        assertEquals(2, emptyRepo.getReportsForZone("brgy7").size)
+    }
+
+    @Test
+    fun testAddReportDeduplicatesById() {
+        val repo = InMemoryReportRepository.createDefault()
+        val report1 = GroundTruthReport(
+            id = "rep-dup-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            status = TapFlowStatus.RUNNING,
+            notes = "First observation",
+            timestamp = baseTime - 10_000L
+        )
+        val report2 = GroundTruthReport(
+            id = "rep-dup-1",
+            zoneId = "brgy4",
+            zoneName = "Zone 4 — Brgy. San Isidro",
+            status = TapFlowStatus.DRY,
+            notes = "Updated observation",
+            timestamp = baseTime - 5_000L
+        )
+
+        repo.addReport(report1)
+        assertEquals(1, repo.getAllReports().size)
+        assertEquals(TapFlowStatus.RUNNING, repo.getAllReports().first().status)
+
+        // Adding a report with identical ID replaces the previous entry
+        repo.addReport(report2)
+        assertEquals(1, repo.getAllReports().size)
+        assertEquals(TapFlowStatus.DRY, repo.getAllReports().first().status)
+        assertEquals("Updated observation", repo.getAllReports().first().notes)
     }
 
     companion object {
