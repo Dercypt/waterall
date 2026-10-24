@@ -469,4 +469,30 @@ class MainViewModelTest {
         assertEquals(TapFlowStatus.RUNNING, consensusZone4.dominantStatus)
         assertEquals(75, consensusZone4.statusPercentages[TapFlowStatus.RUNNING])
     }
+
+    @Test
+    fun testRepeatedLoadSampleReportsIsIdempotentAndDoesNotDuplicateData() {
+        val viewModel = MainViewModel()
+        val now = 1_700_000_000_000L
+
+        // First click
+        viewModel.loadSampleReports(now)
+        assertEquals(8, viewModel.reportRepository.getAllReports().size)
+        assertEquals(4, viewModel.reportRepository.getReportsForZone("brgy4").size)
+
+        // Repeated clicks simulating user tapping btnLoadSampleReports repeatedly
+        viewModel.loadSampleReports(now + 60_000L)
+        viewModel.loadSampleReports(now + 120_000L)
+
+        val reports = viewModel.reportRepository.getAllReports()
+        assertEquals(8, reports.size)
+        assertEquals(4, viewModel.reportRepository.getReportsForZone("brgy4").size)
+        assertEquals(2, viewModel.reportRepository.getReportsForZone("brgy1").size)
+        assertEquals(2, viewModel.reportRepository.getReportsForZone("brgy7").size)
+
+        val consensusZone4 = viewModel.reportRepository.getConsensus("brgy4", "Zone 4", now + 120_000L)
+        assertEquals(4, consensusZone4.totalReports)
+        assertEquals(TapFlowStatus.RUNNING, consensusZone4.dominantStatus)
+        assertEquals(75, consensusZone4.statusPercentages[TapFlowStatus.RUNNING])
+    }
 }
