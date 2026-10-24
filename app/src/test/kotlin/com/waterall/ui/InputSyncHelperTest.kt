@@ -25,6 +25,29 @@ class InputSyncHelperTest {
     }
 
     @Test
+    fun testWhitespaceContainerTextDoesNotTriggerOverwriteWhenCountIsZero() {
+        assertFalse(InputSyncHelper.shouldUpdateContainerCount("   ", 0))
+    }
+
+    @Test
+    fun testNonNumericContainerTextDoesNotTriggerOverwriteWhenCountIsZero() {
+        assertFalse(InputSyncHelper.shouldUpdateContainerCount("abc", 0))
+    }
+
+    @Test
+    fun testNegativeInputIsOverwrittenWhenClampedInStateFlow() {
+        // If an invalid negative string is present, StateFlow clamped to 0 should trigger update to "0"
+        assertTrue(InputSyncHelper.shouldUpdateContainerCount("-1", 0))
+    }
+
+    @Test
+    fun testLeadingZeroEquivalentDoesNotTriggerUpdate() {
+        // "05" parses to 5; if StateFlow is 5, no rewrite needed
+        assertFalse(InputSyncHelper.shouldUpdateContainerCount("05", 5))
+        assertFalse(InputSyncHelper.shouldUpdateContainerCount("00", 0))
+    }
+
+    @Test
     fun testDifferentContainerCountTriggersUpdate() {
         // Quick-adjust increment from 2 to 3
         assertTrue(InputSyncHelper.shouldUpdateContainerCount("2", 3))
@@ -40,14 +63,22 @@ class InputSyncHelperTest {
     fun testSameContainerCountDoesNotTriggerUpdate() {
         assertFalse(InputSyncHelper.shouldUpdateContainerCount("5", 5))
         assertFalse(InputSyncHelper.shouldUpdateContainerCount("0", 0))
+        assertFalse(InputSyncHelper.shouldUpdateContainerCount("999", 999))
     }
 
     @Test
     fun testClearingConsumptionWithBackspaceDoesNotTriggerOverwriteWhenZero() {
         assertFalse(InputSyncHelper.shouldUpdateConsumption("", 0.0))
         assertFalse(InputSyncHelper.shouldUpdateConsumption(null, 0.0))
+        assertFalse(InputSyncHelper.shouldUpdateConsumption("   ", 0.0))
         assertFalse(InputSyncHelper.shouldUpdateConsumption("0", 0.0))
         assertFalse(InputSyncHelper.shouldUpdateConsumption("0.0", 0.0))
+    }
+
+    @Test
+    fun testEquivalentDecimalRepresentationDoesNotTriggerConsumptionUpdate() {
+        // "150.00" parses to 150.0; collector should not trigger setText
+        assertFalse(InputSyncHelper.shouldUpdateConsumption("150.00", 150.0))
     }
 
     @Test
