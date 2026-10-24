@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -494,5 +495,71 @@ class MainViewModelTest {
         assertEquals(4, consensusZone4.totalReports)
         assertEquals(TapFlowStatus.RUNNING, consensusZone4.dominantStatus)
         assertEquals(75, consensusZone4.statusPercentages[TapFlowStatus.RUNNING])
+    }
+
+    private class InMemoryPreferenceStorage : PreferenceStorage {
+        private val stringMap = mutableMapOf<String, String>()
+        private val intMap = mutableMapOf<String, Int>()
+
+        override fun getString(key: String, defaultValue: String): String =
+            stringMap[key] ?: defaultValue
+
+        override fun putString(key: String, value: String) {
+            stringMap[key] = value
+        }
+
+        override fun getInt(key: String, defaultValue: Int): Int =
+            intMap[key] ?: defaultValue
+
+        override fun putInt(key: String, value: Int) {
+            intMap[key] = value
+        }
+    }
+
+    @Test
+    fun testIsInitializedDefaultsToFalseAndCanBeUpdated() {
+        val viewModel = MainViewModel()
+        assertFalse(viewModel.isInitialized)
+
+        viewModel.isInitialized = true
+        assertTrue(viewModel.isInitialized)
+    }
+
+    @Test
+    fun testHydrateFromPreferencesPopulatesZeroedViewModelAndSetsInitialized() {
+        val storage = InMemoryPreferenceStorage()
+        val prefs = UserPreferences(storage)
+        prefs.selectedZoneId = "brgy7"
+        prefs.userMode = UserMode.COMMERCIAL
+        prefs.fillPercentage = 75.0
+        prefs.dailyConsumption = 180.0
+        prefs.saveContainerCounts(drums = 3, tanks = 1, gallons = 6)
+
+        val report = GroundTruthReport(
+            id = "saved-rep-1",
+            zoneId = "brgy7",
+            zoneName = "Zone 7 — Brgy. Trancoville",
+            status = TapFlowStatus.RUNNING,
+            timestamp = 1_700_000_000_000L
+        )
+        prefs.saveReports(listOf(report))
+
+        val viewModel = MainViewModel()
+        assertFalse(viewModel.isInitialized)
+
+        viewModel.hydrateFromPreferences(prefs)
+
+        assertTrue(viewModel.isInitialized)
+        assertEquals("brgy7", viewModel.selectedZone.value.id)
+        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
+        assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
+        assertEquals(180.0, viewModel.dailyConsumption.value, 0.001)
+        assertEquals(3, viewModel.drums200L.value)
+        assertEquals(1, viewModel.tanks1000L.value)
+        assertEquals(6, viewModel.gallons20L.value)
+
+        val restoredReports = viewModel.reportRepository.getAllReports()
+        assertEquals(1, restoredReports.size)
+        assertEquals("saved-rep-1", restoredReports.first().id)
     }
 }

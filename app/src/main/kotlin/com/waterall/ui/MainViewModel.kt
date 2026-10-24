@@ -38,6 +38,13 @@ class MainViewModel(
     initialCustomSupplyHours: Double? = null
 ) : ViewModel() {
 
+    /**
+     * Tracks whether this ViewModel instance has been hydrated with persistent user preferences.
+     * Survives configuration changes in ViewModelStore, but resets to false on brand-new instantiation
+     * (e.g. initial launch or process death recreation), ensuring UserPreferences always restores data.
+     */
+    var isInitialized: Boolean = false
+
     private val _selectedZone = MutableStateFlow(initialZone)
     val selectedZone: StateFlow<BarangayZone> = _selectedZone.asStateFlow()
 
@@ -105,6 +112,28 @@ class MainViewModel(
 
     fun setCustomSupplyHours(hours: Double?) {
         _customSupplyHours.value = hours?.coerceAtLeast(0.0)
+    }
+
+    /**
+     * Hydrates this ViewModel instance with persistent state from [UserPreferences].
+     * Marks [isInitialized] as true upon completion.
+     */
+    fun hydrateFromPreferences(userPreferences: UserPreferences, zones: List<BarangayZone> = DEFAULT_ZONES) {
+        val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
+        setSelectedZone(zones[savedZoneIndex])
+        setUserMode(userPreferences.userMode)
+        setSelectedFillPercentage(userPreferences.fillPercentage)
+        setDailyConsumption(userPreferences.dailyConsumption)
+        setDrums200L(userPreferences.drums200LCount)
+        setTanks1000L(userPreferences.tanks1000LCount)
+        setGallons20L(userPreferences.gallons20LCount)
+        val savedReports = userPreferences.getReports()
+        if (reportRepository.getAllReports().isEmpty()) {
+            savedReports.reversed().forEach { report ->
+                runCatching { reportRepository.addReport(report) }.getOrNull()
+            }
+        }
+        isInitialized = true
     }
 
     /**
