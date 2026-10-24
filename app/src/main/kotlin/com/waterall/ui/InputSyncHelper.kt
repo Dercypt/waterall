@@ -33,6 +33,18 @@ object InputSyncHelper {
     }
 
     /**
+     * Determines whether the hours until next supply EditText needs to be updated with [newHours].
+     *
+     * Coalesces null, empty, or unparseable input to 0.0 so that if the user cleared the
+     * field via backspace, the collector will see current (0.0) == newHours (0.0) and avoid
+     * immediately repopulating the field with "0.0".
+     */
+    fun shouldUpdateSupplyHours(currentText: CharSequence?, newHours: Double): Boolean {
+        val current = currentText?.toString()?.toDoubleOrNull() ?: 0.0
+        return current != newHours
+    }
+
+    /**
      * Calculates the cursor selection offset that positions the cursor at the end of [text],
      * preventing cursor jumping to position 0 when EditText contents are refreshed.
      */
@@ -73,6 +85,25 @@ object InputSyncHelper {
         onUpdate: (formattedText: String, cursorPosition: Int) -> Unit
     ): Boolean {
         if (shouldUpdateConsumption(currentText, newConsumption)) {
+            onUpdate(formattedText, calculateEndCursorPosition(formattedText))
+            return true
+        }
+        return false
+    }
+
+    /**
+     * Synchronizes an hours until next supply text input with [newHours] and [formattedText] if an update is needed.
+     * When updated, [onUpdate] is invoked with [formattedText] and the target cursor index at the end of the text.
+     *
+     * @return true if an update was triggered, false otherwise.
+     */
+    fun syncSupplyHours(
+        currentText: CharSequence?,
+        newHours: Double,
+        formattedText: String,
+        onUpdate: (formattedText: String, cursorPosition: Int) -> Unit
+    ): Boolean {
+        if (shouldUpdateSupplyHours(currentText, newHours)) {
             onUpdate(formattedText, calculateEndCursorPosition(formattedText))
             return true
         }
