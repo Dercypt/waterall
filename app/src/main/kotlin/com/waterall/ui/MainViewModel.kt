@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.SupplyWindow
-import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
 import com.waterall.domain.repository.ReportRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +29,6 @@ class MainViewModel(
     initialZone: BarangayZone = DEFAULT_ZONES[0],
     initialFillPercentage: Double = 0.0,
     initialDailyConsumption: Double = 0.0,
-    initialUserMode: UserMode = UserMode.DOMESTIC,
     initialTab: Tab = Tab.CALENDAR,
     initialDrums200L: Int = 0,
     initialTanks1000L: Int = 0,
@@ -53,9 +51,6 @@ class MainViewModel(
 
     private val _dailyConsumption = MutableStateFlow(initialDailyConsumption)
     val dailyConsumption: StateFlow<Double> = _dailyConsumption.asStateFlow()
-
-    private val _userMode = MutableStateFlow(initialUserMode)
-    val userMode: StateFlow<UserMode> = _userMode.asStateFlow()
 
     private val _currentTab = MutableStateFlow(initialTab)
     val currentTab: StateFlow<Tab> = _currentTab.asStateFlow()
@@ -82,10 +77,6 @@ class MainViewModel(
 
     fun setDailyConsumption(consumption: Double) {
         _dailyConsumption.value = consumption.coerceAtLeast(0.0)
-    }
-
-    fun setUserMode(mode: UserMode) {
-        _userMode.value = mode
     }
 
     fun setCurrentTab(tab: Tab) {
@@ -121,7 +112,6 @@ class MainViewModel(
     fun hydrateFromPreferences(userPreferences: UserPreferences, zones: List<BarangayZone> = DEFAULT_ZONES) {
         val savedZoneIndex = zones.indexOfFirst { it.id == userPreferences.selectedZoneId }.let { if (it >= 0) it else 0 }
         setSelectedZone(zones[savedZoneIndex])
-        setUserMode(userPreferences.userMode)
         setSelectedFillPercentage(userPreferences.fillPercentage)
         setDailyConsumption(userPreferences.dailyConsumption)
         setDrums200L(userPreferences.drums200LCount)
@@ -156,38 +146,27 @@ class MainViewModel(
             BarangayZone(
                 id = "brgy4",
                 name = "Zone 4 — Brgy. San Isidro",
-                domesticSchedules = listOf(
+                schedules = listOf(
                     SupplyWindow(DayOfWeek.MONDAY, 6, 0, 10, 0),
                     SupplyWindow(DayOfWeek.WEDNESDAY, 5, 0, 9, 0),
                     SupplyWindow(DayOfWeek.FRIDAY, 6, 0, 11, 0)
-                ),
-                commercialSchedules = listOf(
-                    SupplyWindow(DayOfWeek.TUESDAY, 8, 0, 14, 0),
-                    SupplyWindow(DayOfWeek.THURSDAY, 8, 0, 14, 0)
                 )
             ),
             BarangayZone(
                 id = "brgy1",
                 name = "Zone 1 — Brgy. Cabinet Hill",
-                domesticSchedules = listOf(
+                schedules = listOf(
                     SupplyWindow(DayOfWeek.TUESDAY, 5, 30, 9, 30),
                     SupplyWindow(DayOfWeek.THURSDAY, 5, 30, 9, 30),
                     SupplyWindow(DayOfWeek.SATURDAY, 6, 0, 12, 0)
-                ),
-                commercialSchedules = listOf(
-                    SupplyWindow(DayOfWeek.MONDAY, 7, 0, 13, 0),
-                    SupplyWindow(DayOfWeek.WEDNESDAY, 7, 0, 13, 0)
                 )
             ),
             BarangayZone(
                 id = "brgy7",
                 name = "Zone 7 — Brgy. Trancoville",
-                domesticSchedules = listOf(
+                schedules = listOf(
                     SupplyWindow(DayOfWeek.WEDNESDAY, 6, 0, 10, 30),
                     SupplyWindow(DayOfWeek.SATURDAY, 5, 0, 10, 0)
-                ),
-                commercialSchedules = listOf(
-                    SupplyWindow(DayOfWeek.FRIDAY, 8, 0, 15, 0)
                 )
             )
         )

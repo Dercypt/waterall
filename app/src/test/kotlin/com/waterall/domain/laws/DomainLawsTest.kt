@@ -10,7 +10,6 @@ import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.StorageInventory
 import com.waterall.domain.model.SupplyWindow
 import com.waterall.domain.model.TapFlowStatus
-import com.waterall.domain.model.UserMode
 import com.waterall.domain.model.VesselType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
