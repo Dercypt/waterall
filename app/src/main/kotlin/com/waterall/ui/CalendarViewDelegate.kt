@@ -17,9 +17,7 @@ import com.waterall.domain.calculator.ZoneConsensus
 import com.waterall.domain.calculator.ZoneConsensusCalculator
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.TapFlowStatus
-import com.waterall.domain.model.UserMode
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Locale
@@ -27,7 +25,7 @@ import java.util.Locale
 /**
  * Screen delegate handling Barangay Water Rotation Calendar & Countdown UI.
  *
- * Encapsulates zone selection, domestic/commercial mode toggles, schedule card lists,
+ * Encapsulates zone selection, schedule card lists,
  * live countdown timers (satisfying Law 2 invariants and lifecycle leak prevention),
  * and community consensus card rendering.
  */
@@ -45,7 +43,6 @@ class CalendarViewDelegate(
 
     override fun setup() {
         setupZoneSelector()
-        setupModeToggle()
 
         binding.btnQuickReport.setOnClickListener {
             onQuickReportClicked()
@@ -69,14 +66,11 @@ class CalendarViewDelegate(
 
     override fun observeState(scope: CoroutineScope) {
         scope.launch {
-            combine(viewModel.selectedZone, viewModel.userMode) { zone, mode ->
-                zone to mode
-            }.collect { (zone, mode) ->
+            viewModel.selectedZone.collect { zone ->
                 val index = zones.indexOfFirst { it.id == zone.id }
                 if (index >= 0 && binding.spinnerZones.selectedItemPosition != index) {
                     binding.spinnerZones.setSelection(index, false)
                 }
-                updateModeToggleUi(mode)
                 updateScheduleCards()
                 startLiveCountdown()
                 updateConsensusCard()
@@ -121,39 +115,8 @@ class CalendarViewDelegate(
         }
     }
 
-    private fun setupModeToggle() {
-        binding.btnModeDomestic.setOnClickListener {
-            if (viewModel.userMode.value != UserMode.DOMESTIC) {
-                viewModel.setUserMode(UserMode.DOMESTIC)
-                userPreferences.userMode = UserMode.DOMESTIC
-                onScheduleChanged()
-            }
-        }
-        binding.btnModeCommercial.setOnClickListener {
-            if (viewModel.userMode.value != UserMode.COMMERCIAL) {
-                viewModel.setUserMode(UserMode.COMMERCIAL)
-                userPreferences.userMode = UserMode.COMMERCIAL
-                onScheduleChanged()
-            }
-        }
-    }
-
-    private fun updateModeToggleUi(mode: UserMode) {
-        if (mode == UserMode.DOMESTIC) {
-            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_active)
-            binding.btnModeDomestic.setTextColor(activity.getColor(R.color.white))
-            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeCommercial.setTextColor(activity.getColor(R.color.ink_soft))
-        } else {
-            binding.btnModeCommercial.setBackgroundResource(R.drawable.bg_pill_active)
-            binding.btnModeCommercial.setTextColor(activity.getColor(R.color.white))
-            binding.btnModeDomestic.setBackgroundResource(R.drawable.bg_pill_inactive)
-            binding.btnModeDomestic.setTextColor(activity.getColor(R.color.ink_soft))
-        }
-    }
-
     private fun updateScheduleCards() {
-        val schedules = viewModel.selectedZone.value.getSchedules(viewModel.userMode.value)
+        val schedules = viewModel.selectedZone.value.schedules
         binding.layoutScheduleContainer.removeAllViews()
 
         if (schedules.isEmpty()) {
@@ -189,7 +152,6 @@ class CalendarViewDelegate(
 
         val calculation = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
 

@@ -139,38 +139,6 @@
                         android:text="Remaining supply window time" />
                 </LinearLayout>
 
-                <!-- Mode toggle -->
-                <LinearLayout
-                    android:id="@+id/layoutModeToggle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:background="@drawable/bg_segment_track"
-                    android:padding="4dp"
-                    android:layout_marginBottom="32dp">
-
-                    <Button
-                        android:id="@+id/btnModeDomestic"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:minHeight="0dp"
-                        android:text="Domestic"
-                        android:textSize="13sp"
-                        android:background="@drawable/bg_pill_active"
-                        android:textColor="@color/white" />
-
-                    <Button
-                        android:id="@+id/btnModeCommercial"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:minHeight="0dp"
-                        android:text="Commercial"
-                        android:textSize="13sp"
-                        android:background="@drawable/bg_pill_inactive"
-                        android:textColor="@color/ink_soft" />
-                </LinearLayout>
 
                 <!-- Schedule -->
                 <TextView
