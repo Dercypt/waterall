@@ -171,7 +171,7 @@ class ReservesViewDelegate(
         }
         scope.launch {
             combine(
-                combine(viewModel.selectedZone, viewModel.userMode) { zone, mode -> zone to mode },
+                viewModel.selectedZone,
                 combine(viewModel.drums200L, viewModel.tanks1000L, viewModel.gallons20L) { d, t, g -> Triple(d, t, g) },
                 combine(viewModel.selectedFillPercentage, viewModel.dailyConsumption, viewModel.customSupplyHours) { f, c, h -> Triple(f, c, h) }
             ) { _, _, _ ->
@@ -195,7 +195,6 @@ class ReservesViewDelegate(
     fun autoPopulateScheduleHours() {
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
         viewModel.setCustomSupplyHours(null)
@@ -226,7 +225,6 @@ class ReservesViewDelegate(
 
         val countdown = ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
             currentTime = LocalDateTime.now()
         )
         val isSupplyHoursBlank = binding.etHoursUntilNextSupply.text.isNullOrBlank()
