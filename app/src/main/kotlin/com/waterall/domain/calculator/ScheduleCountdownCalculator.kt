@@ -2,7 +2,6 @@ package com.waterall.domain.calculator
 
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.SupplyWindow
-import com.waterall.domain.model.UserMode
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -77,17 +76,6 @@ object ScheduleCountdownCalculator {
         currentTime: LocalDateTime = LocalDateTime.now()
     ): CountdownCalculationResult {
         return calculate(zone.schedules, currentTime)
-    }
-
-    /**
-     * Calculates countdown result for a given zone and user mode.
-     */
-    fun calculate(
-        zone: BarangayZone,
-        userMode: UserMode,
-        currentTime: LocalDateTime = LocalDateTime.now()
-    ): CountdownCalculationResult {
-        return calculate(zone.getSchedules(userMode), currentTime)
     }
 
     /**

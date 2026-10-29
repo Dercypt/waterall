@@ -2,7 +2,6 @@ package com.waterall.domain.calculator
 
 import com.waterall.domain.model.BarangayZone
 import com.waterall.domain.model.SupplyWindow
-import com.waterall.domain.model.UserMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -13,29 +12,23 @@ import java.time.LocalDateTime
 
 class ScheduleCountdownCalculatorTest {
 
-    private val sampleDomesticSchedules = listOf(
+    private val sampleSchedules = listOf(
         SupplyWindow("Mon", "Mon", 6, 0, 10, 0),
         SupplyWindow("Wed", "Wed", 5, 0, 9, 0),
         SupplyWindow("Fri", "Fri", 6, 0, 11, 0)
     )
 
-    private val sampleCommercialSchedules = listOf(
-        SupplyWindow("Tue", "Tue", 8, 0, 14, 0),
-        SupplyWindow("Thu", "Thu", 8, 0, 14, 0)
-    )
-
     private val sampleZone = BarangayZone(
         id = "zone-test",
         name = "Zone 4 — Brgy. San Isidro",
-        domesticSchedules = sampleDomesticSchedules,
-        commercialSchedules = sampleCommercialSchedules
+        schedules = sampleSchedules
     )
 
     @Test
     fun testFlowActiveDuringSupplyWindow() {
         // Monday at 07:30 AM falls squarely inside Mon 06:00 - 10:00
         val mondayMorning = LocalDateTime.of(2026, 10, 12, 7, 30, 0) // Oct 12, 2026 is Monday
-        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, mondayMorning)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayMorning)
 
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
         assertNotNull(result.activeWindow)
@@ -55,7 +48,7 @@ class ScheduleCountdownCalculatorTest {
     fun testRationingActiveBeforeWindowOpens() {
         // Monday at 05:15 AM is before Monday 06:00 window
         val mondayEarly = LocalDateTime.of(2026, 10, 12, 5, 15, 0)
-        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, mondayEarly)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayEarly)
 
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertNull(result.activeWindow)
@@ -73,7 +66,7 @@ class ScheduleCountdownCalculatorTest {
     fun testRationingActiveAfterWindowCloses() {
         // Monday at 10:30 AM is after Monday window has closed
         val mondayMidday = LocalDateTime.of(2026, 10, 12, 10, 30, 0)
-        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, mondayMidday)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayMidday)
 
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertNull(result.activeWindow)
@@ -93,7 +86,7 @@ class ScheduleCountdownCalculatorTest {
         // Friday at 12:00 PM (after Friday 06:00-11:00 window)
         // Next window wraps to next Monday at 06:00 AM
         val fridayAfternoon = LocalDateTime.of(2026, 10, 16, 12, 0, 0) // Oct 16, 2026 is Friday
-        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, fridayAfternoon)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, fridayAfternoon)
 
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, result.flowState)
         assertEquals(DayOfWeek.MONDAY, result.nextWindow?.dayOfWeek)
@@ -108,7 +101,7 @@ class ScheduleCountdownCalculatorTest {
     fun testHoursUntilNextOpeningDistinctionDuringActiveFlow() {
         // Active window: Mon 06:00 - 10:00. Next window: Wed 05:00 - 09:00.
         val mondayDuringFlow = LocalDateTime.of(2026, 10, 12, 8, 0, 0)
-        val result = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, mondayDuringFlow)
+        val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayDuringFlow)
 
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
         // remainingHours counts down to window end (10:00 AM) -> 2.0 hours
@@ -121,19 +114,19 @@ class ScheduleCountdownCalculatorTest {
     fun testBoundaryTransitionAtExactStartAndEnd() {
         // At exact start time 06:00:00, flow becomes ACTIVE
         val exactStart = LocalDateTime.of(2026, 10, 12, 6, 0, 0)
-        val startResult = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, exactStart)
+        val startResult = ScheduleCountdownCalculator.calculate(sampleZone, exactStart)
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, startResult.flowState)
         assertEquals(4 * 3600L, startResult.remainingSeconds) // 4 hours remaining
 
         // At 1 second before end time 09:59:59, flow is still ACTIVE
         val beforeEnd = LocalDateTime.of(2026, 10, 12, 9, 59, 59)
-        val beforeEndResult = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, beforeEnd)
+        val beforeEndResult = ScheduleCountdownCalculator.calculate(sampleZone, beforeEnd)
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, beforeEndResult.flowState)
         assertEquals(1L, beforeEndResult.remainingSeconds)
 
         // At exact end time 10:00:00, flow closes and transitions deterministically to RATIONING_ACTIVE
         val exactEnd = LocalDateTime.of(2026, 10, 12, 10, 0, 0)
-        val endResult = ScheduleCountdownCalculator.calculate(sampleZone, UserMode.DOMESTIC, exactEnd)
+        val endResult = ScheduleCountdownCalculator.calculate(sampleZone, exactEnd)
         assertEquals(ScheduleFlowState.RATIONING_ACTIVE, endResult.flowState)
         assertEquals(LocalDateTime.of(2026, 10, 14, 5, 0, 0), endResult.targetDateTime)
     }
@@ -156,13 +149,13 @@ class ScheduleCountdownCalculatorTest {
     }
 
     @Test
-    fun testZoneDirectCalculationWithoutUserMode() {
+    fun testZoneDirectCalculation() {
         val mondayMorning = LocalDateTime.of(2026, 10, 12, 7, 30, 0)
         val result = ScheduleCountdownCalculator.calculate(sampleZone, mondayMorning)
 
         assertEquals(ScheduleFlowState.FLOW_ACTIVE, result.flowState)
         assertEquals("02:30:00", result.formattedCountdown)
-        assertEquals(sampleZone.schedules, sampleZone.domesticSchedules)
+        assertEquals(sampleSchedules, sampleZone.schedules)
     }
 
     @Test
@@ -177,7 +170,7 @@ class ScheduleCountdownCalculatorTest {
 
     @Test
     fun testScheduleDaysContainNoNumbers() {
-        val allSchedules = sampleZone.domesticSchedules + sampleZone.commercialSchedules
+        val allSchedules = sampleZone.schedules
         allSchedules.forEach { window ->
             assertTrue(
                 "Schedule day label '${window.dateLabel}' should not contain digits",

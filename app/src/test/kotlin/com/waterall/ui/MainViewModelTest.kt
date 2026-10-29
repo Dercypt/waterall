@@ -2,7 +2,6 @@ package com.waterall.ui
 
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.TapFlowStatus
-import com.waterall.domain.model.UserMode
 import com.waterall.domain.repository.InMemoryReportRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
@@ -16,7 +15,7 @@ import org.junit.Test
 
 /**
  * Unit test verifying [MainViewModel] preserves [com.waterall.domain.repository.ReportRepository]
- * and UI state (selectedZone, selectedFillPercentage, dailyConsumption, userMode) across ViewModel lifecycle
+ * and UI state (selectedZone, selectedFillPercentage, dailyConsumption) across ViewModel lifecycle
  * and configuration changes.
  */
 class MainViewModelTest {
@@ -85,7 +84,6 @@ class MainViewModelTest {
         assertEquals(MainViewModel.DEFAULT_ZONES[0], viewModel.selectedZone.value)
         assertEquals(0.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(0.0, viewModel.dailyConsumption.value, 0.001)
-        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
         assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
         assertEquals(0, viewModel.drums200L.value)
         assertEquals(0, viewModel.tanks1000L.value)
@@ -173,18 +171,6 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testSetUserModeUpdatesStateFlow() {
-        val viewModel = MainViewModel()
-        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
-
-        viewModel.setUserMode(UserMode.COMMERCIAL)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
-
-        viewModel.setUserMode(UserMode.DOMESTIC)
-        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
-    }
-
-    @Test
     fun testSetCurrentTabUpdatesStateFlow() {
         val viewModel = MainViewModel()
         assertEquals(Tab.CALENDAR, viewModel.currentTab.value)
@@ -206,7 +192,6 @@ class MainViewModelTest {
         viewModel.setSelectedZone(selectedZone)
         viewModel.setSelectedFillPercentage(75.0)
         viewModel.setDailyConsumption(120.0)
-        viewModel.setUserMode(UserMode.COMMERCIAL)
         viewModel.setCurrentTab(Tab.RESERVES)
         viewModel.setDrums200L(3)
         viewModel.setTanks1000L(2)
@@ -217,7 +202,6 @@ class MainViewModelTest {
         assertEquals(selectedZone, viewModel.selectedZone.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(120.0, viewModel.dailyConsumption.value, 0.001)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(Tab.RESERVES, viewModel.currentTab.value)
         assertEquals(3, viewModel.drums200L.value)
         assertEquals(2, viewModel.tanks1000L.value)
@@ -232,7 +216,6 @@ class MainViewModelTest {
             initialZone = zone,
             initialFillPercentage = 50.0,
             initialDailyConsumption = 80.0,
-            initialUserMode = UserMode.COMMERCIAL,
             initialTab = Tab.REPORT,
             initialDrums200L = 2,
             initialTanks1000L = 1,
@@ -243,7 +226,6 @@ class MainViewModelTest {
         assertEquals(zone, viewModel.selectedZone.value)
         assertEquals(50.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(80.0, viewModel.dailyConsumption.value, 0.001)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(Tab.REPORT, viewModel.currentTab.value)
         assertEquals(2, viewModel.drums200L.value)
         assertEquals(1, viewModel.tanks1000L.value)
@@ -267,29 +249,14 @@ class MainViewModelTest {
             reportRepository = repo,
             initialZone = MainViewModel.DEFAULT_ZONES[2],
             initialFillPercentage = 75.0,
-            initialDailyConsumption = 150.0,
-            initialUserMode = UserMode.COMMERCIAL
+            initialDailyConsumption = 150.0
         )
 
         assertEquals(MainViewModel.DEFAULT_ZONES[2], viewModel.selectedZone.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(150.0, viewModel.dailyConsumption.value, 0.001)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(1, viewModel.reportRepository.getAllReports().size)
         assertEquals(report, viewModel.reportRepository.getAllReports().first())
-    }
-
-    @Test
-    fun testUserModePreferencesRestorationWorkflow() {
-        val viewModel = MainViewModel()
-        // Simulate startup with saved commercial user mode
-        val savedMode = UserMode.COMMERCIAL
-        viewModel.setUserMode(savedMode)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
-
-        // Switching back to domestic
-        viewModel.setUserMode(UserMode.DOMESTIC)
-        assertEquals(UserMode.DOMESTIC, viewModel.userMode.value)
     }
 
     @Test
@@ -345,15 +312,13 @@ class MainViewModelTest {
         val emptyZone = com.waterall.domain.model.BarangayZone(
             id = "empty_brgy",
             name = "Zone Empty — Barangay Without Rotation",
-            domesticSchedules = emptyList(),
-            commercialSchedules = emptyList()
+            schedules = emptyList()
         )
         val viewModel = MainViewModel(initialZone = emptyZone)
         assertEquals(emptyZone, viewModel.selectedZone.value)
 
         val countdown = com.waterall.domain.calculator.ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
             currentTime = java.time.LocalDateTime.now()
         )
         // Empty schedule must be RATIONING_ACTIVE with 0.0 hours
@@ -386,7 +351,6 @@ class MainViewModelTest {
         val viewModel = MainViewModel()
         val countdown = com.waterall.domain.calculator.ScheduleCountdownCalculator.calculate(
             zone = viewModel.selectedZone.value,
-            userMode = viewModel.userMode.value,
             currentTime = java.time.LocalDateTime.now()
         )
 
@@ -424,12 +388,12 @@ class MainViewModelTest {
     }
 
     @Test
-    fun testReservesInputsCombineEmitsDeterministicallyAcrossAllNineStateFlows() {
+    fun testReservesInputsCombineEmitsDeterministicallyAcrossAllEightStateFlows() {
         val viewModel = MainViewModel()
         var calculationCount = 0
 
         val combinedFlow = combine(
-            combine(viewModel.selectedZone, viewModel.userMode) { zone, mode -> zone to mode },
+            viewModel.selectedZone,
             combine(viewModel.drums200L, viewModel.tanks1000L, viewModel.gallons20L) { d, t, g -> Triple(d, t, g) },
             combine(viewModel.selectedFillPercentage, viewModel.dailyConsumption, viewModel.customSupplyHours) { f, c, h -> Triple(f, c, h) }
         ) { _, _, _ ->
@@ -474,20 +438,15 @@ class MainViewModelTest {
             delay(50)
             assertEquals(7, calculationCount)
 
-            // Modify user mode
-            viewModel.setUserMode(UserMode.COMMERCIAL)
-            delay(50)
-            assertEquals(8, calculationCount)
-
             // Modify zone
             viewModel.setSelectedZone(MainViewModel.DEFAULT_ZONES[1])
             delay(50)
-            assertEquals(9, calculationCount)
+            assertEquals(8, calculationCount)
 
             // Duplicate values should NOT cause extra calculations in StateFlow
             viewModel.setDrums200L(5)
             delay(50)
-            assertEquals(9, calculationCount)
+            assertEquals(8, calculationCount)
 
             job.cancel()
         }
@@ -572,7 +531,6 @@ class MainViewModelTest {
         val storage = InMemoryPreferenceStorage()
         val prefs = UserPreferences(storage)
         prefs.selectedZoneId = "brgy7"
-        prefs.userMode = UserMode.COMMERCIAL
         prefs.fillPercentage = 75.0
         prefs.dailyConsumption = 180.0
         prefs.saveContainerCounts(drums = 3, tanks = 1, gallons = 6)
@@ -593,7 +551,6 @@ class MainViewModelTest {
 
         assertTrue(viewModel.isInitialized)
         assertEquals("brgy7", viewModel.selectedZone.value.id)
-        assertEquals(UserMode.COMMERCIAL, viewModel.userMode.value)
         assertEquals(75.0, viewModel.selectedFillPercentage.value, 0.001)
         assertEquals(180.0, viewModel.dailyConsumption.value, 0.001)
         assertEquals(3, viewModel.drums200L.value)
@@ -612,7 +569,6 @@ class MainViewModelTest {
 
         // User previously configured preferences before app was backgrounded
         prefs.selectedZoneId = "brgy1"
-        prefs.userMode = UserMode.DOMESTIC
         prefs.fillPercentage = 50.0
         prefs.dailyConsumption = 220.0
         prefs.saveContainerCounts(drums = 2, tanks = 0, gallons = 4)

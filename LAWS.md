@@ -23,7 +23,7 @@ $$\forall t, \quad 0.0 \le \text{currentVolumeLiters}(t) \le \text{totalCapacity
 $$\forall w \in \text{Schedules}, \quad w.\text{startTime} < w.\text{endTime}$$
 
 1. **Strict Positive Duration:** Every scheduled BWD supply window must possess an end time strictly greater than its start time. Zero or negative duration intervals are prohibited.
-2. **Temporal Non-Overlap:** Within any given Barangay Zone and User Mode (`DOMESTIC` or `COMMERCIAL`), no two supply windows may overlap in time.
+2. **Temporal Non-Overlap:** Within any given Barangay Zone, no two supply windows may overlap in time.
 3. **Monotonic Countdown:** The active countdown timer must strictly count down to `endTime` during active flow, and count down to `startTime` of the nearest future window during dry rationing. Countdown values are strictly non-negative; once expired, the timer must transition deterministically to the next state.
 
 ---

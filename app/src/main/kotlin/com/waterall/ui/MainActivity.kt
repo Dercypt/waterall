@@ -147,12 +147,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Retains container counts, user mode, fill level, and daily consumption to lightweight SharedPreferences.
+     * Retains container counts, fill level, and daily consumption to lightweight SharedPreferences.
      */
     private fun persistUserPreferences() {
         if (!::userPreferences.isInitialized || !::viewModel.isInitialized || !viewModel.isInitialized) return
         reservesDelegate.persistPreferences()
-        userPreferences.userMode = viewModel.userMode.value
     }
 
     /**

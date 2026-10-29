@@ -3,11 +3,6 @@ package com.waterall.domain.model
 import java.time.DayOfWeek
 import java.util.Locale
 
-enum class UserMode {
-    DOMESTIC,
-    COMMERCIAL
-}
-
 /**
  * Represents a scheduled BWD water supply window on a specific [dayOfWeek] with 24-hour start and end times.
  * Stores [DayOfWeek] directly to guarantee type-safe scheduling and eliminate fragile string parsing and regex stripping.
@@ -92,15 +87,6 @@ data class SupplyWindow(
 data class BarangayZone(
     val id: String,
     val name: String,
-    val domesticSchedules: List<SupplyWindow>,
-    val commercialSchedules: List<SupplyWindow> = emptyList()
-) {
     val schedules: List<SupplyWindow>
-        get() = domesticSchedules
-
-    fun getSchedules(mode: UserMode = UserMode.DOMESTIC): List<SupplyWindow> = when (mode) {
-        UserMode.DOMESTIC -> domesticSchedules
-        UserMode.COMMERCIAL -> commercialSchedules
-    }
-}
+)
 
