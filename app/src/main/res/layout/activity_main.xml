@@ -869,10 +869,11 @@
                 android:visibility="gone">
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Your zone" />
+                    android:text="Your zone"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/tvReportZoneName"
@@ -884,7 +885,7 @@
                     android:textColor="@color/ink" />
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Water at your tap"
@@ -934,10 +935,11 @@
                 </RadioGroup>
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Note (optional)" />
+                    android:text="Note (optional)"
+                    android:layout_marginBottom="6dp" />
 
                 <EditText
                     android:id="@+id/etReportNotes"
