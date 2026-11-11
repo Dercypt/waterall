@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BWD HydroTrack — High Fidelity Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FAFAF8;
+      --surface: #FFFFFF;
+      --hairline: #ECECE8;
+      --ink: #1A1A1A;
+      --ink-soft: #4A4A48;
+      --ink-muted: #8A8A86;
+      --ink-faint: #BDBDB8;
+      --accent: #2F5D6E;
+      --accent-wash: #EEF3F4;
+      --status-ok: #4F7A5A;
+      --status-ok-wash: #F1F5F1;
+      --status-warn: #A8742A;
+      --status-alert: #A8473A;
+      --status-alert-wash: #F8F0EE;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #EFEFEA;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .bg-paper { background-color: var(--paper); }
+    .bg-surface { background-color: var(--surface); }
+    .border-hairline { border-color: var(--hairline); }
+    .text-ink { color: var(--ink); }
+    .text-ink-soft { color: var(--ink-soft); }
+    .text-ink-muted { color: var(--ink-muted); }
+    .text-ink-faint { color: var(--ink-faint); }
+    .text-accent { color: var(--accent); }
+    .bg-accent { background-color: var(--accent); }
+    .bg-accent-wash { background-color: var(--accent-wash); }
+    .text-status-ok { color: var(--status-ok); }
+    .bg-status-ok-wash { background-color: var(--status-ok-wash); }
+    .text-status-alert { color: var(--status-alert); }
+    .bg-status-alert-wash { background-color: var(--status-alert-wash); }
+    .text-status-warn { color: var(--status-warn); }
+
+    .tnum {
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .waterall-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
+
+  <!-- Mobile Frame Container (Matching Android Phone Dimensions) -->
+  <main class="w-full max-w-[412px] h-screen sm:h-[870px] bg-paper flex flex-col justify-between relative shadow-2xl sm:rounded-[36px] border-0 sm:border-[8px] border-stone-800 overflow-hidden">
+
+    <!-- Top Status Bar & App Header -->
+    <header class="pt-7 pb-3.5 px-6 bg-paper flex items-center justify-between border-b border-hairline z-10 shrink-0">
+      <div class="flex items-center gap-2">
+        <button id="btn-back" class="hidden text-ink p-1 rounded-full hover:bg-stone-200 transition" aria-label="Go Back">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 id="screen-title" class="text-[22px] font-semibold tracking-[-0.01em] text-ink">BWD HydroTrack</h1>
+      </div>
+      <span class="text-[10px] font-bold tracking-wider text-ink-faint uppercase">WATERALL · SDG 6</span>
+    </header>
+
+    <!-- Scrollable Screen Content Body -->
+    <section class="flex-1 overflow-y-auto custom-scroll px-6 py-5">
+
+      <!-- ================= 1. CALENDAR VIEW ================= -->
+      <article id="view-calendar" class="space-y-6">
+        <div class="text-xs text-ink-muted">Calendar view initializing...</div>
+      </article>
+
+      <!-- ================= 2. RESERVES VIEW (SDG 6 Exclusive Feature) ================= -->
+      <article id="view-reserves" class="space-y-6 hidden">
+        <div class="text-xs text-ink-muted">Reserves view initializing...</div>
+      </article>
+
+      <!-- ================= 3. REPORT / CROWDSOURCE VIEW ================= -->
+      <article id="view-report" class="space-y-6 hidden">
+        <div class="text-xs text-ink-muted">Report view initializing...</div>
+      </article>
+
+    </section>
+
+    <!-- Bottom Navigation Bar (3 Tabs: Calendar, Reserves, Report) -->
+    <nav class="h-16 bg-paper border-t border-hairline px-6 flex items-center justify-between z-10 shrink-0">
+      <button data-tab="calendar" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Calendar</span>
+      </button>
+
+      <button data-tab="reserves" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink-faint hover:text-ink-soft py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Reserves</span>
+      </button>
+
+      <button data-tab="report" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink-faint hover:text-ink-soft py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Report</span>
+      </button>
+    </nav>
+
+    <!-- Global Toast Confirmation Modal -->
+    <div id="toast" class="absolute bottom-20 left-5 right-5 bg-stone-900 text-white p-3 rounded-2xl text-xs font-medium flex items-center justify-between shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-3 z-30">
+      <span id="toast-message">Data updated</span>
+      <span class="text-emerald-400 font-bold ml-2">✓</span>
+    </div>
+
+  </main>
+
+  <script>
+    // Navigation routing
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = {
+      calendar: document.getElementById('view-calendar'),
+      reserves: document.getElementById('view-reserves'),
+      report: document.getElementById('view-report')
+    };
+    const titles = {
+      calendar: 'BWD HydroTrack',
+      reserves: 'Reserves',
+      report: 'Report'
+    };
+    const screenTitle = document.getElementById('screen-title');
+    const backBtn = document.getElementById('btn-back');
+
+    function switchTab(tab) {
+      Object.values(views).forEach(v => v.classList.add('hidden'));
+      views[tab].classList.remove('hidden');
+
+      navItems.forEach(n => {
+        n.classList.remove('text-ink');
+        n.classList.add('text-ink-faint');
+      });
+      const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('text-ink');
+        activeBtn.classList.remove('text-ink-faint');
+      }
+
+      screenTitle.textContent = titles[tab];
+      if (tab === 'calendar') {
+        backBtn.classList.add('hidden');
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+    }
+
+    navItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+      });
+    });
+
+    backBtn.addEventListener('click', () => switchTab('calendar'));
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      toastMsg.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+      }, 2600);
+    }
+  </script>
+</body>
+</html>
