@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BWD HydroTrack — High Fidelity Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #FAFAF8;
+      --surface: #FFFFFF;
+      --hairline: #ECECE8;
+      --ink: #1A1A1A;
+      --ink-soft: #4A4A48;
+      --ink-muted: #8A8A86;
+      --ink-faint: #BDBDB8;
+      --accent: #2F5D6E;
+      --accent-wash: #EEF3F4;
+      --status-ok: #4F7A5A;
+      --status-ok-wash: #F1F5F1;
+      --status-warn: #A8742A;
+      --status-alert: #A8473A;
+      --status-alert-wash: #F8F0EE;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #EFEFEA;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .bg-paper { background-color: var(--paper); }
+    .bg-surface { background-color: var(--surface); }
+    .border-hairline { border-color: var(--hairline); }
+    .text-ink { color: var(--ink); }
+    .text-ink-soft { color: var(--ink-soft); }
+    .text-ink-muted { color: var(--ink-muted); }
+    .text-ink-faint { color: var(--ink-faint); }
+    .text-accent { color: var(--accent); }
+    .bg-accent { background-color: var(--accent); }
+    .bg-accent-wash { background-color: var(--accent-wash); }
+    .text-status-ok { color: var(--status-ok); }
+    .bg-status-ok-wash { background-color: var(--status-ok-wash); }
+    .text-status-alert { color: var(--status-alert); }
+    .bg-status-alert-wash { background-color: var(--status-alert-wash); }
+    .text-status-warn { color: var(--status-warn); }
+
+    .tnum {
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+    }
+
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+    }
+
+    .waterall-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
+
+  <!-- Mobile Frame Container (Matching Android Phone Dimensions) -->
+  <main class="w-full max-w-[412px] h-screen sm:h-[870px] bg-paper flex flex-col justify-between relative shadow-2xl sm:rounded-[36px] border-0 sm:border-[8px] border-stone-800 overflow-hidden">
+
+    <!-- Top Status Bar & App Header -->
+    <header class="pt-7 pb-3.5 px-6 bg-paper flex items-center justify-between border-b border-hairline z-10 shrink-0">
+      <div class="flex items-center gap-2">
+        <button id="btn-back" class="hidden text-ink p-1 rounded-full hover:bg-stone-200 transition" aria-label="Go Back">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h1 id="screen-title" class="text-[22px] font-semibold tracking-[-0.01em] text-ink">BWD HydroTrack</h1>
+      </div>
+      <span class="text-[10px] font-bold tracking-wider text-ink-faint uppercase">WATERALL · SDG 6</span>
+    </header>
+
+    <!-- Scrollable Screen Content Body -->
+    <section class="flex-1 overflow-y-auto custom-scroll px-6 py-5">
+
+      <!-- ================= 1. CALENDAR VIEW ================= -->
+      <article id="view-calendar" class="space-y-6">
+        <!-- Zone Selector -->
+        <div>
+          <label class="waterall-label block mb-1">Zone</label>
+          <div class="relative">
+            <select id="zone-selector" class="w-full bg-transparent font-medium text-ink text-sm py-2.5 pr-8 focus:outline-none cursor-pointer appearance-none border-b border-hairline">
+              <option value="brgy4">Zone 4 — Brgy. San Isidro</option>
+              <option value="brgy1">Zone 1 — Brgy. Cabinet Hill</option>
+              <option value="brgy7">Zone 7 — Brgy. Trancoville</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-ink-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flow Status Banner & Live Countdown -->
+        <div class="pt-6 pb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span id="flow-pulse-dot" class="w-2 h-2 rounded-full bg-[var(--status-ok)] transition-colors"></span>
+            <span id="flow-badge" class="section-title !text-[12px] text-status-ok">Flow active</span>
+          </div>
+          <div id="countdown-timer" class="text-[54px] sm:text-[60px] font-extralight tracking-[-0.02em] text-ink font-mono tnum leading-none my-1">02:47:13</div>
+          <p id="countdown-subtext" class="text-xs text-ink-muted mt-2">Remaining supply window time</p>
+        </div>
+
+        <!-- Upcoming Schedule Section -->
+        <div>
+          <h2 class="section-title mb-2">Upcoming schedule</h2>
+          <div id="schedule-container" class="bg-surface rounded-2xl border border-hairline p-1 shadow-xs divide-y divide-hairline">
+            <!-- Schedule cards injected dynamically -->
+          </div>
+          <div id="no-schedule-msg" class="hidden text-xs text-ink-muted py-3">No scheduled supply windows</div>
+        </div>
+
+        <!-- Community Reports & Consensus Section -->
+        <div class="pt-3">
+          <h2 class="section-title mb-3">Community reports</h2>
+          <div id="consensus-card" class="bg-surface border border-hairline rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <span id="consensus-badge" class="waterall-label text-ink-muted">No reports</span>
+              <span id="consensus-timestamp" class="text-xs text-ink-muted">Today</span>
+            </div>
+
+            <div id="consensus-summary" class="text-[15px] font-medium text-ink leading-snug mb-1.5">No verified reports today</div>
+            <div id="consensus-details" class="text-xs text-ink-muted leading-relaxed mb-4">Be the first to report for this zone.</div>
+
+            <!-- Report submission acknowledgment message banner -->
+            <div id="consensus-acknowledgment" class="hidden bg-status-ok-wash text-status-ok text-xs rounded-xl p-3 mb-4 border border-[#D5E4D5]">
+              Report recorded: Running. Status refreshed.
+            </div>
+
+            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer mb-2">
+              Report tap status
+            </button>
+            <button id="btn-load-sample-reports" class="w-full border border-stone-200 hover:border-stone-300 rounded-xl py-2.5 text-xs font-medium text-ink-muted hover:text-ink hover:bg-stone-50 transition cursor-pointer">
+              Load sample community reports
+            </button>
+          </div>
+        </div>
+      </article>
+
+      <!-- ================= 2. RESERVES VIEW (SDG 6 Exclusive Feature) ================= -->
+      <article id="view-reserves" class="space-y-6 hidden">
+        <p class="text-xs text-ink-muted -mt-1 mb-2">Track stored water to see whether it lasts until the next supply window.</p>
+
+        <!-- Storage Inventory (Law 3) -->
+        <div>
+          <h2 class="section-title mb-2">Storage</h2>
+          <div class="bg-surface rounded-2xl border border-hairline p-4 shadow-xs divide-y divide-hairline">
+
+            <!-- 200L Blue Drums -->
+            <div class="flex items-center justify-between py-3 first:pt-1 last:pb-1">
+              <div>
+                <div class="text-sm font-medium text-ink">Blue drums</div>
+                <div class="text-xs text-ink-muted">200 L each</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="btn-dec-drums" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">−</button>
+                <input id="input-drums" type="number" min="0" value="0" class="w-12 h-9 text-center bg-transparent text-sm font-semibold text-ink focus:outline-none tnum">
+                <button id="btn-inc-drums" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">+</button>
+              </div>
+            </div>
+
+            <!-- 1,000L Stainless Tanks -->
+            <div class="flex items-center justify-between py-3 first:pt-1 last:pb-1">
+              <div>
+                <div class="text-sm font-medium text-ink">Stainless tanks</div>
+                <div class="text-xs text-ink-muted">1,000 L each</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="btn-dec-tanks" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">−</button>
+                <input id="input-tanks" type="number" min="0" value="0" class="w-12 h-9 text-center bg-transparent text-sm font-semibold text-ink focus:outline-none tnum">
+                <button id="btn-inc-tanks" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">+</button>
+              </div>
+            </div>
+
+            <!-- 20L Slim Gallons -->
+            <div class="flex items-center justify-between py-3 first:pt-1 last:pb-1">
+              <div>
+                <div class="text-sm font-medium text-ink">Slim gallons</div>
+                <div class="text-xs text-ink-muted">20 L each</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="btn-dec-gallons" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">−</button>
+                <input id="input-gallons" type="number" min="0" value="0" class="w-12 h-9 text-center bg-transparent text-sm font-semibold text-ink focus:outline-none tnum">
+                <button id="btn-inc-gallons" class="w-9 h-9 rounded-xl border border-hairline bg-paper text-ink-soft hover:bg-stone-200 text-lg flex items-center justify-center transition select-none cursor-pointer">+</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Fill Level Presets -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-1.5">
+              <h2 class="section-title">Fill level</h2>
+              <button id="btn-fill-info" class="text-ink-muted hover:text-ink transition p-0.5 rounded cursor-pointer" title="Fill Level Information">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </button>
+            </div>
+            <span id="fill-percentage-display" class="waterall-label text-accent font-bold">0% · EMPTY</span>
+          </div>
+
+          <div class="grid grid-cols-5 p-1 bg-stone-200/70 rounded-2xl text-xs font-semibold gap-1">
+            <button data-fill="0" class="btn-fill py-2 rounded-xl bg-accent text-white shadow-xs transition cursor-pointer">0%</button>
+            <button data-fill="25" class="btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer">25%</button>
+            <button data-fill="50" class="btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer">50%</button>
+            <button data-fill="75" class="btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer">75%</button>
+            <button data-fill="100" class="btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer">100%</button>
+          </div>
+          <p id="fill-hint" class="text-xs text-ink-muted mt-1.5 px-0.5">Empty / dry</p>
+        </div>
+
+        <!-- Daily Consumption -->
+        <div>
+          <h2 class="section-title mb-2">Daily use (L)</h2>
+          <input id="input-daily-consumption" type="number" step="any" min="0" value="0" class="w-full bg-surface border border-hairline rounded-2xl px-4 py-3 text-sm font-semibold text-ink focus:outline-none focus:border-stone-400 tnum shadow-xs" placeholder="0">
+        </div>
+
+        <!-- Hours to Next Supply Window -->
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h2 class="section-title">Hours to next supply</h2>
+              <div id="schedule-sync-status" class="text-[11px] text-ink-muted mt-0.5">Synced with zone schedule</div>
+            </div>
+            <button id="btn-sync-hours" class="border border-stone-300 hover:border-accent text-accent px-3 py-1 rounded-xl text-xs font-semibold transition cursor-pointer">
+              Sync
+            </button>
+          </div>
+          <input id="input-supply-hours" type="number" step="any" min="0" class="w-full bg-surface border border-hairline rounded-2xl px-4 py-3 text-sm font-semibold text-ink focus:outline-none focus:border-stone-400 tnum shadow-xs" placeholder="Auto-calculated from schedule">
+        </div>
+
+        <!-- Runout Estimate Status Card -->
+        <div id="card-runout-status" class="rounded-2xl border p-5 transition-all shadow-xs bg-status-ok-wash border-[#D5E4D5]">
+          <span id="runout-status-badge" class="section-title !text-[12px] text-status-ok block">Surplus</span>
+          <div id="runout-status-title" class="text-[30px] font-light text-status-ok tracking-tight leading-snug mt-1">+12.0 hrs</div>
+          <p id="runout-status-message" class="text-xs text-ink-soft mt-1 leading-relaxed">Your reserve will outlast the next supply window.</p>
+
+          <!-- Recommended Daily Target Box -->
+          <div id="card-recommended-target" class="rounded-xl border p-3.5 mt-4 transition-colors bg-white/70 border-[#D5E4D5]">
+            <div class="flex items-center justify-between">
+              <span id="target-label" class="waterall-label !text-[10px] text-ink-muted">Daily target</span>
+              <span id="target-value" class="text-[15px] font-semibold text-status-ok">≤ 160 L/day</span>
+            </div>
+            <p id="target-subtext" class="text-xs text-ink-muted mt-1 leading-relaxed">Stay at or below target to keep your buffer.</p>
+          </div>
+
+          <div class="h-px bg-hairline/80 my-4"></div>
+
+          <!-- Stored / Capacity / Lasts Metrics Row -->
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <span class="waterall-label !text-[10px] block">Stored</span>
+              <span id="metric-stored" class="text-[16px] font-bold text-ink mt-0.5 block tnum">0 L</span>
+            </div>
+            <div>
+              <span class="waterall-label !text-[10px] block">Capacity</span>
+              <span id="metric-capacity" class="text-[16px] font-bold text-ink mt-0.5 block tnum">0 L</span>
+            </div>
+            <div>
+              <span class="waterall-label !text-[10px] block">Lasts</span>
+              <span id="metric-lasts" class="text-[16px] font-bold text-ink mt-0.5 block tnum">∞</span>
+            </div>
+          </div>
+        </div>
+
+      </article>
+
+      <!-- ================= 3. REPORT / CROWDSOURCE VIEW ================= -->
+      <article id="view-report" class="space-y-6 hidden">
+        <!-- Your Zone -->
+        <div>
+          <h2 class="section-title mb-1">Your zone</h2>
+          <div id="report-zone-name" class="text-[18px] font-semibold text-ink">Zone 4 — Brgy. San Isidro</div>
+        </div>
+
+        <!-- Water at Your Tap (Law 4 Closed States) -->
+        <div class="pt-2">
+          <h2 class="section-title mb-3">Water at your tap</h2>
+          <div class="space-y-2.5" id="radio-group-water-status">
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="RUNNING" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Running</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Continuous pressurized flow</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-ok)]"></span>
+            </label>
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="LOW_PRESSURE" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Low pressure</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Trickle flow or sputtering</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-warn)]"></span>
+            </label>
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="DRY" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Dry</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Completely no water supply</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-alert)]"></span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Note (Optional) -->
+        <div>
+          <h2 class="section-title mb-2">Note (optional)</h2>
+          <textarea id="report-notes" rows="2" placeholder="Pressure dropped around 7:15 AM" class="w-full bg-surface border border-hairline rounded-2xl px-4 py-3 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-stone-400 shadow-xs resize-none"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button id="btn-submit-report" class="w-full bg-stone-900 hover:bg-stone-800 text-white font-semibold py-3.5 rounded-2xl text-sm transition shadow-md active:scale-[0.99] cursor-pointer">
+            Submit report
+          </button>
+          <p class="text-[11px] text-ink-faint text-center mt-3">Reports help refine distribution estimates for your zone.</p>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Bottom Navigation Bar (3 Tabs: Calendar, Reserves, Report) -->
+    <nav class="h-16 bg-paper border-t border-hairline px-6 flex items-center justify-between z-10 shrink-0">
+      <button data-tab="calendar" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Calendar</span>
+      </button>
+
+      <button data-tab="reserves" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink-faint hover:text-ink-soft py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Reserves</span>
+      </button>
+
+      <button data-tab="report" class="nav-item flex-1 flex flex-col items-center gap-1 text-ink-faint hover:text-ink-soft py-1 transition cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span class="text-[11px] font-semibold tracking-tight">Report</span>
+      </button>
+    </nav>
+
+    <!-- Global Toast Confirmation Modal -->
+    <div id="toast" class="absolute bottom-20 left-5 right-5 bg-stone-900 text-white p-3 rounded-2xl text-xs font-medium flex items-center justify-between shadow-xl transition-all duration-300 opacity-0 pointer-events-none translate-y-3 z-30">
+      <span id="toast-message">Data updated</span>
+      <span class="text-emerald-400 font-bold ml-2">✓</span>
+    </div>
+
+    <!-- Fill Level Info Dialog Modal -->
+    <div id="modal-fill-info" class="hidden absolute inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center p-6 z-40 transition-opacity">
+      <div class="bg-surface border border-hairline rounded-3xl p-6 max-w-[340px] shadow-2xl space-y-3.5">
+        <h3 class="text-base font-bold text-ink">Fill Level</h3>
+        <p class="text-xs text-ink-soft leading-relaxed">
+          Fill level indicates how full your water containers currently are (from 0% Empty to 100% Full).<br><br>
+          HydroTrack uses this to calculate your available water reserves in liters and estimate how long your supply will last before the next rationing window.
+        </p>
+        <button id="btn-close-fill-info" class="w-full bg-stone-900 hover:bg-stone-800 text-white font-semibold py-2.5 rounded-xl text-xs transition cursor-pointer">
+          Got it
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Navigation routing
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = {
+      calendar: document.getElementById('view-calendar'),
+      reserves: document.getElementById('view-reserves'),
+      report: document.getElementById('view-report')
+    };
+    const titles = {
+      calendar: 'BWD HydroTrack',
+      reserves: 'Reserves',
+      report: 'Report'
+    };
+    const screenTitle = document.getElementById('screen-title');
+    const backBtn = document.getElementById('btn-back');
+
+    function switchTab(tab) {
+      Object.values(views).forEach(v => v.classList.add('hidden'));
+      views[tab].classList.remove('hidden');
+
+      navItems.forEach(n => {
+        n.classList.remove('text-ink');
+        n.classList.add('text-ink-faint');
+      });
+      const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+      if (activeBtn) {
+        activeBtn.classList.add('text-ink');
+        activeBtn.classList.remove('text-ink-faint');
+      }
+
+      screenTitle.textContent = titles[tab];
+      if (tab === 'calendar') {
+        backBtn.classList.add('hidden');
+        updateConsensusCard();
+      } else {
+        backBtn.classList.remove('hidden');
+      }
+
+      if (tab === 'report') {
+        document.getElementById('report-zone-name').textContent = currentZone.name;
+      } else if (tab === 'reserves') {
+        if (customSupplyHours === null && (!inputSupplyHours.value || inputSupplyHours.value === "")) {
+          autoPopulateScheduleHours();
+        }
+      }
+    }
+
+    navItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+      });
+    });
+
+    backBtn.addEventListener('click', () => switchTab('calendar'));
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-message');
+      toastMsg.textContent = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-3');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
+      }, 2600);
+    }
+
+    // ==========================================
+    // DOMAIN MODELS & DATA DEFINITIONS
+    // ==========================================
+    const ZONES = [
+      {
+        id: "brgy4",
+        name: "Zone 4 — Brgy. San Isidro",
+        schedules: [
+          { day: "Monday", dayShort: "Mon", badge: "M", dayNum: 1, startH: 6, startM: 0, endH: 10, endM: 0, timeRange: "06:00 AM – 10:00 AM" },
+          { day: "Wednesday", dayShort: "Wed", badge: "W", dayNum: 3, startH: 5, startM: 0, endH: 9, endM: 0, timeRange: "05:00 AM – 09:00 AM" },
+          { day: "Friday", dayShort: "Fri", badge: "F", dayNum: 5, startH: 6, startM: 0, endH: 11, endM: 0, timeRange: "06:00 AM – 11:00 AM" }
+        ]
+      },
+      {
+        id: "brgy1",
+        name: "Zone 1 — Brgy. Cabinet Hill",
+        schedules: [
+          { day: "Tuesday", dayShort: "Tue", badge: "T", dayNum: 2, startH: 5, startM: 30, endH: 9, endM: 30, timeRange: "05:30 AM – 09:30 AM" },
+          { day: "Thursday", dayShort: "Thu", badge: "T", dayNum: 4, startH: 5, startM: 30, endH: 9, endM: 30, timeRange: "05:30 AM – 09:30 AM" },
+          { day: "Saturday", dayShort: "Sat", badge: "S", dayNum: 6, startH: 6, startM: 0, endH: 12, endM: 0, timeRange: "06:00 AM – 12:00 PM" }
+        ]
+      },
+      {
+        id: "brgy7",
+        name: "Zone 7 — Brgy. Trancoville",
+        schedules: [
+          { day: "Wednesday", dayShort: "Wed", badge: "W", dayNum: 3, startH: 6, startM: 0, endH: 10, endM: 30, timeRange: "06:00 AM – 10:30 AM" },
+          { day: "Saturday", dayShort: "Sat", badge: "S", dayNum: 6, startH: 5, startM: 0, endH: 10, endM: 0, timeRange: "05:00 AM – 10:00 AM" }
+        ]
+      }
+    ];
+
+    let currentZone = ZONES[0];
+    let reports = [];
+
+    // ==========================================
+    // CALENDAR VIEW & COUNTDOWN ENGINE (Law 2)
+    // ==========================================
+    const zoneSelector = document.getElementById('zone-selector');
+    const flowPulseDot = document.getElementById('flow-pulse-dot');
+    const flowBadge = document.getElementById('flow-badge');
+    const countdownTimer = document.getElementById('countdown-timer');
+    const countdownSubtext = document.getElementById('countdown-subtext');
+    const scheduleContainer = document.getElementById('schedule-container');
+    const noScheduleMsg = document.getElementById('no-schedule-msg');
+    const btnQuickReport = document.getElementById('btn-quick-report');
+    const btnLoadSampleReports = document.getElementById('btn-load-sample-reports');
+
+    let countdownInterval = null;
+
+    function renderScheduleCards() {
+      scheduleContainer.innerHTML = '';
+      if (!currentZone.schedules || currentZone.schedules.length === 0) {
+        noScheduleMsg.classList.remove('hidden');
+        return;
+      }
+      noScheduleMsg.classList.add('hidden');
+
+      currentZone.schedules.forEach(schedule => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3.5 hover:bg-stone-50/50 transition';
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-accent-wash text-accent flex items-center justify-center text-xs font-semibold">${schedule.badge}</span>
+            <span class="font-medium text-ink text-sm">${schedule.dayShort}</span>
+          </div>
+          <span class="text-xs text-ink-muted">${schedule.timeRange}</span>
+        `;
+        scheduleContainer.appendChild(item);
+      });
+    }
+
+    function calculateCountdown() {
+      const now = new Date();
+      // JavaScript Day: 0=Sun, 1=Mon, ..., 6=Sat
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      const currentMins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+      let flowActive = false;
+      let targetSeconds = 0;
+      let hoursUntilNextOpening = 0;
+
+      // Check if inside any window today
+      const todaySchedule = currentZone.schedules.find(s => s.dayNum === currentDay);
+      if (todaySchedule) {
+        const startMins = todaySchedule.startH * 60 + todaySchedule.startM;
+        const endMins = todaySchedule.endH * 60 + todaySchedule.endM;
+        if (currentMins >= startMins && currentMins < endMins) {
+          flowActive = true;
+          targetSeconds = Math.max(0, Math.floor((endMins - currentMins) * 60));
+          hoursUntilNextOpening = 0.0;
+        }
+      }
+
+      // If not active, find nearest upcoming window
+      if (!flowActive) {
+        let minDiffMins = Infinity;
+        currentZone.schedules.forEach(s => {
+          let dayDiff = s.dayNum - currentDay;
+          let windowStartMins = s.startH * 60 + s.startM;
+          if (dayDiff < 0 || (dayDiff === 0 && currentMins >= windowStartMins)) {
+            dayDiff += 7;
+          }
+          const totalDiffMins = dayDiff * 24 * 60 + (windowStartMins - currentMins);
+          if (totalDiffMins < minDiffMins) {
+            minDiffMins = totalDiffMins;
+          }
+        });
+
+        if (minDiffMins !== Infinity) {
+          targetSeconds = Math.max(0, Math.floor(minDiffMins * 60));
+          hoursUntilNextOpening = minDiffMins / 60;
+        } else {
+          targetSeconds = 0;
+          hoursUntilNextOpening = 0;
+        }
+      }
+
+      return {
+        flowActive,
+        remainingSeconds: targetSeconds,
+        hoursUntilNextOpening
+      };
+    }
+
+    function startLiveCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      function tick() {
+        const calc = calculateCountdown();
+        if (calc.flowActive) {
+          flowPulseDot.className = "w-2 h-2 rounded-full bg-[var(--status-ok)] animate-pulse";
+          flowBadge.textContent = "Flow active";
+          flowBadge.className = "section-title !text-[12px] text-status-ok";
+          countdownSubtext.textContent = "Remaining supply window time";
+        } else {
+          flowPulseDot.className = "w-2 h-2 rounded-full bg-[var(--status-warn)]";
+          flowBadge.textContent = "Rationing";
+          flowBadge.className = "section-title !text-[12px] text-status-warn";
+          countdownSubtext.textContent = "Time until next supply window";
+        }
+
+        const hrs = String(Math.floor(calc.remainingSeconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((calc.remainingSeconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(calc.remainingSeconds % 60).padStart(2, '0');
+        countdownTimer.textContent = `${hrs}:${mins}:${secs}`;
+      }
+
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    // Community Consensus Engine (Law 4)
+    function updateConsensusCard() {
+      const zoneReports = reports.filter(r => r.zoneId === currentZone.id);
+      const consensusBadge = document.getElementById('consensus-badge');
+      const consensusTimestamp = document.getElementById('consensus-timestamp');
+      const consensusSummary = document.getElementById('consensus-summary');
+      const consensusDetails = document.getElementById('consensus-details');
+
+      const shortZoneName = currentZone.name.split('—')[0].trim();
+
+      if (zoneReports.length === 0) {
+        consensusBadge.textContent = "No reports";
+        consensusBadge.className = "waterall-label text-ink-muted";
+        consensusTimestamp.textContent = "Today";
+        consensusSummary.textContent = `${shortZoneName}: No verified reports today`;
+        consensusDetails.textContent = "Be the first to report for this zone.";
+        return;
+      }
+
+      const counts = { RUNNING: 0, LOW_PRESSURE: 0, DRY: 0 };
+      zoneReports.forEach(r => counts[r.status] = (counts[r.status] || 0) + 1);
+
+      const dominant = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+      const dominantStatus = dominant[0];
+      const dominantPct = Math.round((dominant[1] / zoneReports.length) * 100);
+
+      const labelMap = { RUNNING: "RUNNING", LOW_PRESSURE: "LOW PRESSURE", DRY: "DRY" };
+      const colorMap = { RUNNING: "text-status-ok", LOW_PRESSURE: "text-status-warn", DRY: "text-status-alert" };
+
+      consensusBadge.textContent = `${dominantPct}% ${labelMap[dominantStatus]}`;
+      consensusBadge.className = `waterall-label font-bold ${colorMap[dominantStatus]}`;
+
+      const latest = zoneReports[0];
+      const relativeTime = getRelativeTime(latest.timestamp);
+      consensusTimestamp.textContent = relativeTime;
+
+      const reportPlural = zoneReports.length === 1 ? "report" : "reports";
+      const breakdown = Object.entries(counts)
+        .filter(([_, cnt]) => cnt > 0)
+        .map(([st, cnt]) => `${Math.round((cnt / zoneReports.length) * 100)}% ${st === 'RUNNING' ? 'Running' : st === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry'}`)
+        .join(', ');
+
+      consensusSummary.textContent = `${shortZoneName}: ${zoneReports.length} verified ${reportPlural} today — ${breakdown}`;
+      const notesPart = latest.notes ? ` ("${latest.notes}")` : "";
+      const latestLabel = latest.status === 'RUNNING' ? 'Running' : latest.status === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry';
+      consensusDetails.textContent = `Latest: ${latestLabel}${notesPart} · ${relativeTime}`;
+    }
+
+    function getRelativeTime(timestamp) {
+      const diffMs = Date.now() - timestamp;
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return "Just now";
+      if (mins === 1) return "1m ago";
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs === 1) return "1h ago";
+      return `${hrs}h ago`;
+    }
+
+    // Zone change listener
+    zoneSelector.addEventListener('change', (e) => {
+      const selected = ZONES.find(z => z.id === e.target.value);
+      if (selected) {
+        currentZone = selected;
+        renderScheduleCards();
+        startLiveCountdown();
+        updateConsensusCard();
+        document.getElementById('consensus-acknowledgment').classList.add('hidden');
+        if (typeof autoPopulateScheduleHours === 'function') {
+          autoPopulateScheduleHours();
+        }
+      }
+    });
+
+    btnQuickReport.addEventListener('click', () => {
+      switchTab('report');
+    });
+
+    btnLoadSampleReports.addEventListener('click', () => {
+      const now = Date.now();
+      const sample = [
+        { id: "seed-z4-1", zoneId: "brgy4", status: "RUNNING", notes: "Strong flow at Purok 1", timestamp: now - 45 * 60000 },
+        { id: "seed-z4-2", zoneId: "brgy4", status: "RUNNING", notes: "Purok 2 tap running", timestamp: now - 30 * 60000 },
+        { id: "seed-z4-3", zoneId: "brgy4", status: "RUNNING", notes: "Good pressure for filling drums", timestamp: now - 20 * 60000 },
+        { id: "seed-z4-4", zoneId: "brgy4", status: "LOW_PRESSURE", notes: "Pressure dropped slightly at upper road", timestamp: now - 12 * 60000 },
+        { id: "seed-z1-1", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Trickle flow observed", timestamp: now - 25 * 60000 },
+        { id: "seed-z1-2", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Low pressure line", timestamp: now - 15 * 60000 },
+        { id: "seed-z7-1", zoneId: "brgy7", status: "DRY", notes: "No supply yet", timestamp: now - 50 * 60000 },
+        { id: "seed-z7-2", zoneId: "brgy7", status: "DRY", notes: "Main line dry", timestamp: now - 10 * 60000 }
+      ];
+
+      sample.forEach(s => {
+        reports = reports.filter(r => r.id !== s.id);
+        reports.unshift(s);
+      });
+
+      updateConsensusCard();
+      showToast('Sample community reports loaded for live demo');
+    });
+
+    // Initialize Calendar
+    renderScheduleCards();
+    startLiveCountdown();
+    updateConsensusCard();
+
+    // ==========================================
+    // RESERVES VIEW ENGINE (Law 1, Law 3)
+    // ==========================================
+    let drums200L = 0;
+    let tanks1000L = 0;
+    let gallons20L = 0;
+    let fillPercentage = 0;
+    let dailyConsumption = 0;
+    let customSupplyHours = null;
+
+    const inputDrums = document.getElementById('input-drums');
+    const inputTanks = document.getElementById('input-tanks');
+    const inputGallons = document.getElementById('input-gallons');
+    const inputDailyConsumption = document.getElementById('input-daily-consumption');
+    const inputSupplyHours = document.getElementById('input-supply-hours');
+    const scheduleSyncStatus = document.getElementById('schedule-sync-status');
+    const btnSyncHours = document.getElementById('btn-sync-hours');
+
+    const fillPercentageDisplay = document.getElementById('fill-percentage-display');
+    const fillHint = document.getElementById('fill-hint');
+    const btnFillList = document.querySelectorAll('.btn-fill');
+
+    const cardRunoutStatus = document.getElementById('card-runout-status');
+    const runoutStatusBadge = document.getElementById('runout-status-badge');
+    const runoutStatusTitle = document.getElementById('runout-status-title');
+    const runoutStatusMessage = document.getElementById('runout-status-message');
+
+    const cardRecommendedTarget = document.getElementById('card-recommended-target');
+    const targetLabel = document.getElementById('target-label');
+    const targetValue = document.getElementById('target-value');
+    const targetSubtext = document.getElementById('target-subtext');
+
+    const metricStored = document.getElementById('metric-stored');
+    const metricCapacity = document.getElementById('metric-capacity');
+    const metricLasts = document.getElementById('metric-lasts');
+
+    const modalFillInfo = document.getElementById('modal-fill-info');
+    const btnFillInfo = document.getElementById('btn-fill-info');
+    const btnCloseFillInfo = document.getElementById('btn-close-fill-info');
+
+    // Steppers
+    document.getElementById('btn-dec-drums').addEventListener('click', () => {
+      drums200L = Math.max(0, drums200L - 1);
+      inputDrums.value = drums200L;
+      recalculateRunoutBuffer();
+    });
+    document.getElementById('btn-inc-drums').addEventListener('click', () => {
+      drums200L += 1;
+      inputDrums.value = drums200L;
+      recalculateRunoutBuffer();
+    });
+
+    document.getElementById('btn-dec-tanks').addEventListener('click', () => {
+      tanks1000L = Math.max(0, tanks1000L - 1);
+      inputTanks.value = tanks1000L;
+      recalculateRunoutBuffer();
+    });
+    document.getElementById('btn-inc-tanks').addEventListener('click', () => {
+      tanks1000L += 1;
+      inputTanks.value = tanks1000L;
+      recalculateRunoutBuffer();
+    });
+
+    document.getElementById('btn-dec-gallons').addEventListener('click', () => {
+      gallons20L = Math.max(0, gallons20L - 1);
+      inputGallons.value = gallons20L;
+      recalculateRunoutBuffer();
+    });
+    document.getElementById('btn-inc-gallons').addEventListener('click', () => {
+      gallons20L += 1;
+      inputGallons.value = gallons20L;
+      recalculateRunoutBuffer();
+    });
+
+    inputDrums.addEventListener('input', (e) => {
+      drums200L = Math.max(0, parseInt(e.target.value, 10) || 0);
+      recalculateRunoutBuffer();
+    });
+    inputTanks.addEventListener('input', (e) => {
+      tanks1000L = Math.max(0, parseInt(e.target.value, 10) || 0);
+      recalculateRunoutBuffer();
+    });
+    inputGallons.addEventListener('input', (e) => {
+      gallons20L = Math.max(0, parseInt(e.target.value, 10) || 0);
+      recalculateRunoutBuffer();
+    });
+
+    inputDailyConsumption.addEventListener('input', (e) => {
+      dailyConsumption = Math.max(0, parseFloat(e.target.value) || 0);
+      recalculateRunoutBuffer();
+    });
+
+    inputSupplyHours.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      customSupplyHours = val === "" ? null : Math.max(0, parseFloat(val) || 0);
+      scheduleSyncStatus.textContent = customSupplyHours !== null ? "Manual override" : "Synced with zone schedule";
+      recalculateRunoutBuffer();
+    });
+
+    btnSyncHours.addEventListener('click', () => {
+      autoPopulateScheduleHours();
+      showToast('Synced with zone schedule');
+    });
+
+    function autoPopulateScheduleHours() {
+      const countdown = calculateCountdown();
+      customSupplyHours = null;
+      inputSupplyHours.value = countdown.hoursUntilNextOpening.toFixed(1);
+      scheduleSyncStatus.textContent = `Synced · ${countdown.hoursUntilNextOpening.toFixed(1)} hrs · ${countdown.flowActive ? 'FLOW ACTIVE' : 'RATIONING ACTIVE'}`;
+      recalculateRunoutBuffer();
+    }
+
+    // Fill presets
+    const fillHints = {
+      0: "Empty / dry",
+      25: "Quarter full",
+      50: "Half full",
+      75: "Three quarters full",
+      100: "Full capacity"
+    };
+
+    const fillLabels = {
+      0: "0% · EMPTY",
+      25: "25% · LOW",
+      50: "50% · HALF",
+      75: "75% · THREE QUARTERS",
+      100: "100% · FULL"
+    };
+
+    btnFillList.forEach(btn => {
+      btn.addEventListener('click', () => {
+        fillPercentage = parseInt(btn.getAttribute('data-fill'), 10);
+
+        btnFillList.forEach(b => {
+          b.className = "btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer";
+        });
+        btn.className = "btn-fill py-2 rounded-xl bg-accent text-white shadow-xs transition cursor-pointer";
+
+        fillPercentageDisplay.textContent = fillLabels[fillPercentage] || `${fillPercentage}%`;
+        fillHint.textContent = fillHints[fillPercentage] || "";
+
+        recalculateRunoutBuffer();
+      });
+    });
+
+    // Fill info dialog
+    btnFillInfo.addEventListener('click', () => {
+      modalFillInfo.classList.remove('hidden');
+    });
+    btnCloseFillInfo.addEventListener('click', () => {
+      modalFillInfo.classList.add('hidden');
+    });
+    modalFillInfo.addEventListener('click', (e) => {
+      if (e.target === modalFillInfo) {
+        modalFillInfo.classList.add('hidden');
+      }
+    });
+
+    // Law 1 & Law 3 Runout Calculation
+    function recalculateRunoutBuffer() {
+      const countdown = calculateCountdown();
+      const nextSupplyHours = customSupplyHours !== null ? customSupplyHours : countdown.hoursUntilNextOpening;
+
+      // Law 3: Discrete vessel quantization
+      const totalCapacity = drums200L * 200 + tanks1000L * 1000 + gallons20L * 20;
+
+      // Law 1 Invariant 1: Capacity clamping & non-negative storage
+      const currentStored = Math.min(totalCapacity, Math.max(0, totalCapacity * (fillPercentage / 100)));
+
+      // Law 1 Invariant 2: Deterministic runout time
+      let runoutHours = Infinity;
+      let hourlyBurn = 0;
+      if (dailyConsumption > 0) {
+        hourlyBurn = dailyConsumption / 24.0;
+        runoutHours = currentStored / hourlyBurn;
+      }
+
+      // Buffer hours
+      const safetyBufferHours = runoutHours - nextSupplyHours;
+
+      // Depletion condition (Law 1 Invariant 3)
+      const isDepleted = runoutHours < nextSupplyHours || (currentStored === 0 && hourlyBurn > 0);
+
+      // Deficit in liters
+      const deficitLiters = isDepleted && hourlyBurn > 0 ? Math.max(0, (nextSupplyHours - runoutHours) * hourlyBurn) : 0;
+
+      // Recommended daily target
+      const recommendedDailyTarget = nextSupplyHours > 0 ? (currentStored / nextSupplyHours) * 24.0 : Infinity;
+
+      // Update Metrics Row
+      metricStored.textContent = `${Math.round(currentStored)} L`;
+      metricCapacity.textContent = `${Math.round(totalCapacity)} L`;
+      metricLasts.textContent = runoutHours === Infinity ? "∞" : `${runoutHours.toFixed(1)} hrs`;
+
+      // Update Card presentation
+      if (isDepleted) {
+        // Deficit Risk (Rose)
+        cardRunoutStatus.className = "rounded-2xl border p-5 transition-all shadow-xs bg-status-alert-wash border-[#F1D6D2]";
+        runoutStatusBadge.textContent = "Deficit risk";
+        runoutStatusBadge.className = "section-title !text-[12px] text-status-alert block";
+        runoutStatusTitle.textContent = `${Math.round(deficitLiters)} L short`;
+        runoutStatusTitle.className = "text-[30px] font-light text-status-alert tracking-tight leading-snug mt-1";
+        runoutStatusMessage.textContent = `Reserves run dry ${Math.abs(safetyBufferHours).toFixed(1)} hrs before the next supply window, leaving a ${Math.round(deficitLiters)} L shortfall.`;
+      } else {
+        // Surplus Buffer (Safe Green)
+        cardRunoutStatus.className = "rounded-2xl border p-5 transition-all shadow-xs bg-status-ok-wash border-[#D5E4D5]";
+        runoutStatusBadge.textContent = "Surplus";
+        runoutStatusBadge.className = "section-title !text-[12px] text-status-ok block";
+        runoutStatusTitle.textContent = safetyBufferHours === Infinity ? "Indefinite" : `+${safetyBufferHours.toFixed(1)} hrs`;
+        runoutStatusTitle.className = "text-[30px] font-light text-status-ok tracking-tight leading-snug mt-1";
+        runoutStatusMessage.textContent = safetyBufferHours === Infinity
+          ? "No consumption set. Stored water lasts indefinitely."
+          : `Stored water outlasts the next supply window by ${safetyBufferHours.toFixed(1)} hrs.`;
+      }
+
+      // Update Target Recommendation Box (TargetRecommendationFormatter)
+      const effectiveFlowActive = (customSupplyHours === null && countdown.flowActive);
+      if (effectiveFlowActive) {
+        cardRecommendedTarget.className = "rounded-xl border p-3.5 mt-4 transition-colors bg-white/70 border-[#D5E4D5]";
+        targetLabel.className = "waterall-label !text-[10px] text-ink-muted";
+        targetValue.textContent = "Unrestricted";
+        targetValue.className = "text-[15px] font-semibold text-status-ok";
+        targetSubtext.textContent = "Supply window is active. Refill containers now.";
+      } else if (nextSupplyHours <= 0) {
+        cardRecommendedTarget.className = "rounded-xl border p-3.5 mt-4 transition-colors bg-white/70 border-hairline";
+        targetLabel.className = "waterall-label !text-[10px] text-ink-muted";
+        targetValue.textContent = "—";
+        targetValue.className = "text-[15px] font-semibold text-ink-muted";
+        targetSubtext.textContent = "Set hours to next supply to calculate a daily target.";
+      } else if (isDepleted) {
+        cardRecommendedTarget.className = "rounded-xl border p-3.5 mt-4 transition-colors bg-white/80 border-[#F8D2CC]";
+        targetLabel.className = "waterall-label !text-[10px] text-status-alert";
+        targetValue.textContent = `≤ ${Math.round(recommendedDailyTarget)} L/day`;
+        targetValue.className = "text-[15px] font-semibold text-status-alert";
+        targetSubtext.textContent = `Reduce use from ${Math.round(dailyConsumption)} to ${Math.round(recommendedDailyTarget)} L/day to avoid running out.`;
+      } else {
+        cardRecommendedTarget.className = "rounded-xl border p-3.5 mt-4 transition-colors bg-white/70 border-[#D5E4D5]";
+        targetLabel.className = "waterall-label !text-[10px] text-ink-muted";
+        targetValue.textContent = `≤ ${Math.round(recommendedDailyTarget)} L/day`;
+        targetValue.className = "text-[15px] font-semibold text-status-ok";
+        targetSubtext.textContent = `Stay at or below ${Math.round(recommendedDailyTarget)} L/day (currently ${Math.round(dailyConsumption)}) to keep your buffer.`;
+      }
+    }
+
+    // Auto-populate supply hours upon start
+    autoPopulateScheduleHours();
+
+    // ==========================================
+    // REPORT VIEW CONTROLLER (Law 4)
+    // ==========================================
+    const reportZoneName = document.getElementById('report-zone-name');
+    const radioStatusCards = document.querySelectorAll('.radio-status-card');
+    const btnSubmitReport = document.getElementById('btn-submit-report');
+    const reportNotes = document.getElementById('report-notes');
+
+    radioStatusCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const input = card.querySelector('input[type="radio"]');
+        input.checked = true;
+
+        radioStatusCards.forEach(c => {
+          c.classList.remove('border-stone-900', 'bg-stone-50/50');
+          c.classList.add('border-hairline');
+          c.querySelector('.radio-dot').classList.add('hidden');
+          c.querySelector('.radio-indicator').classList.remove('border-stone-900');
+        });
+
+        card.classList.remove('border-hairline');
+        card.classList.add('border-stone-900', 'bg-stone-50/50');
+        card.querySelector('.radio-dot').classList.remove('hidden');
+        card.querySelector('.radio-indicator').classList.add('border-stone-900');
+      });
+    });
+
+    btnSubmitReport.addEventListener('click', () => {
+      const selected = document.querySelector('input[name="tap-status"]:checked');
+      if (!selected) {
+        showToast('Select the water status at your tap.');
+        return;
+      }
+
+      const status = selected.value;
+      const notes = reportNotes.value.trim();
+      const report = {
+        id: `rep_${Date.now()}`,
+        zoneId: currentZone.id,
+        zoneName: currentZone.name,
+        status: status,
+        notes: notes,
+        timestamp: Date.now()
+      };
+
+      reports.unshift(report);
+      savePreferences();
+
+      showToast(`Report submitted for ${currentZone.name}`);
+
+      const statusLabel = status === 'RUNNING' ? 'Running' : status === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry';
+      const ackBanner = document.getElementById('consensus-acknowledgment');
+      ackBanner.textContent = `Report recorded: ${statusLabel}. Status refreshed.`;
+      ackBanner.classList.remove('hidden');
+
+      // Reset form
+      reportNotes.value = '';
+      selected.checked = false;
+      radioStatusCards.forEach(c => {
+        c.classList.remove('border-stone-900', 'bg-stone-50/50');
+        c.classList.add('border-hairline');
+        c.querySelector('.radio-dot').classList.add('hidden');
+        c.querySelector('.radio-indicator').classList.remove('border-stone-900');
+      });
+
+      updateConsensusCard();
+
+      setTimeout(() => {
+        switchTab('calendar');
+      }, 350);
+    });
+
+    // ==========================================
+    // PREFERENCE PERSISTENCE (LocalStorage)
+    // ==========================================
+    const STORAGE_KEY = 'waterall_hydrotrack_state';
+
+    function savePreferences() {
+      try {
+        const state = {
+          selectedZoneId: currentZone.id,
+          drums200L,
+          tanks1000L,
+          gallons20L,
+          fillPercentage,
+          dailyConsumption,
+          reports: reports.slice(0, 50)
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        // LocalStorage may fail in restricted sandbox environments
+      }
+    }
+
+    function loadPreferences() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const state = JSON.parse(saved);
+
+        if (state.selectedZoneId) {
+          const found = ZONES.find(z => z.id === state.selectedZoneId);
+          if (found) {
+            currentZone = found;
+            zoneSelector.value = found.id;
+          }
+        }
+
+        if (state.drums200L !== undefined) {
+          drums200L = state.drums200L;
+          inputDrums.value = drums200L;
+        }
+        if (state.tanks1000L !== undefined) {
+          tanks1000L = state.tanks1000L;
+          inputTanks.value = tanks1000L;
+        }
+        if (state.gallons20L !== undefined) {
+          gallons20L = state.gallons20L;
+          inputGallons.value = gallons20L;
+        }
+        if (state.dailyConsumption !== undefined) {
+          dailyConsumption = state.dailyConsumption;
+          inputDailyConsumption.value = dailyConsumption;
+        }
+        if (state.fillPercentage !== undefined) {
+          fillPercentage = state.fillPercentage;
+          const targetBtn = Array.from(btnFillList).find(b => parseInt(b.getAttribute('data-fill'), 10) === fillPercentage);
+          if (targetBtn) {
+            btnFillList.forEach(b => b.className = "btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer");
+            targetBtn.className = "btn-fill py-2 rounded-xl bg-accent text-white shadow-xs transition cursor-pointer";
+          }
+          fillPercentageDisplay.textContent = fillLabels[fillPercentage] || `${fillPercentage}%`;
+          fillHint.textContent = fillHints[fillPercentage] || "";
+        }
+        if (Array.isArray(state.reports) && state.reports.length > 0) {
+          reports = state.reports;
+        }
+
+        renderScheduleCards();
+        startLiveCountdown();
+        updateConsensusCard();
+        autoPopulateScheduleHours();
+      } catch (e) {
+        // Ignore corrupted storage
+      }
+    }
+
+    // Save inputs on change
+    [inputDrums, inputTanks, inputGallons, inputDailyConsumption].forEach(input => {
+      input.addEventListener('change', savePreferences);
+    });
+    btnFillList.forEach(btn => {
+      btn.addEventListener('click', savePreferences);
+    });
+    zoneSelector.addEventListener('change', savePreferences);
+
+    // Load saved preferences if available
+    loadPreferences();
+
+
+
+  </script>
+</body>
+</html>
