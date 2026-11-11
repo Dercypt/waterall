@@ -105,9 +105,18 @@
       color: var(--ink);
     }
 
+    html.dark #btn-back:hover,
+    html.dark button.bg-paper:hover {
+      background-color: var(--surface);
+    }
+
     html.dark .bg-stone-200\/70 {
       background-color: var(--surface);
       border: 1px solid var(--hairline);
+    }
+
+    html.dark .btn-fill.bg-accent {
+      color: var(--paper);
     }
 
     html.dark #btn-quick-report {
@@ -144,6 +153,10 @@
       border: 1px solid var(--hairline);
     }
 
+    html.dark #consensus-acknowledgment {
+      border-color: rgba(79, 122, 90, 0.4) !important;
+    }
+
     html.dark #card-runout-status {
       border-color: rgba(255, 255, 255, 0.1) !important;
     }
@@ -155,6 +168,10 @@
 
     html.dark .radio-status-card:hover {
       border-color: var(--ink-faint);
+    }
+
+    html.dark .radio-indicator {
+      border-color: var(--hairline);
     }
 
     html.dark .radio-status-card.border-stone-900 {
@@ -567,6 +584,39 @@
     });
 
     backBtn.addEventListener('click', () => switchTab('calendar'));
+
+    // ==========================================
+    // DARK MODE CONTROLLER (SDG 6 Tag Tap Trigger)
+    // ==========================================
+    const brandWaterallTag = document.getElementById('brand-waterall-tag');
+    const THEME_STORAGE_KEY = 'waterall_theme_mode';
+
+    function setDarkMode(enable) {
+      if (enable) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem(THEME_STORAGE_KEY, 'light');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+
+    if (brandWaterallTag) {
+      brandWaterallTag.addEventListener('click', toggleDarkMode);
+    }
+
+    // Hydrate theme preference on startup
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === 'dark') {
+      setDarkMode(true);
+    } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
 
     function showToast(msg) {
       const toast = document.getElementById('toast');

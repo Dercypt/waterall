@@ -57,6 +57,19 @@ class MainActivity : AppCompatActivity() {
 
         initDelegates()
         setupBottomNavigation()
+        setupBrandTagToggle()
+    }
+
+    private fun setupBrandTagToggle() {
+        binding.tvBrandSdg.setOnClickListener {
+            val currentNight = resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+            val nextMode = if (currentNight == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+            } else {
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_YES
+            }
+            androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(nextMode)
+        }
     }
 
     private fun initDelegates() {
