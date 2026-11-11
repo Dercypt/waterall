@@ -30,6 +30,14 @@
         <item name="android:textAllCaps">true</item>
     </style>
 
+    <style name="Waterall.SectionTitle" parent="">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
     <style name="Waterall.Body" parent="">
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/ink</item>
