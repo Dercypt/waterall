@@ -40,10 +40,11 @@
             android:textColor="@color/ink" />
 
         <TextView
+            android:id="@+id/tvBrandSdg"
             style="@style/Waterall.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="WATERALL · SDG 6"
+            android:text="BY WATERALL · SDG 6"
             android:textColor="@color/ink_faint" />
     </LinearLayout>
 
