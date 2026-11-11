@@ -75,6 +75,127 @@
       text-transform: uppercase;
       color: var(--ink-muted);
     }
+
+    /* Dark Mode Design Token Mapping (No new colors introduced) */
+    html.dark {
+      --paper: #1A1A1A;
+      --surface: #242424;
+      --hairline: #333333;
+      --ink: #FAFAF8;
+      --ink-soft: #D4D4CE;
+      --ink-muted: #8A8A86;
+      --ink-faint: #4A4A48;
+      --accent: #6FA2B3;
+      --accent-wash: rgba(47, 93, 110, 0.22);
+      --status-ok: #6FA47C;
+      --status-ok-wash: rgba(79, 122, 90, 0.2);
+      --status-warn: #C89248;
+      --status-alert: #C86152;
+      --status-alert-wash: rgba(168, 71, 58, 0.2);
+    }
+
+    html.dark body {
+      background-color: #121212;
+      color: var(--ink);
+    }
+
+    /* Dark Mode Component Overrides */
+    html.dark select option {
+      background-color: var(--surface);
+      color: var(--ink);
+    }
+
+    html.dark #btn-back:hover,
+    html.dark button.bg-paper:hover {
+      background-color: var(--surface);
+    }
+
+    html.dark .bg-stone-200\/70 {
+      background-color: var(--surface);
+      border: 1px solid var(--hairline);
+    }
+
+    html.dark .btn-fill.bg-accent {
+      color: var(--paper);
+    }
+
+    html.dark #btn-quick-report {
+      border-color: var(--hairline);
+    }
+    html.dark #btn-quick-report:hover {
+      background-color: var(--surface);
+      border-color: var(--ink-faint);
+    }
+
+    html.dark #btn-sync-hours {
+      border-color: var(--hairline);
+    }
+    html.dark #btn-sync-hours:hover {
+      border-color: var(--accent);
+    }
+
+    html.dark #btn-submit-report {
+      background-color: var(--ink);
+      color: var(--paper);
+    }
+    html.dark #btn-submit-report:hover {
+      opacity: 0.92;
+    }
+
+    html.dark #btn-close-fill-info {
+      background-color: var(--ink);
+      color: var(--paper);
+    }
+
+    html.dark #toast {
+      background-color: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--hairline);
+    }
+
+    html.dark #consensus-acknowledgment {
+      border-color: rgba(79, 122, 90, 0.4) !important;
+    }
+
+    html.dark #card-runout-status {
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    html.dark #card-recommended-target {
+      background-color: var(--surface) !important;
+      border-color: var(--hairline) !important;
+    }
+
+    html.dark .radio-status-card:hover {
+      border-color: var(--ink-faint);
+    }
+
+    html.dark .radio-indicator {
+      border-color: var(--hairline);
+    }
+
+    html.dark .radio-status-card.border-stone-900 {
+      border-color: var(--ink) !important;
+      background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    html.dark .radio-indicator.border-stone-900 {
+      border-color: var(--ink) !important;
+    }
+
+    html.dark .radio-dot {
+      background-color: var(--ink) !important;
+    }
+
+    html.dark input,
+    html.dark textarea {
+      background-color: var(--surface);
+      color: var(--ink);
+    }
+
+    html.dark #schedule-container > div:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-0 sm:p-4">
@@ -90,9 +211,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/>
           </svg>
         </button>
-        <h1 id="screen-title" class="text-[22px] font-semibold tracking-[-0.01em] text-ink">BWD HydroTrack</h1>
+        <h1 id="screen-title" class="text-[22px] font-semibold tracking-[-0.01em] text-ink">Calendar</h1>
       </div>
-      <span class="text-[10px] font-bold tracking-wider text-ink-faint uppercase">WATERALL · SDG 6</span>
+      <span id="brand-waterall-tag" class="text-[10px] font-bold tracking-wider text-ink-faint uppercase select-none cursor-pointer hover:text-ink transition" title="Toggle dark mode">BY WATERALL · SDG 6</span>
     </header>
 
     <!-- Scrollable Screen Content Body -->
@@ -151,11 +272,8 @@
               Report recorded: Running. Status refreshed.
             </div>
 
-            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer mb-2">
+            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer">
               Report tap status
-            </button>
-            <button id="btn-load-sample-reports" class="w-full border border-stone-200 hover:border-stone-300 rounded-xl py-2.5 text-xs font-medium text-ink-muted hover:text-ink hover:bg-stone-50 transition cursor-pointer">
-              Load sample community reports
             </button>
           </div>
         </div>
@@ -420,7 +538,7 @@
       report: document.getElementById('view-report')
     };
     const titles = {
-      calendar: 'BWD HydroTrack',
+      calendar: 'Calendar',
       reserves: 'Reserves',
       report: 'Report'
     };
@@ -466,6 +584,39 @@
     });
 
     backBtn.addEventListener('click', () => switchTab('calendar'));
+
+    // ==========================================
+    // DARK MODE CONTROLLER (SDG 6 Tag Tap Trigger)
+    // ==========================================
+    const brandWaterallTag = document.getElementById('brand-waterall-tag');
+    const THEME_STORAGE_KEY = 'waterall_theme_mode';
+
+    function setDarkMode(enable) {
+      if (enable) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem(THEME_STORAGE_KEY, 'light');
+      }
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.contains('dark');
+      setDarkMode(!isDark);
+    }
+
+    if (brandWaterallTag) {
+      brandWaterallTag.addEventListener('click', toggleDarkMode);
+    }
+
+    // Hydrate theme preference on startup
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === 'dark') {
+      setDarkMode(true);
+    } else if (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
@@ -523,7 +674,6 @@
     const scheduleContainer = document.getElementById('schedule-container');
     const noScheduleMsg = document.getElementById('no-schedule-msg');
     const btnQuickReport = document.getElementById('btn-quick-report');
-    const btnLoadSampleReports = document.getElementById('btn-load-sample-reports');
 
     let countdownInterval = null;
 
@@ -705,28 +855,6 @@
 
     btnQuickReport.addEventListener('click', () => {
       switchTab('report');
-    });
-
-    btnLoadSampleReports.addEventListener('click', () => {
-      const now = Date.now();
-      const sample = [
-        { id: "seed-z4-1", zoneId: "brgy4", status: "RUNNING", notes: "Strong flow at Purok 1", timestamp: now - 45 * 60000 },
-        { id: "seed-z4-2", zoneId: "brgy4", status: "RUNNING", notes: "Purok 2 tap running", timestamp: now - 30 * 60000 },
-        { id: "seed-z4-3", zoneId: "brgy4", status: "RUNNING", notes: "Good pressure for filling drums", timestamp: now - 20 * 60000 },
-        { id: "seed-z4-4", zoneId: "brgy4", status: "LOW_PRESSURE", notes: "Pressure dropped slightly at upper road", timestamp: now - 12 * 60000 },
-        { id: "seed-z1-1", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Trickle flow observed", timestamp: now - 25 * 60000 },
-        { id: "seed-z1-2", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Low pressure line", timestamp: now - 15 * 60000 },
-        { id: "seed-z7-1", zoneId: "brgy7", status: "DRY", notes: "No supply yet", timestamp: now - 50 * 60000 },
-        { id: "seed-z7-2", zoneId: "brgy7", status: "DRY", notes: "Main line dry", timestamp: now - 10 * 60000 }
-      ];
-
-      sample.forEach(s => {
-        reports = reports.filter(r => r.id !== s.id);
-        reports.unshift(s);
-      });
-
-      updateConsensusCard();
-      showToast('Sample community reports loaded for live demo');
     });
 
     // Initialize Calendar

@@ -47,21 +47,6 @@ class CalendarViewDelegate(
         binding.btnQuickReport.setOnClickListener {
             onQuickReportClicked()
         }
-
-        binding.btnLoadSampleReports.setOnClickListener {
-            val now = System.currentTimeMillis()
-            viewModel.loadSampleReports(now)
-            val activeReports = viewModel.reportRepository.getAllReports().filter { activeReport ->
-                (now - activeReport.timestamp) <= ZoneConsensusCalculator.REPORT_EXPIRATION_WINDOW_MS
-            }
-            userPreferences.saveReports(activeReports)
-            Toast.makeText(
-                activity,
-                "Sample community reports loaded for live demo",
-                Toast.LENGTH_SHORT
-            ).show()
-            updateConsensusCard()
-        }
     }
 
     override fun observeState(scope: CoroutineScope) {

@@ -40,10 +40,14 @@
             android:textColor="@color/ink" />
 
         <TextView
+            android:id="@+id/tvBrandSdg"
             style="@style/Waterall.Label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="WATERALL · SDG 6"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="BY WATERALL · SDG 6"
             android:textColor="@color/ink_faint" />
     </LinearLayout>
 
@@ -251,17 +255,6 @@
                         android:textSize="13sp"
                         android:background="@drawable/bg_button_outline"
                         android:textColor="@color/ink" />
-
-                    <Button
-                        android:id="@+id/btnLoadSampleReports"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:minHeight="0dp"
-                        android:layout_marginTop="8dp"
-                        android:text="Load sample community reports"
-                        android:textSize="13sp"
-                        android:background="@drawable/bg_button_outline"
-                        android:textColor="@color/ink_muted" />
                 </LinearLayout>
 
             </LinearLayout>

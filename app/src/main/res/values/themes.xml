@@ -1,5 +1,5 @@
 <resources>
-    <style name="Theme.Waterall" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Theme.Waterall" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/ink</item>
         <item name="colorPrimaryVariant">@color/ink</item>
         <item name="colorOnPrimary">@color/white</item>
