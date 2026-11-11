@@ -111,7 +111,7 @@
 
                         <TextView
                             android:id="@+id/tvFlowBadge"
-                            style="@style/Waterall.Label"
+                            style="@style/Waterall.SectionTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -143,11 +143,11 @@
 
                 <!-- Schedule -->
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upcoming schedule"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
                     android:id="@+id/layoutScheduleContainer"
@@ -167,7 +167,7 @@
 
                 <!-- Community consensus -->
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Community reports"
@@ -284,11 +284,11 @@
 
                 <!-- Storage inventory -->
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Storage"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <!-- 200L Blue Drums -->
                 <LinearLayout
@@ -526,7 +526,7 @@
                         android:gravity="center_vertical">
 
                         <TextView
-                            style="@style/Waterall.Label"
+                            style="@style/Waterall.SectionTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Fill level" />
@@ -625,11 +625,12 @@
                     android:textColor="@color/ink_muted" />
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Daily use (L)"
-                    android:layout_marginTop="28dp" />
+                    android:layout_marginTop="32dp"
+                    android:layout_marginBottom="6dp" />
 
                 <EditText
                     android:id="@+id/etDailyConsumption"
@@ -645,7 +646,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="28dp">
+                    android:layout_marginTop="32dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -654,7 +655,7 @@
                         android:orientation="vertical">
 
                         <TextView
-                            style="@style/Waterall.Label"
+                            style="@style/Waterall.SectionTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Hours to next supply" />
@@ -707,7 +708,7 @@
 
                     <TextView
                         android:id="@+id/tvRunoutStatusBadge"
-                        style="@style/Waterall.Label"
+                        style="@style/Waterall.SectionTitle"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Surplus"
@@ -868,10 +869,11 @@
                 android:visibility="gone">
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Your zone" />
+                    android:text="Your zone"
+                    android:layout_marginBottom="4dp" />
 
                 <TextView
                     android:id="@+id/tvReportZoneName"
@@ -883,7 +885,7 @@
                     android:textColor="@color/ink" />
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Water at your tap"
@@ -933,10 +935,11 @@
                 </RadioGroup>
 
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Note (optional)" />
+                    android:text="Note (optional)"
+                    android:layout_marginBottom="6dp" />
 
                 <EditText
                     android:id="@+id/etReportNotes"
