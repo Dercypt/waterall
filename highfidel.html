@@ -151,11 +151,8 @@
               Report recorded: Running. Status refreshed.
             </div>
 
-            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer mb-2">
+            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer">
               Report tap status
-            </button>
-            <button id="btn-load-sample-reports" class="w-full border border-stone-200 hover:border-stone-300 rounded-xl py-2.5 text-xs font-medium text-ink-muted hover:text-ink hover:bg-stone-50 transition cursor-pointer">
-              Load sample community reports
             </button>
           </div>
         </div>
@@ -523,7 +520,6 @@
     const scheduleContainer = document.getElementById('schedule-container');
     const noScheduleMsg = document.getElementById('no-schedule-msg');
     const btnQuickReport = document.getElementById('btn-quick-report');
-    const btnLoadSampleReports = document.getElementById('btn-load-sample-reports');
 
     let countdownInterval = null;
 
@@ -705,28 +701,6 @@
 
     btnQuickReport.addEventListener('click', () => {
       switchTab('report');
-    });
-
-    btnLoadSampleReports.addEventListener('click', () => {
-      const now = Date.now();
-      const sample = [
-        { id: "seed-z4-1", zoneId: "brgy4", status: "RUNNING", notes: "Strong flow at Purok 1", timestamp: now - 45 * 60000 },
-        { id: "seed-z4-2", zoneId: "brgy4", status: "RUNNING", notes: "Purok 2 tap running", timestamp: now - 30 * 60000 },
-        { id: "seed-z4-3", zoneId: "brgy4", status: "RUNNING", notes: "Good pressure for filling drums", timestamp: now - 20 * 60000 },
-        { id: "seed-z4-4", zoneId: "brgy4", status: "LOW_PRESSURE", notes: "Pressure dropped slightly at upper road", timestamp: now - 12 * 60000 },
-        { id: "seed-z1-1", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Trickle flow observed", timestamp: now - 25 * 60000 },
-        { id: "seed-z1-2", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Low pressure line", timestamp: now - 15 * 60000 },
-        { id: "seed-z7-1", zoneId: "brgy7", status: "DRY", notes: "No supply yet", timestamp: now - 50 * 60000 },
-        { id: "seed-z7-2", zoneId: "brgy7", status: "DRY", notes: "Main line dry", timestamp: now - 10 * 60000 }
-      ];
-
-      sample.forEach(s => {
-        reports = reports.filter(r => r.id !== s.id);
-        reports.unshift(s);
-      });
-
-      updateConsensusCard();
-      showToast('Sample community reports loaded for live demo');
     });
 
     // Initialize Calendar
