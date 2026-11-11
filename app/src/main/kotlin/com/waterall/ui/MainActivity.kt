@@ -130,6 +130,10 @@ class MainActivity : AppCompatActivity() {
         binding.tvNavCalendar.setTextColor(if (tab == Tab.CALENDAR) activeColor else inactiveColor)
         binding.tvNavReserves.setTextColor(if (tab == Tab.RESERVES) activeColor else inactiveColor)
         binding.tvNavReport.setTextColor(if (tab == Tab.REPORT) activeColor else inactiveColor)
+
+        binding.ivNavCalendar.setColorFilter(if (tab == Tab.CALENDAR) activeColor else inactiveColor)
+        binding.ivNavReserves.setColorFilter(if (tab == Tab.RESERVES) activeColor else inactiveColor)
+        binding.ivNavReport.setColorFilter(if (tab == Tab.REPORT) activeColor else inactiveColor)
     }
 
     private fun observeViewModelState() {

@@ -401,7 +401,7 @@ class MainViewModelTest {
         }
 
         runBlocking {
-            val job = launch {
+            val job = launch(kotlinx.coroutines.Dispatchers.Unconfined) {
                 combinedFlow.collect {}
             }
             delay(50)

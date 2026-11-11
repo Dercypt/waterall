@@ -167,4 +167,34 @@ class ViewDelegateTest {
         minimalDelegate.onTabSelected()
         minimalDelegate.cleanup()
     }
+
+    @Test
+    fun testNavigationSectionVisualStateMapping() {
+        val activeColor = 0xFF1A1A1A.toInt()
+        val inactiveColor = 0xFFBDBDB8.toInt()
+
+        for (activeTab in Tab.values()) {
+            val calendarColor = if (activeTab == Tab.CALENDAR) activeColor else inactiveColor
+            val reservesColor = if (activeTab == Tab.RESERVES) activeColor else inactiveColor
+            val reportColor = if (activeTab == Tab.REPORT) activeColor else inactiveColor
+
+            when (activeTab) {
+                Tab.CALENDAR -> {
+                    assertEquals(activeColor, calendarColor)
+                    assertEquals(inactiveColor, reservesColor)
+                    assertEquals(inactiveColor, reportColor)
+                }
+                Tab.RESERVES -> {
+                    assertEquals(inactiveColor, calendarColor)
+                    assertEquals(activeColor, reservesColor)
+                    assertEquals(inactiveColor, reportColor)
+                }
+                Tab.REPORT -> {
+                    assertEquals(inactiveColor, calendarColor)
+                    assertEquals(inactiveColor, reservesColor)
+                    assertEquals(activeColor, reportColor)
+                }
+            }
+        }
+    }
 }

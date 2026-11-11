@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -984,7 +985,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:orientation="horizontal"
         android:background="@color/paper"
         android:gravity="center_vertical">
@@ -1000,11 +1001,20 @@
             android:clickable="true"
             android:focusable="true">
 
+            <ImageView
+                android:id="@+id/ivNavCalendar"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_nav_calendar"
+                android:contentDescription="@string/tab_calendar"
+                app:tint="@color/ink" />
+
             <TextView
                 android:id="@+id/tvNavCalendar"
                 style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
                 android:text="@string/tab_calendar"
                 android:textColor="@color/ink" />
         </LinearLayout>
@@ -1020,11 +1030,20 @@
             android:clickable="true"
             android:focusable="true">
 
+            <ImageView
+                android:id="@+id/ivNavReserves"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_nav_reserves"
+                android:contentDescription="@string/tab_reserves"
+                app:tint="@color/ink_faint" />
+
             <TextView
                 android:id="@+id/tvNavReserves"
                 style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
                 android:text="@string/tab_reserves"
                 android:textColor="@color/ink_faint" />
         </LinearLayout>
@@ -1040,11 +1059,20 @@
             android:clickable="true"
             android:focusable="true">
 
+            <ImageView
+                android:id="@+id/ivNavReport"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/ic_nav_report"
+                android:contentDescription="@string/tab_report"
+                app:tint="@color/ink_faint" />
+
             <TextView
                 android:id="@+id/tvNavReport"
                 style="@style/Waterall.Nav"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
                 android:text="@string/tab_report"
                 android:textColor="@color/ink_faint" />
         </LinearLayout>
