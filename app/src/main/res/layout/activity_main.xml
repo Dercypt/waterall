@@ -111,7 +111,7 @@
 
                         <TextView
                             android:id="@+id/tvFlowBadge"
-                            style="@style/Waterall.Label"
+                            style="@style/Waterall.SectionTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
@@ -143,11 +143,11 @@
 
                 <!-- Schedule -->
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upcoming schedule"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
                     android:id="@+id/layoutScheduleContainer"
@@ -167,7 +167,7 @@
 
                 <!-- Community consensus -->
                 <TextView
-                    style="@style/Waterall.Label"
+                    style="@style/Waterall.SectionTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Community reports"
