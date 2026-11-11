@@ -292,7 +292,75 @@
 
       <!-- ================= 3. REPORT / CROWDSOURCE VIEW ================= -->
       <article id="view-report" class="space-y-6 hidden">
-        <div class="text-xs text-ink-muted">Report view initializing...</div>
+        <!-- Your Zone -->
+        <div>
+          <h2 class="section-title mb-1">Your zone</h2>
+          <div id="report-zone-name" class="text-[18px] font-semibold text-ink">Zone 4 — Brgy. San Isidro</div>
+        </div>
+
+        <!-- Water at Your Tap (Law 4 Closed States) -->
+        <div class="pt-2">
+          <h2 class="section-title mb-3">Water at your tap</h2>
+          <div class="space-y-2.5" id="radio-group-water-status">
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="RUNNING" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Running</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Continuous pressurized flow</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-ok)]"></span>
+            </label>
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="LOW_PRESSURE" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Low pressure</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Trickle flow or sputtering</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-warn)]"></span>
+            </label>
+
+            <label class="radio-status-card flex items-center justify-between p-4 bg-surface border-2 border-hairline rounded-2xl cursor-pointer hover:border-stone-400 transition select-none shadow-xs">
+              <div class="flex items-center gap-3">
+                <input type="radio" name="tap-status" value="DRY" class="sr-only">
+                <div class="radio-indicator w-4 h-4 rounded-full border-2 border-stone-300 flex items-center justify-center transition">
+                  <div class="radio-dot w-2 h-2 rounded-full bg-stone-900 hidden"></div>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-ink leading-tight">Dry</div>
+                  <div class="text-xs text-ink-muted mt-0.5">Completely no water supply</div>
+                </div>
+              </div>
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--status-alert)]"></span>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Note (Optional) -->
+        <div>
+          <h2 class="section-title mb-2">Note (optional)</h2>
+          <textarea id="report-notes" rows="2" placeholder="Pressure dropped around 7:15 AM" class="w-full bg-surface border border-hairline rounded-2xl px-4 py-3 text-sm text-ink placeholder-ink-faint focus:outline-none focus:border-stone-400 shadow-xs resize-none"></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button id="btn-submit-report" class="w-full bg-stone-900 hover:bg-stone-800 text-white font-semibold py-3.5 rounded-2xl text-sm transition shadow-md active:scale-[0.99] cursor-pointer">
+            Submit report
+          </button>
+          <p class="text-[11px] text-ink-faint text-center mt-3">Reports help refine distribution estimates for your zone.</p>
+        </div>
       </article>
 
     </section>
@@ -379,6 +447,14 @@
         updateConsensusCard();
       } else {
         backBtn.classList.remove('hidden');
+      }
+
+      if (tab === 'report') {
+        document.getElementById('report-zone-name').textContent = currentZone.name;
+      } else if (tab === 'reserves') {
+        if (customSupplyHours === null && (!inputSupplyHours.value || inputSupplyHours.value === "")) {
+          autoPopulateScheduleHours();
+        }
       }
     }
 
@@ -904,6 +980,166 @@
 
     // Auto-populate supply hours upon start
     autoPopulateScheduleHours();
+
+    // ==========================================
+    // REPORT VIEW CONTROLLER (Law 4)
+    // ==========================================
+    const reportZoneName = document.getElementById('report-zone-name');
+    const radioStatusCards = document.querySelectorAll('.radio-status-card');
+    const btnSubmitReport = document.getElementById('btn-submit-report');
+    const reportNotes = document.getElementById('report-notes');
+
+    radioStatusCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const input = card.querySelector('input[type="radio"]');
+        input.checked = true;
+
+        radioStatusCards.forEach(c => {
+          c.classList.remove('border-stone-900', 'bg-stone-50/50');
+          c.classList.add('border-hairline');
+          c.querySelector('.radio-dot').classList.add('hidden');
+          c.querySelector('.radio-indicator').classList.remove('border-stone-900');
+        });
+
+        card.classList.remove('border-hairline');
+        card.classList.add('border-stone-900', 'bg-stone-50/50');
+        card.querySelector('.radio-dot').classList.remove('hidden');
+        card.querySelector('.radio-indicator').classList.add('border-stone-900');
+      });
+    });
+
+    btnSubmitReport.addEventListener('click', () => {
+      const selected = document.querySelector('input[name="tap-status"]:checked');
+      if (!selected) {
+        showToast('Select the water status at your tap.');
+        return;
+      }
+
+      const status = selected.value;
+      const notes = reportNotes.value.trim();
+      const report = {
+        id: `rep_${Date.now()}`,
+        zoneId: currentZone.id,
+        zoneName: currentZone.name,
+        status: status,
+        notes: notes,
+        timestamp: Date.now()
+      };
+
+      reports.unshift(report);
+      savePreferences();
+
+      showToast(`Report submitted for ${currentZone.name}`);
+
+      const statusLabel = status === 'RUNNING' ? 'Running' : status === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry';
+      const ackBanner = document.getElementById('consensus-acknowledgment');
+      ackBanner.textContent = `Report recorded: ${statusLabel}. Status refreshed.`;
+      ackBanner.classList.remove('hidden');
+
+      // Reset form
+      reportNotes.value = '';
+      selected.checked = false;
+      radioStatusCards.forEach(c => {
+        c.classList.remove('border-stone-900', 'bg-stone-50/50');
+        c.classList.add('border-hairline');
+        c.querySelector('.radio-dot').classList.add('hidden');
+        c.querySelector('.radio-indicator').classList.remove('border-stone-900');
+      });
+
+      updateConsensusCard();
+
+      setTimeout(() => {
+        switchTab('calendar');
+      }, 350);
+    });
+
+    // ==========================================
+    // PREFERENCE PERSISTENCE (LocalStorage)
+    // ==========================================
+    const STORAGE_KEY = 'waterall_hydrotrack_state';
+
+    function savePreferences() {
+      try {
+        const state = {
+          selectedZoneId: currentZone.id,
+          drums200L,
+          tanks1000L,
+          gallons20L,
+          fillPercentage,
+          dailyConsumption,
+          reports: reports.slice(0, 50)
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        // LocalStorage may fail in restricted sandbox environments
+      }
+    }
+
+    function loadPreferences() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (!saved) return;
+        const state = JSON.parse(saved);
+
+        if (state.selectedZoneId) {
+          const found = ZONES.find(z => z.id === state.selectedZoneId);
+          if (found) {
+            currentZone = found;
+            zoneSelector.value = found.id;
+          }
+        }
+
+        if (state.drums200L !== undefined) {
+          drums200L = state.drums200L;
+          inputDrums.value = drums200L;
+        }
+        if (state.tanks1000L !== undefined) {
+          tanks1000L = state.tanks1000L;
+          inputTanks.value = tanks1000L;
+        }
+        if (state.gallons20L !== undefined) {
+          gallons20L = state.gallons20L;
+          inputGallons.value = gallons20L;
+        }
+        if (state.dailyConsumption !== undefined) {
+          dailyConsumption = state.dailyConsumption;
+          inputDailyConsumption.value = dailyConsumption;
+        }
+        if (state.fillPercentage !== undefined) {
+          fillPercentage = state.fillPercentage;
+          const targetBtn = Array.from(btnFillList).find(b => parseInt(b.getAttribute('data-fill'), 10) === fillPercentage);
+          if (targetBtn) {
+            btnFillList.forEach(b => b.className = "btn-fill py-2 rounded-xl text-ink-soft hover:text-ink transition cursor-pointer");
+            targetBtn.className = "btn-fill py-2 rounded-xl bg-accent text-white shadow-xs transition cursor-pointer";
+          }
+          fillPercentageDisplay.textContent = fillLabels[fillPercentage] || `${fillPercentage}%`;
+          fillHint.textContent = fillHints[fillPercentage] || "";
+        }
+        if (Array.isArray(state.reports) && state.reports.length > 0) {
+          reports = state.reports;
+        }
+
+        renderScheduleCards();
+        startLiveCountdown();
+        updateConsensusCard();
+        autoPopulateScheduleHours();
+      } catch (e) {
+        // Ignore corrupted storage
+      }
+    }
+
+    // Save inputs on change
+    [inputDrums, inputTanks, inputGallons, inputDailyConsumption].forEach(input => {
+      input.addEventListener('change', savePreferences);
+    });
+    btnFillList.forEach(btn => {
+      btn.addEventListener('click', savePreferences);
+    });
+    zoneSelector.addEventListener('change', savePreferences);
+
+    // Load saved preferences if available
+    loadPreferences();
+
 
 
   </script>
