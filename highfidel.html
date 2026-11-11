@@ -100,7 +100,65 @@
 
       <!-- ================= 1. CALENDAR VIEW ================= -->
       <article id="view-calendar" class="space-y-6">
-        <div class="text-xs text-ink-muted">Calendar view initializing...</div>
+        <!-- Zone Selector -->
+        <div>
+          <label class="waterall-label block mb-1">Zone</label>
+          <div class="relative">
+            <select id="zone-selector" class="w-full bg-transparent font-medium text-ink text-sm py-2.5 pr-8 focus:outline-none cursor-pointer appearance-none border-b border-hairline">
+              <option value="brgy4">Zone 4 — Brgy. San Isidro</option>
+              <option value="brgy1">Zone 1 — Brgy. Cabinet Hill</option>
+              <option value="brgy7">Zone 7 — Brgy. Trancoville</option>
+            </select>
+            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-ink-muted">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flow Status Banner & Live Countdown -->
+        <div class="pt-6 pb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span id="flow-pulse-dot" class="w-2 h-2 rounded-full bg-[var(--status-ok)] transition-colors"></span>
+            <span id="flow-badge" class="section-title !text-[12px] text-status-ok">Flow active</span>
+          </div>
+          <div id="countdown-timer" class="text-[54px] sm:text-[60px] font-extralight tracking-[-0.02em] text-ink font-mono tnum leading-none my-1">02:47:13</div>
+          <p id="countdown-subtext" class="text-xs text-ink-muted mt-2">Remaining supply window time</p>
+        </div>
+
+        <!-- Upcoming Schedule Section -->
+        <div>
+          <h2 class="section-title mb-2">Upcoming schedule</h2>
+          <div id="schedule-container" class="bg-surface rounded-2xl border border-hairline p-1 shadow-xs divide-y divide-hairline">
+            <!-- Schedule cards injected dynamically -->
+          </div>
+          <div id="no-schedule-msg" class="hidden text-xs text-ink-muted py-3">No scheduled supply windows</div>
+        </div>
+
+        <!-- Community Reports & Consensus Section -->
+        <div class="pt-3">
+          <h2 class="section-title mb-3">Community reports</h2>
+          <div id="consensus-card" class="bg-surface border border-hairline rounded-2xl p-5 shadow-xs">
+            <div class="flex items-center justify-between mb-3">
+              <span id="consensus-badge" class="waterall-label text-ink-muted">No reports</span>
+              <span id="consensus-timestamp" class="text-xs text-ink-muted">Today</span>
+            </div>
+
+            <div id="consensus-summary" class="text-[15px] font-medium text-ink leading-snug mb-1.5">No verified reports today</div>
+            <div id="consensus-details" class="text-xs text-ink-muted leading-relaxed mb-4">Be the first to report for this zone.</div>
+
+            <!-- Report submission acknowledgment message banner -->
+            <div id="consensus-acknowledgment" class="hidden bg-status-ok-wash text-status-ok text-xs rounded-xl p-3 mb-4 border border-[#D5E4D5]">
+              Report recorded: Running. Status refreshed.
+            </div>
+
+            <button id="btn-quick-report" class="w-full border border-stone-300 hover:border-stone-400 rounded-xl py-2.5 text-xs font-semibold text-ink hover:bg-stone-50 transition cursor-pointer mb-2">
+              Report tap status
+            </button>
+            <button id="btn-load-sample-reports" class="w-full border border-stone-200 hover:border-stone-300 rounded-xl py-2.5 text-xs font-medium text-ink-muted hover:text-ink hover:bg-stone-50 transition cursor-pointer">
+              Load sample community reports
+            </button>
+          </div>
+        </div>
       </article>
 
       <!-- ================= 2. RESERVES VIEW (SDG 6 Exclusive Feature) ================= -->
@@ -180,6 +238,7 @@
       screenTitle.textContent = titles[tab];
       if (tab === 'calendar') {
         backBtn.classList.add('hidden');
+        updateConsensusCard();
       } else {
         backBtn.classList.remove('hidden');
       }
@@ -203,6 +262,264 @@
         toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-3');
       }, 2600);
     }
+
+    // ==========================================
+    // DOMAIN MODELS & DATA DEFINITIONS
+    // ==========================================
+    const ZONES = [
+      {
+        id: "brgy4",
+        name: "Zone 4 — Brgy. San Isidro",
+        schedules: [
+          { day: "Monday", dayShort: "Mon", badge: "M", dayNum: 1, startH: 6, startM: 0, endH: 10, endM: 0, timeRange: "06:00 AM – 10:00 AM" },
+          { day: "Wednesday", dayShort: "Wed", badge: "W", dayNum: 3, startH: 5, startM: 0, endH: 9, endM: 0, timeRange: "05:00 AM – 09:00 AM" },
+          { day: "Friday", dayShort: "Fri", badge: "F", dayNum: 5, startH: 6, startM: 0, endH: 11, endM: 0, timeRange: "06:00 AM – 11:00 AM" }
+        ]
+      },
+      {
+        id: "brgy1",
+        name: "Zone 1 — Brgy. Cabinet Hill",
+        schedules: [
+          { day: "Tuesday", dayShort: "Tue", badge: "T", dayNum: 2, startH: 5, startM: 30, endH: 9, endM: 30, timeRange: "05:30 AM – 09:30 AM" },
+          { day: "Thursday", dayShort: "Thu", badge: "T", dayNum: 4, startH: 5, startM: 30, endH: 9, endM: 30, timeRange: "05:30 AM – 09:30 AM" },
+          { day: "Saturday", dayShort: "Sat", badge: "S", dayNum: 6, startH: 6, startM: 0, endH: 12, endM: 0, timeRange: "06:00 AM – 12:00 PM" }
+        ]
+      },
+      {
+        id: "brgy7",
+        name: "Zone 7 — Brgy. Trancoville",
+        schedules: [
+          { day: "Wednesday", dayShort: "Wed", badge: "W", dayNum: 3, startH: 6, startM: 0, endH: 10, endM: 30, timeRange: "06:00 AM – 10:30 AM" },
+          { day: "Saturday", dayShort: "Sat", badge: "S", dayNum: 6, startH: 5, startM: 0, endH: 10, endM: 0, timeRange: "05:00 AM – 10:00 AM" }
+        ]
+      }
+    ];
+
+    let currentZone = ZONES[0];
+    let reports = [];
+
+    // ==========================================
+    // CALENDAR VIEW & COUNTDOWN ENGINE (Law 2)
+    // ==========================================
+    const zoneSelector = document.getElementById('zone-selector');
+    const flowPulseDot = document.getElementById('flow-pulse-dot');
+    const flowBadge = document.getElementById('flow-badge');
+    const countdownTimer = document.getElementById('countdown-timer');
+    const countdownSubtext = document.getElementById('countdown-subtext');
+    const scheduleContainer = document.getElementById('schedule-container');
+    const noScheduleMsg = document.getElementById('no-schedule-msg');
+    const btnQuickReport = document.getElementById('btn-quick-report');
+    const btnLoadSampleReports = document.getElementById('btn-load-sample-reports');
+
+    let countdownInterval = null;
+
+    function renderScheduleCards() {
+      scheduleContainer.innerHTML = '';
+      if (!currentZone.schedules || currentZone.schedules.length === 0) {
+        noScheduleMsg.classList.remove('hidden');
+        return;
+      }
+      noScheduleMsg.classList.add('hidden');
+
+      currentZone.schedules.forEach(schedule => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-3.5 hover:bg-stone-50/50 transition';
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-accent-wash text-accent flex items-center justify-center text-xs font-semibold">${schedule.badge}</span>
+            <span class="font-medium text-ink text-sm">${schedule.dayShort}</span>
+          </div>
+          <span class="text-xs text-ink-muted">${schedule.timeRange}</span>
+        `;
+        scheduleContainer.appendChild(item);
+      });
+    }
+
+    function calculateCountdown() {
+      const now = new Date();
+      // JavaScript Day: 0=Sun, 1=Mon, ..., 6=Sat
+      const currentDay = now.getDay() === 0 ? 7 : now.getDay();
+      const currentMins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+      let flowActive = false;
+      let targetSeconds = 0;
+      let hoursUntilNextOpening = 0;
+
+      // Check if inside any window today
+      const todaySchedule = currentZone.schedules.find(s => s.dayNum === currentDay);
+      if (todaySchedule) {
+        const startMins = todaySchedule.startH * 60 + todaySchedule.startM;
+        const endMins = todaySchedule.endH * 60 + todaySchedule.endM;
+        if (currentMins >= startMins && currentMins < endMins) {
+          flowActive = true;
+          targetSeconds = Math.max(0, Math.floor((endMins - currentMins) * 60));
+          hoursUntilNextOpening = 0.0;
+        }
+      }
+
+      // If not active, find nearest upcoming window
+      if (!flowActive) {
+        let minDiffMins = Infinity;
+        currentZone.schedules.forEach(s => {
+          let dayDiff = s.dayNum - currentDay;
+          let windowStartMins = s.startH * 60 + s.startM;
+          if (dayDiff < 0 || (dayDiff === 0 && currentMins >= windowStartMins)) {
+            dayDiff += 7;
+          }
+          const totalDiffMins = dayDiff * 24 * 60 + (windowStartMins - currentMins);
+          if (totalDiffMins < minDiffMins) {
+            minDiffMins = totalDiffMins;
+          }
+        });
+
+        if (minDiffMins !== Infinity) {
+          targetSeconds = Math.max(0, Math.floor(minDiffMins * 60));
+          hoursUntilNextOpening = minDiffMins / 60;
+        } else {
+          targetSeconds = 0;
+          hoursUntilNextOpening = 0;
+        }
+      }
+
+      return {
+        flowActive,
+        remainingSeconds: targetSeconds,
+        hoursUntilNextOpening
+      };
+    }
+
+    function startLiveCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      function tick() {
+        const calc = calculateCountdown();
+        if (calc.flowActive) {
+          flowPulseDot.className = "w-2 h-2 rounded-full bg-[var(--status-ok)] animate-pulse";
+          flowBadge.textContent = "Flow active";
+          flowBadge.className = "section-title !text-[12px] text-status-ok";
+          countdownSubtext.textContent = "Remaining supply window time";
+        } else {
+          flowPulseDot.className = "w-2 h-2 rounded-full bg-[var(--status-warn)]";
+          flowBadge.textContent = "Rationing";
+          flowBadge.className = "section-title !text-[12px] text-status-warn";
+          countdownSubtext.textContent = "Time until next supply window";
+        }
+
+        const hrs = String(Math.floor(calc.remainingSeconds / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((calc.remainingSeconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(calc.remainingSeconds % 60).padStart(2, '0');
+        countdownTimer.textContent = `${hrs}:${mins}:${secs}`;
+      }
+
+      tick();
+      countdownInterval = setInterval(tick, 1000);
+    }
+
+    // Community Consensus Engine (Law 4)
+    function updateConsensusCard() {
+      const zoneReports = reports.filter(r => r.zoneId === currentZone.id);
+      const consensusBadge = document.getElementById('consensus-badge');
+      const consensusTimestamp = document.getElementById('consensus-timestamp');
+      const consensusSummary = document.getElementById('consensus-summary');
+      const consensusDetails = document.getElementById('consensus-details');
+
+      const shortZoneName = currentZone.name.split('—')[0].trim();
+
+      if (zoneReports.length === 0) {
+        consensusBadge.textContent = "No reports";
+        consensusBadge.className = "waterall-label text-ink-muted";
+        consensusTimestamp.textContent = "Today";
+        consensusSummary.textContent = `${shortZoneName}: No verified reports today`;
+        consensusDetails.textContent = "Be the first to report for this zone.";
+        return;
+      }
+
+      const counts = { RUNNING: 0, LOW_PRESSURE: 0, DRY: 0 };
+      zoneReports.forEach(r => counts[r.status] = (counts[r.status] || 0) + 1);
+
+      const dominant = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+      const dominantStatus = dominant[0];
+      const dominantPct = Math.round((dominant[1] / zoneReports.length) * 100);
+
+      const labelMap = { RUNNING: "RUNNING", LOW_PRESSURE: "LOW PRESSURE", DRY: "DRY" };
+      const colorMap = { RUNNING: "text-status-ok", LOW_PRESSURE: "text-status-warn", DRY: "text-status-alert" };
+
+      consensusBadge.textContent = `${dominantPct}% ${labelMap[dominantStatus]}`;
+      consensusBadge.className = `waterall-label font-bold ${colorMap[dominantStatus]}`;
+
+      const latest = zoneReports[0];
+      const relativeTime = getRelativeTime(latest.timestamp);
+      consensusTimestamp.textContent = relativeTime;
+
+      const reportPlural = zoneReports.length === 1 ? "report" : "reports";
+      const breakdown = Object.entries(counts)
+        .filter(([_, cnt]) => cnt > 0)
+        .map(([st, cnt]) => `${Math.round((cnt / zoneReports.length) * 100)}% ${st === 'RUNNING' ? 'Running' : st === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry'}`)
+        .join(', ');
+
+      consensusSummary.textContent = `${shortZoneName}: ${zoneReports.length} verified ${reportPlural} today — ${breakdown}`;
+      const notesPart = latest.notes ? ` ("${latest.notes}")` : "";
+      const latestLabel = latest.status === 'RUNNING' ? 'Running' : latest.status === 'LOW_PRESSURE' ? 'Low pressure' : 'Dry';
+      consensusDetails.textContent = `Latest: ${latestLabel}${notesPart} · ${relativeTime}`;
+    }
+
+    function getRelativeTime(timestamp) {
+      const diffMs = Date.now() - timestamp;
+      const mins = Math.floor(diffMs / 60000);
+      if (mins < 1) return "Just now";
+      if (mins === 1) return "1m ago";
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs === 1) return "1h ago";
+      return `${hrs}h ago`;
+    }
+
+    // Zone change listener
+    zoneSelector.addEventListener('change', (e) => {
+      const selected = ZONES.find(z => z.id === e.target.value);
+      if (selected) {
+        currentZone = selected;
+        renderScheduleCards();
+        startLiveCountdown();
+        updateConsensusCard();
+        document.getElementById('consensus-acknowledgment').classList.add('hidden');
+        if (typeof autoPopulateScheduleHours === 'function') {
+          autoPopulateScheduleHours();
+        }
+      }
+    });
+
+    btnQuickReport.addEventListener('click', () => {
+      switchTab('report');
+    });
+
+    btnLoadSampleReports.addEventListener('click', () => {
+      const now = Date.now();
+      const sample = [
+        { id: "seed-z4-1", zoneId: "brgy4", status: "RUNNING", notes: "Strong flow at Purok 1", timestamp: now - 45 * 60000 },
+        { id: "seed-z4-2", zoneId: "brgy4", status: "RUNNING", notes: "Purok 2 tap running", timestamp: now - 30 * 60000 },
+        { id: "seed-z4-3", zoneId: "brgy4", status: "RUNNING", notes: "Good pressure for filling drums", timestamp: now - 20 * 60000 },
+        { id: "seed-z4-4", zoneId: "brgy4", status: "LOW_PRESSURE", notes: "Pressure dropped slightly at upper road", timestamp: now - 12 * 60000 },
+        { id: "seed-z1-1", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Trickle flow observed", timestamp: now - 25 * 60000 },
+        { id: "seed-z1-2", zoneId: "brgy1", status: "LOW_PRESSURE", notes: "Low pressure line", timestamp: now - 15 * 60000 },
+        { id: "seed-z7-1", zoneId: "brgy7", status: "DRY", notes: "No supply yet", timestamp: now - 50 * 60000 },
+        { id: "seed-z7-2", zoneId: "brgy7", status: "DRY", notes: "Main line dry", timestamp: now - 10 * 60000 }
+      ];
+
+      sample.forEach(s => {
+        reports = reports.filter(r => r.id !== s.id);
+        reports.unshift(s);
+      });
+
+      updateConsensusCard();
+      showToast('Sample community reports loaded for live demo');
+    });
+
+    // Initialize Calendar
+    renderScheduleCards();
+    startLiveCountdown();
+    updateConsensusCard();
+
   </script>
 </body>
 </html>
