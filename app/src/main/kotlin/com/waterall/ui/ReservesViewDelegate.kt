@@ -1,6 +1,10 @@
 package com.waterall.ui
 
+import android.content.Context
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
@@ -101,6 +105,10 @@ class ReservesViewDelegate(
                 binding.tvScheduleSyncStatus.text = "Manual override"
             }
         }
+
+        // Configure cursor dismissal upon entering on keyboard for daily use and supply hours
+        setupCursorDismissOnEnter(binding.etDailyConsumption)
+        setupCursorDismissOnEnter(binding.etHoursUntilNextSupply)
 
         // Sync with Schedule Countdown button
         binding.btnSyncScheduleHours.setOnClickListener {
@@ -414,5 +422,50 @@ class ReservesViewDelegate(
         persistContainerCounts()
         userPreferences.fillPercentage = viewModel.selectedFillPercentage.value
         userPreferences.dailyConsumption = viewModel.dailyConsumption.value
+    }
+
+    private fun setupCursorDismissOnEnter(editText: EditText) {
+        editText.imeOptions = EditorInfo.IME_ACTION_DONE
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            editText.isCursorVisible = hasFocus
+        }
+        editText.setOnClickListener {
+            editText.isCursorVisible = true
+        }
+        editText.setOnEditorActionListener { _, actionId, event ->
+            if (InputSyncHelper.isEnterOrDoneAction(
+                    actionId = actionId,
+                    keyCode = event?.keyCode,
+                    keyAction = event?.action
+                )
+            ) {
+                dismissInputCursor(editText)
+                true
+            } else {
+                false
+            }
+        }
+        editText.setOnKeyListener { _, keyCode, event ->
+            if (InputSyncHelper.isEnterOrDoneAction(
+                    actionId = 0,
+                    keyCode = keyCode,
+                    keyAction = event.action
+                )
+            ) {
+                dismissInputCursor(editText)
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun dismissInputCursor(editText: EditText) {
+        editText.isCursorVisible = false
+        editText.clearFocus()
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(editText.windowToken, 0)
+        binding.viewReserves.isFocusableInTouchMode = true
+        binding.viewReserves.requestFocus()
     }
 }
