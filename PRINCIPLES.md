@@ -42,3 +42,4 @@ Any developer or agent encountering the following situations must halt, report, 
 4. **Input Synchronization & Cursor Preservation:**
    - Any programmatically updated `EditText` (e.g., from StateFlow collectors or stepper buttons) must use `InputSyncHelper.shouldUpdateContainerCount`, `InputSyncHelper.shouldUpdateConsumption`, or `InputSyncHelper.shouldUpdateSupplyHours` to avoid overwriting user edits or backspaced blank states.
    - Always append `editText.setSelection(editText.text.length)` after `setText` calls so that the cursor stays anchored at the end of the input instead of jumping to index 0.
+   - For numeric inputs with keyboard submission (e.g., Daily Use and Hours to Next Supply), dismiss the blinking cursor, clear focus, and hide the soft input upon keyboard Enter or IME Done action (using `InputSyncHelper.isEnterOrDoneAction`). Restore cursor visibility dynamically when the field is clicked or regains focus.
