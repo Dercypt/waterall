@@ -200,11 +200,14 @@ class ViewDelegateTest {
 
     @Test
     fun testScreenSectionTitleCatalog() {
-        val calendarSections = listOf("RATIONING", "UPCOMING SCHEDULE", "COMMUNITY REPORTS")
+        val calendarSections = listOf("ZONE", "UPCOMING SCHEDULE", "COMMUNITY REPORTS")
         val reservesSections = listOf("STORAGE", "FILL LEVEL", "DAILY USE", "HOURS TO NEXT SUPPLY", "SURPLUS")
         val reportSections = listOf("YOUR ZONE", "WATER AT YOUR TAP", "NOTE")
 
         assertEquals(3, calendarSections.size)
+        assertTrue(calendarSections.contains("ZONE"))
+        assertTrue(calendarSections.contains("UPCOMING SCHEDULE"))
+        assertTrue(calendarSections.contains("COMMUNITY REPORTS"))
         assertEquals(5, reservesSections.size)
         assertEquals(3, reportSections.size)
     }
