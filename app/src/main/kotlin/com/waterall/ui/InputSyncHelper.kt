@@ -109,4 +109,22 @@ object InputSyncHelper {
         }
         return false
     }
+
+    /**
+     * Determines whether an editor action or key event represents an Enter keypress or Done action,
+     * signaling that the soft keyboard and blinking cursor should be dismissed.
+     */
+    fun isEnterOrDoneAction(
+        actionId: Int,
+        keyCode: Int? = null,
+        keyAction: Int? = null
+    ): Boolean {
+        // Standard IME actions (DONE = 6, GO = 2, NEXT = 5, SEARCH = 3, SEND = 4)
+        val isDoneImeAction = actionId in listOf(6, 2, 3, 4, 5)
+        // Standard keyboard Enter (66) and Numpad Enter (160)
+        val isEnterKey = keyCode == 66 || keyCode == 160
+        // Trigger on ACTION_DOWN (0) or unspecified/null action
+        val isDownOrUnspecified = keyAction == null || keyAction == 0
+        return isDoneImeAction || (isEnterKey && isDownOrUnspecified)
+    }
 }
