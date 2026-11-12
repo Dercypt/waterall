@@ -946,6 +946,7 @@
                     android:paddingTop="10dp"
                     android:paddingBottom="10dp"
                     android:inputType="textMultiLine|textCapSentences"
+                    android:imeOptions="actionDone"
                     android:hint="Pressure dropped around 7:15 AM"
                     android:textSize="14sp"
                     android:importantForAutofill="no"
