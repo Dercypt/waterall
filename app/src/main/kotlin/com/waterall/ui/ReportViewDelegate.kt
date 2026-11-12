@@ -1,6 +1,11 @@
 package com.waterall.ui
 
+import android.content.Context
+import android.view.KeyEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.waterall.R
@@ -28,6 +33,9 @@ class ReportViewDelegate(
 
     override fun setup() {
         binding.tvReportZoneName.text = viewModel.selectedZone.value.name
+
+        // Configure cursor dismissal upon entering on keyboard for report note input
+        setupCursorDismissOnEnter(binding.etReportNotes)
 
         binding.btnSubmitReport.setOnClickListener {
             val selectedRadioId = binding.rgWaterStatus.checkedRadioButtonId
@@ -74,6 +82,7 @@ class ReportViewDelegate(
 
             binding.etReportNotes.setText("")
             binding.rgWaterStatus.clearCheck()
+            dismissInputCursor(binding.etReportNotes)
 
             onReportSubmitted(report)
         }
@@ -93,5 +102,50 @@ class ReportViewDelegate(
 
     override fun onTabSelected() {
         binding.tvReportZoneName.text = viewModel.selectedZone.value.name
+    }
+
+    private fun setupCursorDismissOnEnter(editText: EditText) {
+        editText.imeOptions = EditorInfo.IME_ACTION_DONE
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            editText.isCursorVisible = hasFocus
+        }
+        editText.setOnClickListener {
+            editText.isCursorVisible = true
+        }
+        editText.setOnEditorActionListener { _, actionId, event ->
+            if (InputSyncHelper.isEnterOrDoneAction(
+                    actionId = actionId,
+                    keyCode = event?.keyCode,
+                    keyAction = event?.action
+                )
+            ) {
+                dismissInputCursor(editText)
+                true
+            } else {
+                false
+            }
+        }
+        editText.setOnKeyListener { _, keyCode, event ->
+            if (InputSyncHelper.isEnterOrDoneAction(
+                    actionId = 0,
+                    keyCode = keyCode,
+                    keyAction = event.action
+                )
+            ) {
+                dismissInputCursor(editText)
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun dismissInputCursor(editText: EditText) {
+        editText.isCursorVisible = false
+        editText.clearFocus()
+        val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(editText.windowToken, 0)
+        binding.viewReport.isFocusableInTouchMode = true
+        binding.viewReport.requestFocus()
     }
 }
