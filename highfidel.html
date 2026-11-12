@@ -1129,6 +1129,13 @@
     const btnSubmitReport = document.getElementById('btn-submit-report');
     const reportNotes = document.getElementById('report-notes');
 
+    reportNotes.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        reportNotes.blur();
+      }
+    });
+
     radioStatusCards.forEach(card => {
       card.addEventListener('click', () => {
         const input = card.querySelector('input[type="radio"]');
