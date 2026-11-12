@@ -328,4 +328,16 @@ class InputSyncHelperTest {
         assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 29, keyAction = 0))
         assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 67, keyAction = 0))
     }
+
+    @Test
+    fun testIsEnterOrDoneActionForReportNotesSubmission() {
+        // When typing in Note (optional) in Report screen, keyboard Done action (6) or Enter key (66) triggers dismiss
+        assertTrue("IME Done action on notes should dismiss cursor", InputSyncHelper.isEnterOrDoneAction(actionId = 6))
+        assertTrue("Hardware Enter on notes should dismiss cursor", InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 66, keyAction = 0))
+        assertTrue("Numpad Enter on notes should dismiss cursor", InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 160, keyAction = 0))
+
+        // Normal typing keys (e.g., Space = 62, Tab = 61, letters) must not trigger cursor dismissal
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 62, keyAction = 0))
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 61, keyAction = 0))
+    }
 }
