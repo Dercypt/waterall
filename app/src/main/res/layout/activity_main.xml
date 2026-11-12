@@ -631,6 +631,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:inputType="numberDecimal"
+                    android:imeOptions="actionDone"
                     android:text="0"
                     android:importantForAutofill="no" />
 
@@ -686,6 +687,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
                     android:inputType="numberDecimal"
+                    android:imeOptions="actionDone"
                     android:hint="Auto-calculated from schedule"
                     android:importantForAutofill="no" />
 

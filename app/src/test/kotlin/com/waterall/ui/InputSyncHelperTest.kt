@@ -295,4 +295,37 @@ class InputSyncHelperTest {
         }
         assertFalse(noUpdate)
     }
+
+    @Test
+    fun testIsEnterOrDoneActionIdentifiesImeDoneAndSubmitActions() {
+        // IME_ACTION_DONE = 6
+        assertTrue("IME_ACTION_DONE should trigger cursor dismissal", InputSyncHelper.isEnterOrDoneAction(actionId = 6))
+        // IME_ACTION_GO = 2, IME_ACTION_NEXT = 5, IME_ACTION_SEARCH = 3, IME_ACTION_SEND = 4
+        assertTrue(InputSyncHelper.isEnterOrDoneAction(actionId = 2))
+        assertTrue(InputSyncHelper.isEnterOrDoneAction(actionId = 5))
+        assertTrue(InputSyncHelper.isEnterOrDoneAction(actionId = 3))
+        assertTrue(InputSyncHelper.isEnterOrDoneAction(actionId = 4))
+
+        // IME_ACTION_NONE = 1 or unspecified = 0
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 1))
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0))
+    }
+
+    @Test
+    fun testIsEnterOrDoneActionIdentifiesHardwareAndVirtualEnterKeys() {
+        // KEYCODE_ENTER = 66, ACTION_DOWN = 0
+        assertTrue("Enter keydown should trigger cursor dismissal", InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 66, keyAction = 0))
+        // Enter key with null action (unspecified)
+        assertTrue(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 66, keyAction = null))
+        // KEYCODE_NUMPAD_ENTER = 160
+        assertTrue("Numpad Enter should trigger cursor dismissal", InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 160, keyAction = 0))
+
+        // Enter keyup (ACTION_UP = 1) should not trigger to avoid double-handling
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 66, keyAction = 1))
+
+        // Non-enter keycodes (e.g., BACK = 4, A = 29, DEL = 67)
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 4, keyAction = 0))
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 29, keyAction = 0))
+        assertFalse(InputSyncHelper.isEnterOrDoneAction(actionId = 0, keyCode = 67, keyAction = 0))
+    }
 }

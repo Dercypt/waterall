@@ -954,11 +954,23 @@
       recalculateRunoutBuffer();
     });
 
+    inputDailyConsumption.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        inputDailyConsumption.blur();
+      }
+    });
+
     inputSupplyHours.addEventListener('input', (e) => {
       const val = e.target.value.trim();
       customSupplyHours = val === "" ? null : Math.max(0, parseFloat(val) || 0);
       scheduleSyncStatus.textContent = customSupplyHours !== null ? "Manual override" : "Synced with zone schedule";
       recalculateRunoutBuffer();
+    });
+
+    inputSupplyHours.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        inputSupplyHours.blur();
+      }
     });
 
     btnSyncHours.addEventListener('click', () => {
