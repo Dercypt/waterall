@@ -6,6 +6,7 @@ import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -113,6 +114,11 @@ class ReservesViewDelegate(
         // Sync with Schedule Countdown button
         binding.btnSyncScheduleHours.setOnClickListener {
             autoPopulateScheduleHours()
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.schedule_synced_toast),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         setupFillLevelPresets()
