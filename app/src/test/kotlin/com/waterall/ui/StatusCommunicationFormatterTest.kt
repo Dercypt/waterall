@@ -85,6 +85,40 @@ class StatusCommunicationFormatterTest {
     }
 
     @Test
+    fun testFormatShareZoneSummaryDuringRationingWithUpcomingWindow() {
+        val nextWindow = SupplyWindow(DayOfWeek.FRIDAY, 6, 0, 11, 0)
+        val zone = BarangayZone(
+            id = "brgy4",
+            name = "Zone 4 — Brgy. San Isidro",
+            schedules = listOf(nextWindow)
+        )
+        val countdown = CountdownCalculationResult(
+            flowState = ScheduleFlowState.RATIONING_ACTIVE,
+            remainingSeconds = 7200L,
+            targetDateTime = LocalDateTime.of(2026, 11, 20, 6, 0),
+            activeWindow = null,
+            nextWindow = nextWindow
+        )
+        val consensus = ZoneConsensus(
+            zoneId = "brgy4",
+            zoneName = zone.name,
+            totalReports = 1,
+            statusCounts = mapOf(TapFlowStatus.DRY to 1),
+            statusPercentages = mapOf(TapFlowStatus.DRY to 100),
+            dominantStatus = TapFlowStatus.DRY,
+            summaryText = "Zone 4: 1 verified report today — 100% Dry",
+            latestReport = null,
+            formattedRelativeTime = "Reported 5m ago"
+        )
+
+        val formatted = StatusCommunicationFormatter.formatShareZoneSummary(zone, countdown, consensus)
+
+        assertTrue(formatted.contains("Rationing (next window in 02:00:00)"))
+        assertTrue(formatted.contains("Next window: Fri 6:00 AM – 11:00 AM"))
+        assertTrue(formatted.contains("100% Dry"))
+    }
+
+    @Test
     fun testFormatReportNotificationTitleAndBodyWithAndWithoutNotes() {
         val consensus = ZoneConsensus(
             zoneId = "brgy4",
@@ -119,6 +153,12 @@ class StatusCommunicationFormatterTest {
         assertEquals(
             "Tap report recorded. Zone 4: 1 verified report today — 100% Low Pressure",
             StatusCommunicationFormatter.formatReportNotificationBody(reportWithoutNote, consensus)
+        )
+
+        val reportPlainZoneName = reportWithoutNote.copy(zoneName = "Zone 4")
+        assertEquals(
+            "Zone 4 · Low Pressure",
+            StatusCommunicationFormatter.formatReportNotificationTitle(reportPlainZoneName)
         )
     }
 
