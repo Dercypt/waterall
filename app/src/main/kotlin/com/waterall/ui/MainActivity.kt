@@ -1,8 +1,13 @@
 package com.waterall.ui
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -38,6 +43,18 @@ class MainActivity : AppCompatActivity() {
     // Mock Baguio Water District Rotation Data
     internal val zones: List<BarangayZone> = MainViewModel.DEFAULT_ZONES
 
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(
+                this,
+                getString(R.string.notification_permission_denied_toast),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -55,9 +72,46 @@ class MainActivity : AppCompatActivity() {
             viewModel.hydrateFromPreferences(userPreferences, zones)
         }
 
+        HydroTrackNotificationHelper.ensureNotificationChannel(this)
+        requestNotificationPermissionIfNeeded()
+
         initDelegates()
         setupBottomNavigation()
         setupBrandTagToggle()
+        handleIntentExtras(intent)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntentExtras(intent)
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !HydroTrackNotificationHelper.hasNotificationPermission(this)
+        ) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
+    private fun handleIntentExtras(intent: Intent?) {
+        if (intent == null) return
+        val targetZone = StatusCommunicationFormatter.resolveTargetZone(
+            zoneId = intent.getStringExtra(StatusCommunicationFormatter.EXTRA_ZONE_ID),
+            zones = zones
+        )
+        if (targetZone != null && targetZone.id != viewModel.selectedZone.value.id) {
+            viewModel.setSelectedZone(targetZone)
+            userPreferences.selectedZoneId = targetZone.id
+        }
+
+        val targetTab = StatusCommunicationFormatter.resolveTargetTab(
+            rawTabName = intent.getStringExtra(StatusCommunicationFormatter.EXTRA_TARGET_TAB)
+        )
+        if (targetTab != null) {
+            switchTab(targetTab)
+        }
     }
 
     private fun setupBrandTagToggle() {

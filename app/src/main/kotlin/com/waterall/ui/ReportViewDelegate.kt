@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.waterall.R
 import com.waterall.databinding.ActivityMainBinding
+import com.waterall.domain.calculator.ZoneConsensus
 import com.waterall.domain.calculator.ZoneConsensusCalculator
 import com.waterall.domain.model.GroundTruthReport
 import com.waterall.domain.model.TapFlowStatus
@@ -69,12 +70,34 @@ class ReportViewDelegate(
             }
             userPreferences.saveReports(activeReports)
 
-            // Immediate UI acknowledgment: Toast notification and consensus confirmation
+            // Immediate UI acknowledgment: Toast notification, status notification, and consensus confirmation
             Toast.makeText(
                 activity,
                 "Report submitted for ${report.zoneName}",
                 Toast.LENGTH_LONG
             ).show()
+
+            val consensusTime = maxOf(now, report.timestamp)
+            val consensus = runCatching {
+                viewModel.reportRepository.getConsensus(
+                    zoneId = currentZone.id,
+                    zoneName = currentZone.name,
+                    currentTimeMillis = consensusTime
+                )
+            }.getOrElse {
+                ZoneConsensus(
+                    zoneId = currentZone.id,
+                    zoneName = currentZone.name,
+                    totalReports = 1,
+                    statusCounts = mapOf(report.status to 1),
+                    statusPercentages = mapOf(report.status to 100),
+                    dominantStatus = report.status,
+                    summaryText = "${currentZone.name}: 1 verified report today",
+                    latestReport = report,
+                    formattedRelativeTime = "Reported just now"
+                )
+            }
+            HydroTrackNotificationHelper.showReportNotification(activity, report, consensus)
 
             binding.tvConsensusAcknowledgment.visibility = View.VISIBLE
             binding.tvConsensusAcknowledgment.text =
