@@ -1,5 +1,7 @@
 package com.waterall.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import android.os.CountDownTimer
 import android.view.View
 import android.widget.AdapterView
@@ -46,6 +48,10 @@ class CalendarViewDelegate(
 
         binding.btnQuickReport.setOnClickListener {
             onQuickReportClicked()
+        }
+
+        binding.btnShareZoneStatus.setOnClickListener {
+            shareCurrentZoneStatus()
         }
     }
 
@@ -186,9 +192,46 @@ class CalendarViewDelegate(
         }
     }
 
-    fun updateConsensusCard() {
+    private fun shareCurrentZoneStatus() {
         val currentZone = viewModel.selectedZone.value
-        val consensus = try {
+        val countdown = ScheduleCountdownCalculator.calculate(
+            zone = currentZone,
+            currentTime = LocalDateTime.now()
+        )
+        val consensus = resolveZoneConsensus(currentZone)
+        val summary = StatusCommunicationFormatter.formatShareZoneSummary(
+            zone = currentZone,
+            countdown = countdown,
+            consensus = consensus
+        )
+
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(
+                Intent.EXTRA_SUBJECT,
+                "${activity.getString(R.string.share_subject_prefix)} — ${currentZone.name}"
+            )
+            putExtra(Intent.EXTRA_TEXT, summary)
+        }
+
+        try {
+            activity.startActivity(
+                Intent.createChooser(
+                    shareIntent,
+                    activity.getString(R.string.share_chooser_title)
+                )
+            )
+        } catch (_: ActivityNotFoundException) {
+            Toast.makeText(
+                activity,
+                activity.getString(R.string.share_no_app_toast),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    private fun resolveZoneConsensus(currentZone: BarangayZone): ZoneConsensus {
+        return try {
             viewModel.reportRepository.getConsensus(
                 zoneId = currentZone.id,
                 zoneName = currentZone.name,
@@ -208,6 +251,11 @@ class CalendarViewDelegate(
                 formattedRelativeTime = null
             )
         }
+    }
+
+    fun updateConsensusCard() {
+        val currentZone = viewModel.selectedZone.value
+        val consensus = resolveZoneConsensus(currentZone)
 
         binding.tvConsensusSummary.text = consensus.summaryText
 
