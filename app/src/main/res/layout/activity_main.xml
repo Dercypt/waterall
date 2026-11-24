@@ -170,13 +170,37 @@
                     android:paddingBottom="12dp" />
 
                 <!-- Community consensus -->
-                <TextView
-                    style="@style/Waterall.SectionTitle"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Community reports"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
                     android:layout_marginTop="40dp"
-                    android:layout_marginBottom="12dp" />
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        style="@style/Waterall.SectionTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Community reports" />
+
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btnShareZoneStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="32dp"
+                        android:minWidth="0dp"
+                        android:minHeight="0dp"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:paddingTop="0dp"
+                        android:paddingBottom="0dp"
+                        android:text="@string/share_zone_status"
+                        android:textAllCaps="false"
+                        android:textSize="12sp"
+                        android:textColor="@color/accent"
+                        android:background="@drawable/bg_button_outline" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/cardZoneConsensus"

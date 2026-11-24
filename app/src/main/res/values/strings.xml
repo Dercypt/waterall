@@ -7,4 +7,12 @@
     <string name="fill_level_info_title">Fill Level</string>
     <string name="fill_level_info_message">Fill level indicates how full your water containers currently are (from 0% Empty to 100% Full).\n\nHydroTrack uses this to calculate your available water reserves in liters and estimate how long your supply will last before the next rationing window.</string>
     <string name="dialog_ok">Got it</string>
+    <string name="notification_channel_name">Water Status Updates</string>
+    <string name="notification_channel_description">Notifications for crowdsourced tap status reports and supply alerts.</string>
+    <string name="share_zone_status">Share</string>
+    <string name="share_chooser_title">Share zone water status</string>
+    <string name="share_subject_prefix">BWD HydroTrack Status</string>
+    <string name="share_no_app_toast">No app available to share zone status.</string>
+    <string name="notification_permission_denied_toast">Notifications disabled. Reports will still be saved locally.</string>
+    <string name="schedule_synced_toast">Synced with zone schedule.</string>
 </resources>
